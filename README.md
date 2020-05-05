@@ -26,6 +26,40 @@ Other hardware:
 - Get/Set values as json through http request
 - Set time with ntp
 
+### Temp/filter time
+
+The local table is defined like this:
+
+
+| Temp    | Hour |0  |1  |2  |3  |4  |5  |6  |7  |8  |9  |10 |11 |12 |13 |14 |15 |16 |17 |18 |19 |20 |21 |22 |23 |
+|:-------:|:----:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+|  <1     |      | X | X | X | X | X | X | X |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+| 3<t<6   |      |   |   |   | X | X |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+| 6<t<9   |      |   |   |   | X | X | X |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+| 9<t<12  |      | | | | | | | | |X|X|X|X|  |  |  |  |  |  |  |  |  |  |  |  |
+| 12<t<15 |      | | | | | | | | |X|X|X|  |  |  |X|X|  |  |  |  |  |  |  |  |
+| 15<t<18 |      | | | | | | | | |X|X|X|  |  |  |X|X|  |  |  |  |  |  |  |  |
+| 18<t<21 |      | | | | | | | | |X|X|X|  |  |  |X|X|  |  |  |  |  |  |  |  |
+| 21<t<23 |      | | | | | | | | |X|X|X|  |  |  |X|X|  |  |  |  |  |  |  |  |
+| 23<t<26 |      | | | |X|X| | | |X|X|X|  |  |  |X|X|  |  |  |  |  |  |  |  |
+| 26<t<28 |      | | | |X|X|X|X| |X|X|X|  |  |  |X|X|  |  |  |  |  |  |  |  |
+| 28<t<30 |      | | | |X|X|X|X| |X|X|X|  |  |  |X|X|  |  |  |  |  |  |  |  |
+| 30<     |      | | | | | | | | |X|X|X|  |  |  |X|X|  |  |  |  |  |  |  |  |
+
+Other table exemples:
+
+- from [1](https://pool-technologie.com/fichiers/spec_telechargement/MANUEL%20SIMPLEO-FR.pdf)
+
+- from [https://www.piscine-center.net/gestion-de-la-filtration-et-de-l-electrolyseur.html](https://www.piscine-center.net/gestion-de-la-filtration-et-de-l-electrolyseur.html
+
+    ![](https://uppict.piscine-center.net/fiche/12832/automateau-gestion-de-la-filtration-et-de-l-electrolyseur-piscine-center-95319400.jpg)
+
+- from [https://www.perfeco-f.fr/index.php/le-perfeco](https://www.perfeco-f.fr/index.php/le-perfeco)
+
+    ![](https://clweb01.hosteur.com/~perfecotest.fr/images/filtration.gif)
+
+
+
 ## ToDo
 
 - force filter pump
