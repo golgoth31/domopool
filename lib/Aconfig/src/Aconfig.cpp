@@ -36,31 +36,7 @@ void loadConfiguration(const char *filename, Config &config)
     }
 
     // Copy values from the JsonDocument to the Config
-    config.global.lcdBacklightDuration = doc["global"]["lcdBacklightDuration"];
-    config.time.initialized = doc["time"]["initialized"];
-    config.time.dayLight = doc["time"]["dayLight"];
-    config.time.ntpServer = doc["time"]["ntpServer"];
-    config.time.timeZone = doc["time"]["timeZone"];
-    config.netConfig.dhcp = doc["network"]["dhcp"];
-    config.netConfig.ip = doc["network"]["ip"];
-    config.netConfig.gateway = doc["network"]["gateway"];
-    config.netConfig.netmask = doc["network"]["netmask"];
-    config.netConfig.dns = doc["network"]["dns"];
-    config.sensConfig.ph.enabled = doc["sensors"]["ph"]["enabled"];
-    config.sensConfig.ph.threshold = doc["sensors"]["ph"]["threshold"];
-    config.sensConfig.waitForConversion = doc["sensors"]["waitForConvertion"];
-    config.sensConfig.tempResolution = doc["sensors"]["tempResolution"];
-    config.sensConfig.tin.enabled = doc["sensors"]["tin"]["enabled"];
-    for (int i = 0; i < 8; i++)
-    {
-        config.sensConfig.tin.addr[i] = doc["sensors"]["tin"]["addr"][i];
-    }
-    config.sensConfig.tout.enabled = true;
-    for (int i = 0; i < 8; i++)
-    {
-        config.sensConfig.tout.addr[i] = doc["sensors"]["tout"]["addr"][i];
-    }
-    config.sensConfig.tdht.enabled = doc["sensors"]["tdht"]["enabled"];
+    convert2config(doc, config);
 
     // Close the file (Curiously, File's destructor doesn't close the file)
     file.close();
@@ -88,7 +64,8 @@ bool saveConfiguration(const char *filename, Config &config)
     // Allocate a temporary JsonDocument
     // Don't forget to change the capacity to match your requirements.
     // Use arduinojson.org/assistant to compute the capacity.
-    StaticJsonDocument<AconfigDocSize> doc = convert2doc(config);
+    StaticJsonDocument<AconfigDocSize> doc;
+    convert2doc(config, doc);
 
     // Serialize JSON to file
     if (serializeJson(doc, file) == 0)
@@ -103,9 +80,28 @@ bool saveConfiguration(const char *filename, Config &config)
 }
 
 // Saves the configuration to a file
-StaticJsonDocument<AconfigDocSize> convert2doc(Config &config)
+bool saveJson(String &data, Config &config, const char *filename)
 {
     StaticJsonDocument<AconfigDocSize> doc;
+    DeserializationError error = deserializeJson(doc, data);
+    if (error)
+    {
+        return false;
+    }
+    convert2config(doc, config);
+    bool saved = saveConfiguration(filename, config);
+    if (!saved)
+    {
+        return false;
+    }
+    return true;
+}
+
+// Saves the configuration to a file
+// StaticJsonDocument<AconfigDocSize> convert2doc(Config &config)
+void convert2doc(Config &config, JsonDocument &doc)
+{
+    // StaticJsonDocument<AconfigDocSize> doc;
 
     // Set the values in the document
     doc["global"]["lcdBacklightDuration"] = config.global.lcdBacklightDuration;
@@ -139,16 +135,16 @@ StaticJsonDocument<AconfigDocSize> convert2doc(Config &config)
     doc["sensors"]["ph"]["threshold"] = config.sensConfig.ph.threshold;
     doc["sensors"]["ph"]["val"] = config.sensConfig.ph.val;
 
-    return doc;
+    // return doc;
 }
 
-Config convert2config(String data)
+void convert2config(JsonDocument &doc, Config &config)
 {
-    StaticJsonDocument<AconfigDocSize> doc;
-    deserializeJson(doc, data);
-    // DeserializationError error = deserializeJson(doc, data);
+    // StaticJsonDocument<AconfigDocSize> doc;
+    // deserializeJson(doc, data);
+    // // DeserializationError error = deserializeJson(doc, data);
 
-    Config config;
+    // Config config;
     config.global.lcdBacklightDuration = doc["global"]["lcdBacklightDuration"];
     config.time.initialized = doc["time"]["initialized"];
     config.time.dayLight = doc["time"]["dayLight"];
@@ -174,7 +170,7 @@ Config convert2config(String data)
         config.sensConfig.tout.addr[i] = doc["sensors"]["tout"]["addr"][i];
     }
     config.sensConfig.tdht.enabled = doc["sensors"]["tdht"]["enabled"];
-    return config;
+    // return config;
 }
 
 // Prints the content of a file to the Serial

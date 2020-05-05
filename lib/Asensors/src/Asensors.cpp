@@ -31,7 +31,7 @@ void printAddress(DeviceAddress deviceAddress)
     Serial.println("");
 }
 
-Sensors registerDevices(Sensors config, DallasTemperature tempSensors)
+void registerDevices(Sensors &config, DallasTemperature tempSensors)
 {
     DeviceAddress deviceAddress;
     bool devOk;
@@ -84,5 +84,4 @@ Sensors registerDevices(Sensors config, DallasTemperature tempSensors)
             break;
         }
     }
-    return config;
 }

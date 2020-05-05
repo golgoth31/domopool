@@ -70,7 +70,9 @@ struct Config
 
 void loadConfiguration(const char *filename, Config &config);
 bool saveConfiguration(const char *filename, Config &config);
-StaticJsonDocument<AconfigDocSize> convert2doc(Config &config);
-Config convert2config(String data);
+bool saveJson(String &data, Config &config, const char *filename);
+// StaticJsonDocument<AconfigDocSize> convert2doc(Config &config);
+void convert2doc(Config &config, JsonDocument &doc);
+void convert2config(JsonDocument &doc, Config &config);
 void printFile(const char *filename);
 #endif

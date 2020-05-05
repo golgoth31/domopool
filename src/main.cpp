@@ -23,6 +23,13 @@
 #define DHTPIN 40
 #define pumpFilterPin 48
 #define pumpPhPin 49
+// change this to match your SD shield or module;
+// Arduino Ethernet shield: pin 4
+// Adafruit SD shields and modules: pin 10
+// Sparkfun SD shield: pin 8
+// MKRZero SD: SDCARD_SS_PIN
+const int SDCARD_CS_PIN = 4;
+const int SDCARD_SS_PIN = 53;
 
 dht dhtClient;
 
@@ -45,7 +52,7 @@ DallasTemperature tempSensors(&ow);
 float tempMoy;
 
 // Creates an LCD object. Parameters: (rs, enable, d4, d5, d6, d7)
-LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+LiquidCrystal lcd(12, 11, 9, 8, 7, 6);
 int lcdLEDButtonState = 0;
 bool lcdLEDBacklightState = true;
 unsigned long lcdBacklightTimer = 0;
@@ -63,8 +70,6 @@ Config config;
 const char *filename = "config.jsn";
 
 bool serverStarted = false;
-
-const int chipSelect = 4;
 
 bool filterPumpOn = false;
 bool phPumpOn = false;
@@ -94,8 +99,8 @@ void setup(void)
   // Initialize SD library
   lcd.print("[SD] 1/1");
   Serial.println(F("[SD] Initializing SD card reader..."));
-  pinMode(SS, OUTPUT);
-  while (!SD.begin(chipSelect))
+  pinMode(SDCARD_SS_PIN, OUTPUT);
+  while (!SD.begin(SDCARD_CS_PIN))
   {
     Serial.println(F("[SD] Failed to initialize SD library"));
     delay(1000);
@@ -127,8 +132,7 @@ void setup(void)
   lcd.setCursor(0, 0);
   lcd.print("[Sens] 3/4");
   Serial.println("[Sens] Registering addresses...");
-  config.sensConfig = registerDevices(config.sensConfig, tempSensors);
-  // config.sensConfig = registerDevices(config.sensConfig, tempSensors, numTempSensors);
+  registerDevices(config.sensConfig, tempSensors);
 
   lcd.setCursor(0, 0);
   lcd.print("[Sens] 4/4");

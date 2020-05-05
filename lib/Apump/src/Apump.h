@@ -8,5 +8,5 @@
 void pumpInit(int filterPin, int phPin);
 void pumpFullTime(bool pump[24], bool state);
 bool setFilterState(float tempMoy, int hour, bool force);
-bool setPhState(Ph config, bool force, bool filterOn = false);
+bool setPhState(Ph &config, bool force, bool filterOn = false);
 #endif

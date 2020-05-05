@@ -50,7 +50,7 @@ void setSytemTime(bool ethServerStarted)
     // Serial.println(RTC.get());
 }
 
-void initSystemTime(Time config, bool ethServerStarted)
+void initSystemTime(Time &config, bool ethServerStarted)
 {
     if (RTC.chipPresent)
     {

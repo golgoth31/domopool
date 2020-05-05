@@ -9,5 +9,5 @@
 #define __AETHERNET_H_UNDEFINED__
 bool checkIP(const char *ip);
 bool startEthernetServer(Network conf);
-void sendData(EthernetServer server, Config config);
+void sendData(EthernetServer server, Config &config);
 #endif

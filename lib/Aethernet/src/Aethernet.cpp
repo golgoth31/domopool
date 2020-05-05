@@ -75,7 +75,7 @@ bool startEthernetServer(Network conf)
     }
 }
 
-void sendData(EthernetServer server, Config config)
+void sendData(EthernetServer server, Config &config)
 {
     EthernetClient client = server.available();
     bool postRequest = false;
@@ -111,8 +111,8 @@ void sendData(EthernetServer server, Config config)
 
                 if (reqType.equals("GET"))
                 {
-                    StaticJsonDocument<AconfigDocSize>
-                        httpResponse = convert2doc(config);
+                    StaticJsonDocument<AconfigDocSize> httpResponse;
+                    convert2doc(config, httpResponse);
 
                     client.println("HTTP/1.1 200 OK");
                     client.println("Content-Type: application/json");
@@ -125,8 +125,7 @@ void sendData(EthernetServer server, Config config)
                 }
                 else if (reqType.equals("POST"))
                 {
-                    Config conf = convert2config(reqBody);
-                    bool saved = saveConfiguration("config.jsn", conf);
+                    bool saved = saveJson(reqBody, config, "config.jsn");
                     if (saved)
                     {
                         postRequest = true;

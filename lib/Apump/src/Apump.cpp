@@ -43,110 +43,110 @@ bool setFilterState(float tempMoy, int hour, bool force)
     // put pump on based on temp/hour
     else if (tempMoy > 1 && tempMoy <= 6)
     {
-        for (int i = 3; i < 5; i++)
+        for (int i = 3; i <= 4; i++)
         {
             pump[i] = true;
         };
     }
     else if (tempMoy > 6 && tempMoy <= 9)
     {
-        for (int i = 3; i < 6; i++)
+        for (int i = 3; i <= 5; i++)
         {
             pump[i] = true;
         };
     }
     else if (tempMoy > 9 && tempMoy <= 12)
     {
-        for (int i = 8; i < 12; i++)
+        for (int i = 8; i <= 11; i++)
         {
             pump[i] = true;
         };
     }
     else if (tempMoy > 12 && tempMoy <= 15)
     {
-        for (int i = 8; i < 11; i++)
+        for (int i = 8; i <= 10; i++)
         {
             pump[i] = true;
         };
-        for (int i = 14; i < 16; i++)
+        for (int i = 14; i <= 15; i++)
         {
             pump[i] = true;
         };
     }
     else if (tempMoy > 15 && tempMoy <= 18)
     {
-        for (int i = 8; i < 11; i++)
+        for (int i = 8; i <= 10; i++)
         {
             pump[i] = true;
         };
-        for (int i = 14; i < 17; i++)
+        for (int i = 14; i <= 16; i++)
         {
             pump[i] = true;
         };
     }
     else if (tempMoy > 18 && tempMoy <= 21)
     {
-        for (int i = 8; i < 12; i++)
+        for (int i = 8; i <= 11; i++)
         {
             pump[i] = true;
         };
-        for (int i = 14; i < 17; i++)
+        for (int i = 14; i <= 16; i++)
         {
             pump[i] = true;
         };
     }
     else if (tempMoy > 21 && tempMoy <= 23)
     {
-        for (int i = 8; i < 12; i++)
+        for (int i = 8; i <= 11; i++)
         {
             pump[i] = true;
         };
-        for (int i = 14; i < 18; i++)
+        for (int i = 14; i <= 17; i++)
         {
             pump[i] = true;
         };
     }
     else if (tempMoy > 23 && tempMoy <= 26)
     {
-        for (int i = 3; i < 5; i++)
+        for (int i = 3; i <= 4; i++)
         {
             pump[i] = true;
         };
-        for (int i = 8; i < 12; i++)
+        for (int i = 8; i <= 11; i++)
         {
             pump[i] = true;
         };
-        for (int i = 14; i < 18; i++)
+        for (int i = 14; i <= 18; i++)
         {
             pump[i] = true;
         };
     }
     else if (tempMoy > 26 && tempMoy <= 28)
     {
-        for (int i = 3; i < 7; i++)
+        for (int i = 3; i <= 5; i++)
         {
             pump[i] = true;
         };
-        for (int i = 8; i < 12; i++)
+        for (int i = 8; i <= 11; i++)
         {
             pump[i] = true;
         };
-        for (int i = 14; i < 18; i++)
+        for (int i = 14; i <= 19; i++)
         {
             pump[i] = true;
         };
     }
     else if (tempMoy > 28 && tempMoy <= 30)
     {
-        for (int i = 3; i < 5; i++)
+        for (int i = 3; i <= 6; i++)
         {
             pump[i] = true;
         };
-        for (int i = 8; i < 12; i++)
+        for (int i = 8; i <= 11; i++)
         {
             pump[i] = true;
         };
-        for (int i = 14; i < 20; i++)
+        for (int i = 14; i <= 20; i++)
         {
             pump[i] = true;
         };
@@ -167,7 +167,7 @@ bool setFilterState(float tempMoy, int hour, bool force)
     }
 }
 
-bool setPhState(Ph config, bool force, bool filterOn)
+bool setPhState(Ph &config, bool force, bool filterOn)
 {
     if (config.enabled)
     {
