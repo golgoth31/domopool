@@ -80,8 +80,6 @@ struct Aconfig
 void loadConfiguration(const char *filename, Aconfig &config);
 bool saveConfiguration(const char *filename, Aconfig &config);
 bool saveJson(String &data, Aconfig &config, const char *filename);
-// StaticJsonDocument<AconfigDocSize> convert2doc(Aconfig &config);
 void convert2doc(Aconfig &config, JsonDocument &doc);
 void convert2config(JsonDocument &doc, Aconfig &config);
-void printFile(const char *filename);
 #endif

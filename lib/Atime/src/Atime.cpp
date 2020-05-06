@@ -30,7 +30,7 @@ void setSytemTime(bool ethServerStarted)
 {
     if (ethServerStarted)
     {
-        Serial.println("[Time] get ntp time");
+        Serial.println(F("[Time] get ntp time"));
         timeClient.update();
         RTC.set(timeClient.getEpochTime());
     }
@@ -42,7 +42,7 @@ void setSytemTime(bool ethServerStarted)
         tmElements_t tm;
         if (!RTC.read(tm))
         {
-            Serial.println("[Time] setup rtc with compile time");
+            Serial.println(F("[Time] setup rtc with compile time"));
             RTC.write(tm);
         }
     }
@@ -54,13 +54,13 @@ void initSystemTime(Time &config, bool ethServerStarted)
 {
     if (RTC.chipPresent)
     {
-        Serial.println("[Time] RTC found, setting...");
+        Serial.println(F("[Time] RTC found, setting..."));
         if (ethServerStarted)
         {
             String ntpServ = config.ntpServer;
-            Serial.print("[Time] requesting '");
+            Serial.print(F("[Time] requesting '"));
             Serial.print(ntpServ);
-            Serial.println("'");
+            Serial.println(F("'"));
             timeClient.setTimeOffset(config.timeZone * 3600);
             timeClient.setUpdateInterval(60000);
             timeClient.begin();
@@ -69,6 +69,6 @@ void initSystemTime(Time &config, bool ethServerStarted)
     }
     else
     {
-        Serial.println("no rtc module");
+        Serial.println(F("[Time] no rtc module"));
     }
 }

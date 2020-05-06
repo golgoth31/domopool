@@ -52,49 +52,46 @@ bool startEthernetServer(Network conf)
     // Check for Ethernet hardware present
     if (Ethernet.hardwareStatus() == EthernetNoHardware)
     {
-        Serial.println("Ethernet shield was not found.  Sorry, can't run without hardware. :(");
+        Serial.println(F("Ethernet shield was not found.  Sorry, can't run without hardware. :("));
         return false;
     }
     if (Ethernet.linkStatus() == LinkOFF) // not working on W5100 shield
     {
-        Serial.println("Ethernet cable is not connected.");
+        Serial.println(F("Ethernet cable is not connected."));
         return false;
     }
 
     // start the server
     if (ethOK == 1)
     {
-        Serial.print("server is at ");
+        Serial.print(F("server is at "));
         Serial.println(Ethernet.localIP());
         return true;
     }
     else
     {
-        Serial.println("[Eth] DHCP failed");
+        Serial.println(F("[Eth] DHCP failed"));
         return false;
     }
 }
 
 void response200(EthernetClient &client)
 {
-    client.println("HTTP/1.1 200 OK");
-    client.println("Content-Type: application/json");
-    client.println("Connection: close");
-    client.println();
+    client.println(F("HTTP/1.1 200 OK"));
+    client.println(F("Content-Type: application/json"));
+    client.println(F("Connection: close"));
 }
 void response404(EthernetClient &client)
 {
-    client.println("HTTP/1.1 404 NotFound");
-    client.println("Content-Type: application/json");
-    client.println("Connection: close");
-    client.println();
+    client.println(F("HTTP/1.1 404 NotFound"));
+    client.println(F("Content-Type: application/json"));
+    client.println(F("Connection: close"));
 }
 void response500(EthernetClient &client)
 {
-    client.println("HTTP/1.1 500 Error");
-    client.println("Content-Type: application/json");
-    client.println("Connection: close");
-    client.println();
+    client.println(F("HTTP/1.1 500 Error"));
+    client.println(F("Content-Type: application/json"));
+    client.println(F("Connection: close"));
 }
 void sendData(EthernetServer server, Aconfig &config)
 {
@@ -102,7 +99,7 @@ void sendData(EthernetServer server, Aconfig &config)
     bool postRequest = false;
     if (client)
     {
-        Serial.println("[Ethernet] New client request");
+        Serial.println(F("[Ethernet] New client request"));
         boolean currentLineIsBlank = true;
         while (client.connected())
         {
@@ -126,23 +123,33 @@ void sendData(EthernetServer server, Aconfig &config)
                 String reqBody = client.readStringUntil('\n');
 
                 // Serial.println(reqType);
-                // Serial.println(reqURI);
+                Serial.println(reqURI);
                 // Serial.println(reqProtocol);
                 // Serial.println(reqBody);
-
+                StaticJsonDocument<AconfigDocSize> httpResponse;
                 if (reqType.equals("GET"))
                 {
-                    StaticJsonDocument<AconfigDocSize> httpResponse;
-                    convert2doc(config, httpResponse);
+                    if (reqURI.equals("/"))
+                    {
+                        httpResponse["version"] = "test";
+                        String compile = __DATE__;
+                        compile += " ";
+                        compile += __TIME__;
+                        httpResponse["compile"] = compile;
+                    }
+                    else if (reqURI.equals("/config"))
+                    {
+                        convert2doc(config, httpResponse);
+                        response200(client);
+                        client.print(F("Content-Length: "));
+                        client.println(measureJsonPretty(httpResponse));
 
-                    client.println("HTTP/1.1 200 OK");
-                    client.println("Content-Type: application/json");
-                    client.println("Connection: close");
-                    client.print(F("Content-Length: "));
-                    client.println(measureJsonPretty(httpResponse));
-                    client.println();
-
-                    serializeJsonPretty(httpResponse, client);
+                        serializeJsonPretty(httpResponse, client);
+                    }
+                    else
+                    {
+                        response404(client);
+                    }
                 }
                 else if (reqType.equals("POST"))
                 {
@@ -153,7 +160,7 @@ void sendData(EthernetServer server, Aconfig &config)
                     else if (reqURI.equals("/config"))
                     {
 
-                        Serial.print("[eth] Post body: ");
+                        Serial.print(F("[Eth] Post body: "));
                         Serial.println(reqBody);
                         bool saved = saveJson(reqBody, config, "config.jsn");
                         if (saved)
@@ -167,19 +174,19 @@ void sendData(EthernetServer server, Aconfig &config)
                     }
                     else
                     {
-
                         response404(client);
                     }
                 }
+                client.println();
             }
             // give the web browser time to receive the data
             delay(1);
             // close the connection:
             client.stop();
-            Serial.println("[Ethernet] Response sent");
+            Serial.println(F("[Eth] Response sent"));
             if (postRequest)
             {
-                Serial.println("[Ethernet] Rebooting");
+                Serial.println(F("[Eth] Rebooting"));
                 software_Reboot();
             }
         }

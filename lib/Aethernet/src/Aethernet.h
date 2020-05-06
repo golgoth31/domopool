@@ -4,6 +4,7 @@
 #include <Ethernet.h>
 #include <ArduinoJson.h>
 #include <avr/wdt.h>
+#include <TimeLib.h>
 
 #ifndef __AETHERNET_H_UNDEFINED__
 #define __AETHERNET_H_UNDEFINED__

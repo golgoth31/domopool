@@ -97,7 +97,7 @@ void setup(void)
   Serial.println(F("Starting up"));
 
   // Initialize SD library
-  lcd.print("[SD] 1/1");
+  lcd.print(F("[SD] 1/1"));
   Serial.println(F("[SD] Initializing SD card reader..."));
   pinMode(SDCARD_SS_PIN, OUTPUT);
   while (!SD.begin(SDCARD_CS_PIN))
@@ -109,14 +109,14 @@ void setup(void)
 
   // Should load default config if run for the first time
   lcd.setCursor(0, 0);
-  lcd.print("[Conf] 1/2");
+  lcd.print(F("[Conf] 1/2"));
   Serial.println(F("[Conf] Loading configuration..."));
   loadConfiguration(filename, config);
 
   // Start up the library
   lcd.setCursor(0, 0);
-  lcd.print("[Sens] 1/4");
-  Serial.println("[Sens] Starting...");
+  lcd.print(F("[Sens] 1/4"));
+  Serial.println(F("[Sens] Starting..."));
   // start ds18b20 sensors
   tempSensors.begin();
 
@@ -130,47 +130,47 @@ void setup(void)
   // Serial.println(" devices.");
 
   lcd.setCursor(0, 0);
-  lcd.print("[Sens] 3/4");
-  Serial.println("[Sens] Registering addresses...");
+  lcd.print(F("[Sens] 3/4"));
+  Serial.println(F("[Sens] Registering addresses..."));
   registerDevices(config.sensConfig, tempSensors);
 
   lcd.setCursor(0, 0);
-  lcd.print("[Sens] 4/4");
-  Serial.println("[Sens] Setting sensors options...");
+  lcd.print(F("[Sens] 4/4"));
+  Serial.println(F("[Sens] Setting sensors options..."));
   tempSensors.setWaitForConversion(config.sensConfig.waitForConversion);
   tempSensors.setResolution(config.sensConfig.tempResolution);
 
   // Start ethernet service
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print("[Eth] 1/1");
-  Serial.println("[Eth] Starting server...");
+  lcd.print(F("[Eth] 1/1"));
+  Serial.println(F("[Eth] Starting server..."));
   serverStarted = startEthernetServer(config.netConfig);
   if (serverStarted)
   {
-    Serial.println("[Eth] Server is up");
+    Serial.println(F("[Eth] Server is up"));
   }
   else
   {
-    Serial.println("[Eth] Server not started");
+    Serial.println(F("[Eth] Server not started"));
   }
 
-  lcd.print("[Time] 1/1");
-  Serial.println("[Time] Setting time...");
+  lcd.print(F("[Time] 1/1"));
+  Serial.println(F("[Time] Setting time..."));
   initSystemTime(config.time, serverStarted);
   setSyncProvider(RTC.get);
-  Serial.print("[Time] Current time: ");
+  Serial.print(F("[Time] Current time: "));
   Serial.println(printTime());
 
   lcd.setCursor(0, 0);
-  lcd.print("[Conf] 2/2");
-  Serial.println("[Conf] Updating sensors config...");
+  lcd.print(F("[Conf] 2/2"));
+  Serial.println(F("[Conf] Updating sensors config..."));
   saveConfiguration(filename, config);
-  Serial.println("[Conf] Done");
+  Serial.println(F("[Conf] Done"));
 
   // Setup done, initialize default LCD
   lcd.setCursor(0, 0);
-  lcd.print("Startup done \\o/");
+  lcd.print(F("Startup done"));
 }
 
 void loop(void)
@@ -186,7 +186,7 @@ void loop(void)
   // ToDo: add debounce
   if (lcdLEDButtonState == LOW)
   {
-    Serial.println("[LCD] Ligth ON");
+    Serial.println(F("[LCD] Ligth ON"));
     digitalWrite(lcdLEDPin, HIGH);
     lcdBacklightTimer = millis();
     lcdLEDBacklightState = true;
@@ -195,7 +195,7 @@ void loop(void)
   {
     if ((millis() - lcdBacklightTimer) >= config.global.lcdBacklightDuration && lcdLEDBacklightState)
     {
-      Serial.println("[LCD] Ligth OFF");
+      Serial.println(F("[LCD] Ligth OFF"));
       digitalWrite(lcdLEDPin, LOW);
       lcdLEDBacklightState = false;
     }
@@ -236,29 +236,29 @@ void loop(void)
       }
     }
 
-    Serial.println("[Temp] Printing data...");
+    Serial.println(F("[Temp] Printing data..."));
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("Tout:");
+    lcd.print(F("Tout:"));
 
-    Serial.print("Sensor 'tout' value: ");
+    Serial.print(F("Sensor 'tout' value: "));
     config.sensConfig.tout.val = tempSensors.getTempC(config.sensConfig.tout.addr);
     Serial.println(config.sensConfig.tout.val);
     lcd.setCursor(6, 0);
     lcd.print(config.sensConfig.tout.val);
     lcd.write(byte(0));
-    lcd.print("C");
+    lcd.print(F("C"));
     if (config.sensConfig.tin.enabled)
     {
       lcd.setCursor(0, 1);
-      lcd.print("Tin:");
-      Serial.print("Sensor 'tin' value: ");
+      lcd.print(F("Tin:"));
+      Serial.print(F("Sensor 'tin' value: "));
       config.sensConfig.tin.val = tempSensors.getTempC(config.sensConfig.tin.addr);
       Serial.println(config.sensConfig.tin.val);
       lcd.setCursor(5, 1);
       lcd.print(config.sensConfig.tin.val);
       lcd.write(byte(0));
-      lcd.print("C");
+      lcd.print(F("C"));
       tempMoy = (config.sensConfig.tout.val + config.sensConfig.tin.val) / 2;
     }
     else
@@ -268,7 +268,7 @@ void loop(void)
 
     if (config.sensConfig.tdht.enabled)
     {
-      Serial.print("Sensor 'DHT' value: ");
+      Serial.print(F("Sensor 'DHT' value: "));
       if (chk == DHTLIB_OK)
       {
         Serial.println(dhtClient.temperature);
@@ -279,7 +279,7 @@ void loop(void)
       }
     }
 
-    filterPumpOn = setFilterState(tempMoy, hour(), config.pump.forceFilter);
+    filterPumpOn = setFilterState(config, hour());
     phPumpOn = setPhState(config, filterPumpOn);
 
     count_time_30s++; // Count 15 cycles for sending XPL every 30s
@@ -288,8 +288,8 @@ void loop(void)
 
   if (count_time_30s == 15)
   {
-    Serial.println("*** 30s ***");
-    Serial.print("Time: ");
+    Serial.println(F("*** 30s ***"));
+    Serial.print(F("Time: "));
     Serial.println(printTime());
 
     count_time_30min++; // Count 60 cycles for 30 min
@@ -297,9 +297,9 @@ void loop(void)
   }
   if (count_time_30min == 60)
   {
-    Serial.println("*** 30m ***");
+    Serial.println(F("*** 30m ***"));
     setSytemTime(serverStarted);
-    Serial.print("Time: ");
+    Serial.print(F("Time: "));
     Serial.println(printTime());
     count_time_30min = 0;
   }

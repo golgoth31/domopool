@@ -28,41 +28,47 @@ void pumpInit(int filterPin, int phPin)
     pumpPhRelayPin = phPin;
 }
 
-bool setFilterState(Aconfig &config, int hour, bool force)
+bool setFilterState(Aconfig &config, int hour)
 {
     // first disable all
-    Serial.println("[Filter] Setting filter state");
+    Serial.println(F("[Filter] Setting filter state"));
     pumpFullTime(pump, false);
 
+    // keep using water temperature if last chown is below 2 degreC
+    if (config.data.filterOn || config.data.curTemp <= 2)
+    {
+        config.data.savedTemp = config.data.curTemp;
+    }
+
     // enable all if temp too low or to high
-    if (config.data.curTemp <= 1 || config.data.curTemp > 30)
+    if (config.data.savedTemp <= 1 || config.data.savedTemp > 30)
     {
         pumpFullTime(pump, true);
     }
 
     // put pump on based on temp/hour
-    else if (config.data.curTemp > 1 && config.data.curTemp <= 6)
+    else if (config.data.savedTemp > 1 && config.data.savedTemp <= 6)
     {
         for (int i = 3; i <= 4; i++)
         {
             pump[i] = true;
         };
     }
-    else if (config.data.curTemp > 6 && config.data.curTemp <= 9)
+    else if (config.data.savedTemp > 6 && config.data.savedTemp <= 9)
     {
         for (int i = 3; i <= 5; i++)
         {
             pump[i] = true;
         };
     }
-    else if (config.data.curTemp > 9 && config.data.curTemp <= 12)
+    else if (config.data.savedTemp > 9 && config.data.savedTemp <= 12)
     {
         for (int i = 8; i <= 11; i++)
         {
             pump[i] = true;
         };
     }
-    else if (config.data.curTemp > 12 && config.data.curTemp <= 15)
+    else if (config.data.savedTemp > 12 && config.data.savedTemp <= 15)
     {
         for (int i = 8; i <= 10; i++)
         {
@@ -73,7 +79,7 @@ bool setFilterState(Aconfig &config, int hour, bool force)
             pump[i] = true;
         };
     }
-    else if (config.data.curTemp > 15 && config.data.curTemp <= 18)
+    else if (config.data.savedTemp > 15 && config.data.savedTemp <= 18)
     {
         for (int i = 8; i <= 10; i++)
         {
@@ -84,7 +90,7 @@ bool setFilterState(Aconfig &config, int hour, bool force)
             pump[i] = true;
         };
     }
-    else if (config.data.curTemp > 18 && config.data.curTemp <= 21)
+    else if (config.data.savedTemp > 18 && config.data.savedTemp <= 21)
     {
         for (int i = 8; i <= 11; i++)
         {
@@ -95,7 +101,7 @@ bool setFilterState(Aconfig &config, int hour, bool force)
             pump[i] = true;
         };
     }
-    else if (config.data.curTemp > 21 && config.data.curTemp <= 23)
+    else if (config.data.savedTemp > 21 && config.data.savedTemp <= 23)
     {
         for (int i = 8; i <= 11; i++)
         {
@@ -106,7 +112,7 @@ bool setFilterState(Aconfig &config, int hour, bool force)
             pump[i] = true;
         };
     }
-    else if (config.data.curTemp > 23 && config.data.curTemp <= 26)
+    else if (config.data.savedTemp > 23 && config.data.savedTemp <= 26)
     {
         for (int i = 3; i <= 4; i++)
         {
@@ -121,7 +127,7 @@ bool setFilterState(Aconfig &config, int hour, bool force)
             pump[i] = true;
         };
     }
-    else if (config.data.curTemp > 26 && config.data.curTemp <= 28)
+    else if (config.data.savedTemp > 26 && config.data.savedTemp <= 28)
     {
         for (int i = 3; i <= 5; i++)
         {
@@ -136,7 +142,7 @@ bool setFilterState(Aconfig &config, int hour, bool force)
             pump[i] = true;
         };
     }
-    else if (config.data.curTemp > 28 && config.data.curTemp <= 30)
+    else if (config.data.savedTemp > 28 && config.data.savedTemp <= 30)
     {
         for (int i = 3; i <= 6; i++)
         {
@@ -153,21 +159,23 @@ bool setFilterState(Aconfig &config, int hour, bool force)
     }
 
     // Start the filter pump if needed
-    if ((pump[hour] && config.data.hour != hour) || force)
+    if (config.data.hour != hour)
     {
-        Serial.println("[Filter] On");
+        if (pump[hour] || config.pump.forceFilter)
+        {
+            Serial.println(F("[Filter] On"));
+            config.data.filterOn = true;
+            digitalWrite(pumpFilterRelayPin, LOW);
+        }
+        else
+        {
+            Serial.println(F("[Filter] Off"));
+            digitalWrite(pumpFilterRelayPin, HIGH);
+            config.data.filterOn = false;
+        }
         config.data.hour = hour;
-        config.data.filterOn = true;
-        digitalWrite(pumpFilterRelayPin, LOW);
-        return true;
     }
-    else if (!(pump[hour]) && !(force))
-    {
-        Serial.println("[Filter] Off");
-        digitalWrite(pumpFilterRelayPin, HIGH);
-        config.data.filterOn = false;
-        return false;
-    }
+    return config.data.filterOn;
 }
 
 bool setPhState(Aconfig &config, bool filterOn)

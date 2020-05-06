@@ -34,7 +34,8 @@ The local table is defined like this:
 | Temp  |Hour|0  |1  |2  |3  |4  |5  |6  |7  |8  |9  |10 |11 |12 |13 |14 |15 |16 |17 |18 |19 |20 |21 |22 |23 |
 |-------|----|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
 |  t<1  |    | X | X | X | X | X | X | X | X | X | X | X | X | X | X | X | X | X | X | X | X | X | X | X | X |
-|1<t<6  |    |   |   |   | X | X |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+|1<t<3  |    |   |   |   | X | X |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+|3<t<6  |    |   |   |   | X | X |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
 |6<t<9  |    |   |   |   | X | X | X |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
 |9<t<12 |    |   |   |   |   |   |   |   |   | X | X | X | X |   |   |   |   |   |   |   |   |   |   |   |   |
 |12<t<15|    |   |   |   |   |   |   |   |   | X | X | X |   |   |   | X | X |   |   |   |   |   |   |   |   |
@@ -62,7 +63,7 @@ Other table exemples:
 
 ## ToDo
 
-- force filter pump
-- fix temp for filter on 1 hour step
+- force filter pump for limited time
 - set hour if no ethernet shield present
 - add Hbridge driver for peristaltic pump (ph)
+- add ability to redefine filter pump steps or

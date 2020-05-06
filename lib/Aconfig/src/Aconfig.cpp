@@ -53,7 +53,7 @@ bool saveConfiguration(const char *filename, Aconfig &config)
     file2remove = const_cast<char *>(filename);
     SD.remove(file2remove);
 
-    Serial.print("[Conf] Opening ");
+    Serial.print(F("[Conf] Opening "));
     Serial.print(filename);
     Serial.println(F("..."));
     // Open file for writing
@@ -169,26 +169,4 @@ void convert2config(JsonDocument &doc, Aconfig &config)
     config.pump.forceFilter = doc["pump"]["forceFilter"];
     config.pump.forcePH = doc["pump"]["forcePH"];
     config.pump.forceCH = doc["pump"]["forceCH"];
-}
-
-// Prints the content of a file to the Serial
-void printFile(const char *filename)
-{
-    // Open file for reading
-    File file = SD.open(filename);
-    if (!file)
-    {
-        Serial.println(F("Failed to read file"));
-        return;
-    }
-
-    // Extract each characters by one by one
-    while (file.available())
-    {
-        Serial.print((char)file.read());
-    }
-    Serial.println();
-
-    // Close the file
-    file.close();
 }

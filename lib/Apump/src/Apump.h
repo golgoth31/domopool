@@ -7,6 +7,6 @@
 #define __APUMP_H_UNDEFINED__
 void pumpInit(int filterPin, int phPin);
 void pumpFullTime(bool pump[24], bool state);
-bool setFilterState(float tempMoy, int hour, bool force);
+bool setFilterState(Aconfig &config, int hour);
 bool setPhState(Aconfig &config, bool filterOn);
 #endif
