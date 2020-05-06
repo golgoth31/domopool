@@ -1,7 +1,7 @@
 #include "Aconfig.h"
 
 // Loads the configuration from a file
-void loadConfiguration(const char *filename, Config &config)
+void loadConfiguration(const char *filename, Aconfig &config)
 {
     // Open file for reading
     File file = SD.open(filename);
@@ -33,6 +33,9 @@ void loadConfiguration(const char *filename, Config &config)
         doc["time"]["dayLight"] = true;
         doc["time"]["ntpServer"] = "europe.pool.ntp.org";
         doc["time"]["timeZone"] = 2;
+        doc["pump"]["forceFilter"] = false;
+        doc["pump"]["forcePH"] = false;
+        doc["pump"]["forceCH"] = false;
     }
 
     // Copy values from the JsonDocument to the Config
@@ -43,7 +46,7 @@ void loadConfiguration(const char *filename, Config &config)
 }
 
 // Saves the configuration to a file
-bool saveConfiguration(const char *filename, Config &config)
+bool saveConfiguration(const char *filename, Aconfig &config)
 {
     // Delete existing file, otherwise the configuration is appended to the file
     char *file2remove;
@@ -80,7 +83,7 @@ bool saveConfiguration(const char *filename, Config &config)
 }
 
 // Saves the configuration to a file
-bool saveJson(String &data, Config &config, const char *filename)
+bool saveJson(String &data, Aconfig &config, const char *filename)
 {
     StaticJsonDocument<AconfigDocSize> doc;
     DeserializationError error = deserializeJson(doc, data);
@@ -98,12 +101,9 @@ bool saveJson(String &data, Config &config, const char *filename)
 }
 
 // Saves the configuration to a file
-// StaticJsonDocument<AconfigDocSize> convert2doc(Config &config)
-void convert2doc(Config &config, JsonDocument &doc)
+// StaticJsonDocument<AconfigDocSize> convert2doc(Aconfig &config)
+void convert2doc(Aconfig &config, JsonDocument &doc)
 {
-    // StaticJsonDocument<AconfigDocSize> doc;
-
-    // Set the values in the document
     doc["global"]["lcdBacklightDuration"] = config.global.lcdBacklightDuration;
     doc["time"]["initialized"] = config.time.initialized;
     doc["time"]["dayLight"] = config.time.dayLight;
@@ -134,17 +134,13 @@ void convert2doc(Config &config, JsonDocument &doc)
     doc["sensors"]["ph"]["enabled"] = config.sensConfig.ph.enabled;
     doc["sensors"]["ph"]["threshold"] = config.sensConfig.ph.threshold;
     doc["sensors"]["ph"]["val"] = config.sensConfig.ph.val;
-
-    // return doc;
+    doc["pump"]["forceFilter"] = config.pump.forceFilter;
+    doc["pump"]["forcePH"] = config.pump.forcePH;
+    doc["pump"]["forceCH"] = config.pump.forceCH;
 }
 
-void convert2config(JsonDocument &doc, Config &config)
+void convert2config(JsonDocument &doc, Aconfig &config)
 {
-    // StaticJsonDocument<AconfigDocSize> doc;
-    // deserializeJson(doc, data);
-    // // DeserializationError error = deserializeJson(doc, data);
-
-    // Config config;
     config.global.lcdBacklightDuration = doc["global"]["lcdBacklightDuration"];
     config.time.initialized = doc["time"]["initialized"];
     config.time.dayLight = doc["time"]["dayLight"];
@@ -170,7 +166,9 @@ void convert2config(JsonDocument &doc, Config &config)
         config.sensConfig.tout.addr[i] = doc["sensors"]["tout"]["addr"][i];
     }
     config.sensConfig.tdht.enabled = doc["sensors"]["tdht"]["enabled"];
-    // return config;
+    config.pump.forceFilter = doc["pump"]["forceFilter"];
+    config.pump.forcePH = doc["pump"]["forcePH"];
+    config.pump.forceCH = doc["pump"]["forceCH"];
 }
 
 // Prints the content of a file to the Serial

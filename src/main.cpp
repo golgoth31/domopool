@@ -66,7 +66,7 @@ byte Degree[8] = {
     0b00000,
     0b00000};
 
-Config config;
+Aconfig config;
 const char *filename = "config.jsn";
 
 bool serverStarted = false;
@@ -280,7 +280,7 @@ void loop(void)
     }
 
     filterPumpOn = setFilterState(tempMoy, hour(), config.pump.forceFilter);
-    phPumpOn = setPhState(config.sensConfig.ph, config.pump.forcePH, filterPumpOn);
+    phPumpOn = setPhState(config, filterPumpOn);
 
     count_time_30s++; // Count 15 cycles for sending XPL every 30s
     lastReadingTime = millis();

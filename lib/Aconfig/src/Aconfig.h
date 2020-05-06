@@ -59,20 +59,29 @@ struct Pump
     bool forceCH;
 };
 
-struct Config
+struct Data
+{
+    float curTemp;
+    float savedTemp;
+    bool filterOn;
+    int hour;
+};
+
+struct Aconfig
 {
     Network netConfig;
     Sensors sensConfig;
     Global global;
     Time time;
     Pump pump;
+    Data data;
 };
 
-void loadConfiguration(const char *filename, Config &config);
-bool saveConfiguration(const char *filename, Config &config);
-bool saveJson(String &data, Config &config, const char *filename);
-// StaticJsonDocument<AconfigDocSize> convert2doc(Config &config);
-void convert2doc(Config &config, JsonDocument &doc);
-void convert2config(JsonDocument &doc, Config &config);
+void loadConfiguration(const char *filename, Aconfig &config);
+bool saveConfiguration(const char *filename, Aconfig &config);
+bool saveJson(String &data, Aconfig &config, const char *filename);
+// StaticJsonDocument<AconfigDocSize> convert2doc(Aconfig &config);
+void convert2doc(Aconfig &config, JsonDocument &doc);
+void convert2config(JsonDocument &doc, Aconfig &config);
 void printFile(const char *filename);
 #endif

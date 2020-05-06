@@ -75,7 +75,28 @@ bool startEthernetServer(Network conf)
     }
 }
 
-void sendData(EthernetServer server, Config &config)
+void response200(EthernetClient &client)
+{
+    client.println("HTTP/1.1 200 OK");
+    client.println("Content-Type: application/json");
+    client.println("Connection: close");
+    client.println();
+}
+void response404(EthernetClient &client)
+{
+    client.println("HTTP/1.1 404 NotFound");
+    client.println("Content-Type: application/json");
+    client.println("Connection: close");
+    client.println();
+}
+void response500(EthernetClient &client)
+{
+    client.println("HTTP/1.1 500 Error");
+    client.println("Content-Type: application/json");
+    client.println("Connection: close");
+    client.println();
+}
+void sendData(EthernetServer server, Aconfig &config)
 {
     EthernetClient client = server.available();
     bool postRequest = false;
@@ -125,24 +146,29 @@ void sendData(EthernetServer server, Config &config)
                 }
                 else if (reqType.equals("POST"))
                 {
-                    Serial.print("[eth] Post body: ");
-                    Serial.println(reqBody);
-                    bool saved = saveJson(reqBody, config, "config.jsn");
-                    if (saved)
+                    if (reqURI.equals("/reboot"))
                     {
-                        client.println("HTTP/1.1 200 OK");
-                        client.println("Content-Type: application/json");
-                        client.println("Connection: close");
-                        client.println();
                         postRequest = true;
+                    }
+                    else if (reqURI.equals("/config"))
+                    {
+
+                        Serial.print("[eth] Post body: ");
+                        Serial.println(reqBody);
+                        bool saved = saveJson(reqBody, config, "config.jsn");
+                        if (saved)
+                        {
+                            response200(client);
+                        }
+                        else
+                        {
+                            response500(client);
+                        }
                     }
                     else
                     {
-                        client.println("HTTP/1.1 500 Error");
-                        client.println("Content-Type: application/json");
-                        client.println("Connection: close");
-                        client.println();
-                        postRequest = false;
+
+                        response404(client);
                     }
                 }
             }
@@ -151,11 +177,11 @@ void sendData(EthernetServer server, Config &config)
             // close the connection:
             client.stop();
             Serial.println("[Ethernet] Response sent");
-            // if (postRequest)
-            // {
-            //     Serial.println("[Ethernet] New configuration received, rebooting");
-            //     software_Reboot();
-            // }
+            if (postRequest)
+            {
+                Serial.println("[Ethernet] Rebooting");
+                software_Reboot();
+            }
         }
     }
 }
