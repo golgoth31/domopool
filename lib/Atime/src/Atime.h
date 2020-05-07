@@ -4,7 +4,15 @@
 #include <TimeLib.h>
 #include <Wire.h>
 #include <DS1307RTC.h>
+
+#ifdef __AVR_ATmega2560__
 #include <EthernetUdp.h>
+#endif
+
+#ifdef ESP32
+#include <WiFiUdp.h>
+#endif
+
 #include <NTPClient.h>
 
 #ifndef __ATIME_H_UNDEFINED__

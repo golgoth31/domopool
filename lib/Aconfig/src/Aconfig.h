@@ -1,6 +1,14 @@
-// #include <Arduino.h>
+#include <Arduino.h>
 #include <ArduinoJson.h>
+
+#ifdef __AVR_ATmega2560__
 #include <SD.h>
+#endif
+
+#ifdef ESP32
+#include "FS.h"
+#include "SPIFFS.h"
+#endif
 
 #ifndef __ACONFIG_H_UNDEFINED__
 #define __ACONFIG_H_UNDEFINED__

@@ -10,12 +10,20 @@
 #include <Wire.h>
 #include <LiquidCrystal.h>
 #include <SPI.h>
-#include <Ethernet.h>
-// #include <EthernetUdp.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <dht.h>
 #include <TimeLib.h>
+
+// #ifdef __AVR_ATmega2560__
+// #include <Ethernet.h>
+// EthernetServer server(80);
+// #endif
+
+// #ifdef ESP32
+// #include <WiFi.h>
+// WiFiServer server(80);
+// #endif
 
 #define ONE_WIRE_BUS 22
 #define lcdLEDPin 38
@@ -28,13 +36,13 @@
 // Adafruit SD shields and modules: pin 10
 // Sparkfun SD shield: pin 8
 // MKRZero SD: SDCARD_SS_PIN
-const int SDCARD_CS_PIN = 4;
-const int SDCARD_SS_PIN = 53;
+#define SDCARD_CS_PIN 4
+#define SDCARD_SS_PIN 53
 
 dht dhtClient;
 
 // Ethernet config
-EthernetServer server(80);
+
 // EthernetUDP ntpUDP;
 // NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 3600, 60000);
 
@@ -145,7 +153,7 @@ void setup(void)
   lcd.setCursor(0, 0);
   lcd.print(F("[Eth] 1/1"));
   Serial.println(F("[Eth] Starting server..."));
-  serverStarted = startEthernetServer(config.netConfig);
+  serverStarted = startNetwork(config.netConfig);
   if (serverStarted)
   {
     Serial.println(F("[Eth] Server is up"));
@@ -201,7 +209,7 @@ void loop(void)
     }
   }
 
-  sendData(server, config);
+  sendData(config);
 
   // Get sensors every 2 seconds
   if ((millis() - lastReadingTime) >= 2000)

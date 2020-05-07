@@ -1,5 +1,13 @@
 #include "Aethernet.h"
 
+#ifdef __AVR_ATmega2560__
+EthernetServer server(80);
+#endif
+
+#ifdef ESP32
+WiFiServer server(80);
+#endif
+
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 int ip1, ip2, ip3, ip4;
 
@@ -23,7 +31,7 @@ bool checkIP(const char *ip)
     return false;
 }
 
-bool startEthernetServer(Network conf)
+bool startNetwork(Network &conf)
 {
     int ethOK = 1;
     if (conf.dhcp)
@@ -93,7 +101,7 @@ void response500(EthernetClient &client)
     client.println(F("Content-Type: application/json"));
     client.println(F("Connection: close"));
 }
-void sendData(EthernetServer server, Aconfig &config)
+void sendData(Aconfig &config)
 {
     EthernetClient client = server.available();
     bool postRequest = false;
