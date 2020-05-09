@@ -4,7 +4,7 @@
 
 #ifndef __AESP32_H__
 #define __AESP32_H__
-void initStorage();
+bool initStorage();
 File openFile(const char *filename);
 File saveFile(const char *filename);
 #endif

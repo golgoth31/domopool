@@ -3,7 +3,7 @@
 
 #ifndef __AMEGA2560_H__
 #define __AMEGA2560_H__
-void initStorage();
+bool initStorage();
 File openFile(const char *filename);
 File saveFile(const char *filename);
 #endif

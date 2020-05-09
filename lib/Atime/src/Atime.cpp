@@ -3,7 +3,7 @@
 EthernetUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "europe.pool.ntp.org");
 
-String printTime()
+String printTime(bool seconds)
 {
     String time = "";
     if (hour() < 10)
@@ -11,18 +11,22 @@ String printTime()
         time += "0";
     }
     time += hour();
-    time += ":";
+    time += "h";
     if (minute() < 10)
     {
         time += "0";
     }
     time += minute();
-    time += ":";
-    if (second() < 10)
+    if (seconds)
     {
-        time += "0";
+        time += "m";
+        if (second() < 10)
+        {
+            time += "0";
+        }
+        time += second();
+        time += "s";
     }
-    time += second();
     return time;
 }
 

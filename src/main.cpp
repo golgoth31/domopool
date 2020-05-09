@@ -4,6 +4,7 @@
 #include <Apump.h>
 #include <Asensors.h>
 #include <Atime.h>
+#include <Adisplay.h>
 
 // include the dependencies
 #include <Arduino.h>
@@ -31,28 +32,19 @@ OneWire ow(ONE_WIRE_BUS);
 // int numTempSensors = 0;
 // Pass our oneWire reference to Dallas Temperature.
 DallasTemperature tempSensors(&ow);
-float tempMoy;
+// float tempMoy;
 
 // Creates an LCD object. Parameters: (rs, enable, d4, d5, d6, d7)
 LiquidCrystal lcd(12, 11, 9, 8, 7, 6);
 int lcdLEDButtonState = 0;
 bool lcdLEDBacklightState = true;
 unsigned long lcdBacklightTimer = 0;
-byte Degree[8] = {
-    0b00000,
-    0b00100,
-    0b01010,
-    0b00100,
-    0b00000,
-    0b00000,
-    0b00000,
-    0b00000};
 
 Aconfig config;
 const char *filename = "CONFIG.JSN";
 
 bool serverStarted = false;
-
+bool storageOk = false;
 bool filterPumpOn = false;
 bool phPumpOn = false;
 
@@ -71,16 +63,13 @@ void setup(void)
   pinMode(lcdLEDPin, OUTPUT);
   pinMode(lcdLEDButtonPin, INPUT_PULLUP);
   digitalWrite(lcdLEDPin, HIGH);
-  lcd.begin(16, 2);
-  lcd.createChar(0, Degree);
-  lcd.clear();
-  lcd.setCursor(0, 0);
+  lcdInit(lcd, 16, 2);
 
   Serial.println(F("Starting up"));
 
   // Initialize SD library
   lcd.print(F("[Stor] 1/1"));
-  initStorage();
+  storageOk = initStorage();
 
   // Should load default config if run for the first time
   lcd.setCursor(0, 0);
@@ -135,7 +124,7 @@ void setup(void)
   initSystemTime(config.time, serverStarted);
   setSyncProvider(RTC.get);
   Serial.print(F("[Time] Current time: "));
-  Serial.println(printTime());
+  Serial.println(printTime(true));
 
   lcd.setCursor(0, 0);
   lcd.print(F("[Conf] 2/2"));
@@ -143,6 +132,7 @@ void setup(void)
   saveConfiguration(filename, config);
   Serial.println(F("[Conf] Done"));
 
+  config.data.alarms.storage = storageOk;
   // Setup done, initialize default LCD
   lcd.setCursor(0, 0);
   lcd.print(F("Startup done"));
@@ -183,40 +173,22 @@ void loop(void)
   {
     tempSensors.requestTemperatures();
 
-    Serial.println(F("[Temp] Printing data..."));
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print(F("Tw:"));
-
-    Serial.print(F("Sensor 'tw' value: "));
+    Serial.print(F("Sensor 'twout' value: "));
     config.sensConfig.twout.val = tempSensors.getTempC(config.sensConfig.twout.addr);
     Serial.println(config.sensConfig.twout.val);
-    tempMoy = config.sensConfig.twout.val;
+    config.data.curTempWater = config.sensConfig.twout.val;
     if (config.sensConfig.twin.enabled)
     {
-      Serial.print(F("Sensor 'tin' value: "));
+      Serial.print(F("Sensor 'twin' value: "));
       config.sensConfig.twin.val = tempSensors.getTempC(config.sensConfig.twin.addr);
       Serial.println(config.sensConfig.twin.val);
-      lcd.setCursor(5, 1);
-      lcd.print(config.sensConfig.twin.val);
-      lcd.write(byte(0));
-      lcd.print(F("C"));
-      tempMoy = (config.sensConfig.twout.val + config.sensConfig.twin.val) / 2;
+      config.data.curTempWater = (config.sensConfig.twout.val + config.sensConfig.twin.val) / 2;
     }
-    lcd.setCursor(4, 0);
-    lcd.print(tempMoy);
-    lcd.write(byte(0));
-    lcd.print(F("C"));
+    config.data.curTempWater = roundTemp(config.data.curTempWater);
 
-    lcd.setCursor(0, 1);
-    lcd.print(F("Tamb:"));
     Serial.print(F("Sensor 'tamb' value: "));
     config.sensConfig.tamb.val = tempSensors.getTempC(config.sensConfig.tamb.addr);
     Serial.println(config.sensConfig.tamb.val);
-    lcd.setCursor(6, 1);
-    lcd.print(config.sensConfig.tamb.val);
-    lcd.write(byte(0));
-    lcd.print(F("C"));
 
     filterPumpOn = setFilterState(config, hour());
     phPumpOn = setPhState(config, filterPumpOn);
@@ -229,7 +201,9 @@ void loop(void)
   {
     Serial.println(F("*** 30s ***"));
     Serial.print(F("Time: "));
-    Serial.println(printTime());
+    Serial.println(printTime(true));
+
+    lcdPage1(lcd, config);
 
     count_time_30min++; // Count 60 cycles for 30 min
     count_time_30s = 0;
@@ -239,7 +213,7 @@ void loop(void)
     Serial.println(F("*** 30m ***"));
     setSytemTime(serverStarted);
     Serial.print(F("Time: "));
-    Serial.println(printTime());
+    Serial.println(printTime(true));
     count_time_30min = 0;
   }
 }

@@ -8,4 +8,5 @@
 #define __ASENSORS_H_UNDEFINED__
 bool checkAddress(DeviceAddress deviceAddress);
 void registerDevices(Sensors &config, DallasTemperature tempSensors);
+float roundTemp(float temp);
 #endif

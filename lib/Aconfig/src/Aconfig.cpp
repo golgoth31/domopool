@@ -4,7 +4,7 @@
 void loadConfiguration(const char *filename, Aconfig &config)
 {
     // Open file for reading
-    File file = saveFile(filename);
+    File file = openFile(filename);
 
     // Allocate a temporary JsonDocument
     // Don't forget to change the capacity to match your requirements.
@@ -47,22 +47,7 @@ void loadConfiguration(const char *filename, Aconfig &config)
 // Saves the configuration to a file
 bool saveConfiguration(const char *filename, Aconfig &config)
 {
-    // // Delete existing file, otherwise the configuration is appended to the file
-    // char *file2remove;
-    // file2remove = const_cast<char *>(filename);
-    // SD.remove(file2remove);
-
-    // Serial.print(F("[Conf] Opening "));
-    // Serial.print(filename);
-    // Serial.println(F("..."));
-    // // Open file for writing
-    // File file = SD.open(filename, FILE_WRITE);
-    // if (!file)
-    // {
-    //     Serial.println(F("Failed to create file"));
-    //     return false;
-    // }
-    File file = openFile(filename);
+    File file = saveFile(filename);
     // Allocate a temporary JsonDocument
     // Don't forget to change the capacity to match your requirements.
     // Use arduinojson.org/assistant to compute the capacity.

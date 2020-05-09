@@ -19,5 +19,5 @@
 #define __ATIME_H_UNDEFINED__
 void initSystemTime(Time &config, bool ethServerStarted);
 void setSytemTime(bool ethServerStarted);
-String printTime();
+String printTime(bool seconds);
 #endif

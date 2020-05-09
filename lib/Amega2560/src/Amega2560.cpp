@@ -8,17 +8,19 @@
 #define SDCARD_CS_PIN 4
 #define SDCARD_SS_PIN 53
 
-void initStorage()
+bool initStorage()
 {
     // Initialize SD library
     Serial.println(F("[SD] Initializing SD card reader..."));
+    delay(100);
     pinMode(SDCARD_SS_PIN, OUTPUT);
-    while (!SD.begin(SDCARD_CS_PIN))
+    if (!SD.begin(SDCARD_CS_PIN))
     {
-        Serial.println(F("[SD] Failed to initialize SD library"));
-        delay(1000);
+        Serial.println(F("[SD] Failed to initialize SD card reader"));
+        return false;
     }
     Serial.println(F("[SD] Initialized"));
+    return true;
 }
 
 // Loads the configuration from a file

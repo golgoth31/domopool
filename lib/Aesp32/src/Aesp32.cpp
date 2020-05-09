@@ -1,12 +1,13 @@
 #include "Aesp32.h"
 
-void initStorage()
+bool initStorage()
 {
     if (!SPIFFS.begin())
     {
         Serial.println("Card Mount Failed");
-        return;
+        return false;
     }
+    return true;
 }
 // Loads the configuration from a file
 File openFile(const char *filename)

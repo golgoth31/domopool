@@ -78,3 +78,23 @@ void registerDevices(Sensors &config, DallasTemperature tempSensors)
         }
     }
 }
+
+float roundTemp(float temp)
+{
+    float val;
+    int abs = temp;
+    float dec = temp - abs;
+    if (dec < 0.25)
+    {
+        val = abs;
+    }
+    else if (dec >= 0.25 && dec < 0.75)
+    {
+        val = abs;
+    }
+    else
+    {
+        val++;
+    }
+    return val;
+}
