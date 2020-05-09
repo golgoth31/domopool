@@ -1,5 +1,9 @@
 #include <Aconfig.h>
 
+#ifdef __AVR_ATmega2560__
+#include <Amega2560.h>
+#endif
+
 #include <Arduino.h>
 #include <TimeLib.h>
 

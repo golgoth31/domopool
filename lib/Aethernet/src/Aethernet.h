@@ -4,6 +4,7 @@
 #include <ArduinoJson.h>
 
 #ifdef __AVR_ATmega2560__
+#include <Amega2560.h>
 #include <Ethernet.h>
 #include <avr/wdt.h>
 #endif

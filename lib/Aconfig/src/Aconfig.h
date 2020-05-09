@@ -1,14 +1,13 @@
-#include <Arduino.h>
-#include <ArduinoJson.h>
-
 #ifdef __AVR_ATmega2560__
-#include <SD.h>
+#include <Amega2560.h>
 #endif
 
 #ifdef ESP32
-#include "FS.h"
-#include "SPIFFS.h"
+#include <Aesp32.h>
 #endif
+
+#include <Arduino.h>
+#include <ArduinoJson.h>
 
 #ifndef __ACONFIG_H_UNDEFINED__
 #define __ACONFIG_H_UNDEFINED__
@@ -40,9 +39,9 @@ struct Ch
 };
 struct Sensors
 {
-    Temp tin;
-    Temp tout;
-    Temp tdht;
+    Temp twin;
+    Temp twout;
+    Temp tamb;
     bool waitForConversion;
     int tempResolution;
     Ph ph;
@@ -67,12 +66,23 @@ struct Pump
     bool forceCH;
 };
 
+struct Alarms
+{
+    bool filter;
+    bool ph;
+    bool phVal;
+    bool rtc;
+    bool storage;
+};
+
 struct Data
 {
-    float curTemp;
-    float savedTemp;
+    float curTempWater;
+    float savedTempWater;
     bool filterOn;
+    bool phOn;
     int hour;
+    Alarms alarms;
 };
 
 struct Aconfig

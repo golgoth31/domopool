@@ -12,39 +12,13 @@
 #include <SPI.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
-#include <dht.h>
 #include <TimeLib.h>
-
-// #ifdef __AVR_ATmega2560__
-// #include <Ethernet.h>
-// EthernetServer server(80);
-// #endif
-
-// #ifdef ESP32
-// #include <WiFi.h>
-// WiFiServer server(80);
-// #endif
 
 #define ONE_WIRE_BUS 22
 #define lcdLEDPin 38
 #define lcdLEDButtonPin 34
-#define DHTPIN 40
 #define pumpFilterPin 48
 #define pumpPhPin 49
-// change this to match your SD shield or module;
-// Arduino Ethernet shield: pin 4
-// Adafruit SD shields and modules: pin 10
-// Sparkfun SD shield: pin 8
-// MKRZero SD: SDCARD_SS_PIN
-#define SDCARD_CS_PIN 4
-#define SDCARD_SS_PIN 53
-
-dht dhtClient;
-
-// Ethernet config
-
-// EthernetUDP ntpUDP;
-// NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 3600, 60000);
 
 // configure timed actions
 unsigned long lastReadingTime = 0;
@@ -75,7 +49,7 @@ byte Degree[8] = {
     0b00000};
 
 Aconfig config;
-const char *filename = "config.jsn";
+const char *filename = "CONFIG.JSN";
 
 bool serverStarted = false;
 
@@ -105,15 +79,8 @@ void setup(void)
   Serial.println(F("Starting up"));
 
   // Initialize SD library
-  lcd.print(F("[SD] 1/1"));
-  Serial.println(F("[SD] Initializing SD card reader..."));
-  pinMode(SDCARD_SS_PIN, OUTPUT);
-  while (!SD.begin(SDCARD_CS_PIN))
-  {
-    Serial.println(F("[SD] Failed to initialize SD library"));
-    delay(1000);
-  }
-  Serial.println(F("[SD] Initialized"));
+  lcd.print(F("[Stor] 1/1"));
+  initStorage();
 
   // Should load default config if run for the first time
   lcd.setCursor(0, 0);
@@ -215,77 +182,41 @@ void loop(void)
   if ((millis() - lastReadingTime) >= 2000)
   {
     tempSensors.requestTemperatures();
-    int chk;
-    String dhtError = "No data";
-    if (config.sensConfig.tdht.enabled)
-    {
-      chk = dhtClient.read11(DHTPIN);
-
-      switch (chk)
-      {
-      case DHTLIB_ERROR_CHECKSUM:
-        dhtError = "Checksum error";
-        break;
-      case DHTLIB_ERROR_TIMEOUT:
-        dhtError = "Time out error";
-        break;
-      case DHTLIB_ERROR_CONNECT:
-        dhtError = "Connect error";
-        break;
-      case DHTLIB_ERROR_ACK_L:
-        dhtError = "Ack Low error";
-        break;
-      case DHTLIB_ERROR_ACK_H:
-        dhtError = "Ack High error";
-        break;
-      default:
-        dhtError = "Unknown error";
-        break;
-      }
-    }
 
     Serial.println(F("[Temp] Printing data..."));
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print(F("Tout:"));
+    lcd.print(F("Tw:"));
 
-    Serial.print(F("Sensor 'tout' value: "));
-    config.sensConfig.tout.val = tempSensors.getTempC(config.sensConfig.tout.addr);
-    Serial.println(config.sensConfig.tout.val);
-    lcd.setCursor(6, 0);
-    lcd.print(config.sensConfig.tout.val);
-    lcd.write(byte(0));
-    lcd.print(F("C"));
-    if (config.sensConfig.tin.enabled)
+    Serial.print(F("Sensor 'tw' value: "));
+    config.sensConfig.twout.val = tempSensors.getTempC(config.sensConfig.twout.addr);
+    Serial.println(config.sensConfig.twout.val);
+    tempMoy = config.sensConfig.twout.val;
+    if (config.sensConfig.twin.enabled)
     {
-      lcd.setCursor(0, 1);
-      lcd.print(F("Tin:"));
       Serial.print(F("Sensor 'tin' value: "));
-      config.sensConfig.tin.val = tempSensors.getTempC(config.sensConfig.tin.addr);
-      Serial.println(config.sensConfig.tin.val);
+      config.sensConfig.twin.val = tempSensors.getTempC(config.sensConfig.twin.addr);
+      Serial.println(config.sensConfig.twin.val);
       lcd.setCursor(5, 1);
-      lcd.print(config.sensConfig.tin.val);
+      lcd.print(config.sensConfig.twin.val);
       lcd.write(byte(0));
       lcd.print(F("C"));
-      tempMoy = (config.sensConfig.tout.val + config.sensConfig.tin.val) / 2;
+      tempMoy = (config.sensConfig.twout.val + config.sensConfig.twin.val) / 2;
     }
-    else
-    {
-      tempMoy = config.sensConfig.tout.val;
-    }
+    lcd.setCursor(4, 0);
+    lcd.print(tempMoy);
+    lcd.write(byte(0));
+    lcd.print(F("C"));
 
-    if (config.sensConfig.tdht.enabled)
-    {
-      Serial.print(F("Sensor 'DHT' value: "));
-      if (chk == DHTLIB_OK)
-      {
-        Serial.println(dhtClient.temperature);
-      }
-      else
-      {
-        Serial.println(dhtError);
-      }
-    }
+    lcd.setCursor(0, 1);
+    lcd.print(F("Tamb:"));
+    Serial.print(F("Sensor 'tamb' value: "));
+    config.sensConfig.tamb.val = tempSensors.getTempC(config.sensConfig.tamb.addr);
+    Serial.println(config.sensConfig.tamb.val);
+    lcd.setCursor(6, 1);
+    lcd.print(config.sensConfig.tamb.val);
+    lcd.write(byte(0));
+    lcd.print(F("C"));
 
     filterPumpOn = setFilterState(config, hour());
     phPumpOn = setPhState(config, filterPumpOn);

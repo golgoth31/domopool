@@ -34,54 +34,47 @@ void printAddress(DeviceAddress deviceAddress)
 void registerDevices(Sensors &config, DallasTemperature tempSensors)
 {
     DeviceAddress deviceAddress;
-    bool devOk;
 
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 3; i++)
     {
-        Serial.print(F("[Sens] Sensor "));
-        Serial.print(i + 1);
-        Serial.print(F(" : "));
-        devOk = tempSensors.getAddress(deviceAddress, i);
-        printAddress(deviceAddress);
-        switch (i)
+        bool devOk = tempSensors.getAddress(deviceAddress, i);
+        if (devOk)
         {
-        case 0:
-            // Connect tout device and let the system register it
-            // Do we have registerd this sensor as tout
-            if (!checkAddress(deviceAddress, config.tout.addr))
+            bool twout = checkAddress(deviceAddress, config.twout.addr);
+            bool tamb = checkAddress(deviceAddress, config.tamb.addr);
+            bool twin = checkAddress(deviceAddress, config.twin.addr);
+
+            if (!config.twin.enabled)
             {
-                // Do we have registerd this sensor as tin, in case we replace a deffective device
-                if (!checkAddress(deviceAddress, config.tin.addr))
-                {
-                    // This device hasn't been registered, must be connected to tout
-                    Serial.println(F("[Sens] Updating tout configuration"));
-                    for (uint8_t i = 0; i < 8; i++)
-                    {
-                        config.tout.addr[i] = deviceAddress[i];
-                    }
-                }
+                twin = false;
             }
-            break;
-        case 1:
-            // we have a second device connected, set it as tin
-            if (devOk)
+            if (!(tamb || twin))
             {
-                if (!checkAddress(deviceAddress, config.tin.addr))
+                Serial.println(F("[Sens] twout address: "));
+                for (uint8_t i = 0; i < 8; i++)
                 {
-                    if (!checkAddress(deviceAddress, config.tout.addr))
-                    {
-                        Serial.println(F("[Sens] Updating tin configuration"));
-                        for (uint8_t i = 0; i < 8; i++)
-                        {
-                            config.tin.addr[i] = deviceAddress[i];
-                        }
-                        config.tin.enabled = true;
-                    }
+                    config.twout.addr[i] = deviceAddress[i];
                 }
+                printAddress(deviceAddress);
             }
-            break;
-        default:
-            break;
+            if (!(twout || twin))
+            {
+                Serial.println(F("[Sens] tamb address: "));
+                for (uint8_t i = 0; i < 8; i++)
+                {
+                    config.tamb.addr[i] = deviceAddress[i];
+                }
+                printAddress(deviceAddress);
+            }
+            if (!(twout || tamb))
+            {
+                Serial.println(F("[Sens] twin address: "));
+                for (uint8_t i = 0; i < 8; i++)
+                {
+                    config.twin.addr[i] = deviceAddress[i];
+                }
+                printAddress(deviceAddress);
+            }
         }
     }
 }

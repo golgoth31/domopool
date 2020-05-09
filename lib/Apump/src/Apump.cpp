@@ -35,40 +35,40 @@ bool setFilterState(Aconfig &config, int hour)
     pumpFullTime(pump, false);
 
     // keep using water temperature if last chown is below 2 degreC
-    if (config.data.filterOn || config.data.curTemp <= 2)
+    if (config.data.filterOn || config.data.curTempWater <= 2)
     {
-        config.data.savedTemp = config.data.curTemp;
+        config.data.savedTempWater = config.data.curTempWater;
     }
 
     // enable all if temp too low or to high
-    if (config.data.savedTemp <= 1 || config.data.savedTemp > 30)
+    if (config.data.savedTempWater <= 1 || config.data.savedTempWater > 30)
     {
         pumpFullTime(pump, true);
     }
 
     // put pump on based on temp/hour
-    else if (config.data.savedTemp > 1 && config.data.savedTemp <= 6)
+    else if (config.data.savedTempWater > 1 && config.data.savedTempWater <= 6)
     {
         for (int i = 3; i <= 4; i++)
         {
             pump[i] = true;
         };
     }
-    else if (config.data.savedTemp > 6 && config.data.savedTemp <= 9)
+    else if (config.data.savedTempWater > 6 && config.data.savedTempWater <= 9)
     {
         for (int i = 3; i <= 5; i++)
         {
             pump[i] = true;
         };
     }
-    else if (config.data.savedTemp > 9 && config.data.savedTemp <= 12)
+    else if (config.data.savedTempWater > 9 && config.data.savedTempWater <= 12)
     {
         for (int i = 8; i <= 11; i++)
         {
             pump[i] = true;
         };
     }
-    else if (config.data.savedTemp > 12 && config.data.savedTemp <= 15)
+    else if (config.data.savedTempWater > 12 && config.data.savedTempWater <= 15)
     {
         for (int i = 8; i <= 10; i++)
         {
@@ -79,7 +79,7 @@ bool setFilterState(Aconfig &config, int hour)
             pump[i] = true;
         };
     }
-    else if (config.data.savedTemp > 15 && config.data.savedTemp <= 18)
+    else if (config.data.savedTempWater > 15 && config.data.savedTempWater <= 18)
     {
         for (int i = 8; i <= 10; i++)
         {
@@ -90,7 +90,7 @@ bool setFilterState(Aconfig &config, int hour)
             pump[i] = true;
         };
     }
-    else if (config.data.savedTemp > 18 && config.data.savedTemp <= 21)
+    else if (config.data.savedTempWater > 18 && config.data.savedTempWater <= 21)
     {
         for (int i = 8; i <= 11; i++)
         {
@@ -101,7 +101,7 @@ bool setFilterState(Aconfig &config, int hour)
             pump[i] = true;
         };
     }
-    else if (config.data.savedTemp > 21 && config.data.savedTemp <= 23)
+    else if (config.data.savedTempWater > 21 && config.data.savedTempWater <= 23)
     {
         for (int i = 8; i <= 11; i++)
         {
@@ -112,7 +112,7 @@ bool setFilterState(Aconfig &config, int hour)
             pump[i] = true;
         };
     }
-    else if (config.data.savedTemp > 23 && config.data.savedTemp <= 26)
+    else if (config.data.savedTempWater > 23 && config.data.savedTempWater <= 26)
     {
         for (int i = 3; i <= 4; i++)
         {
@@ -127,7 +127,7 @@ bool setFilterState(Aconfig &config, int hour)
             pump[i] = true;
         };
     }
-    else if (config.data.savedTemp > 26 && config.data.savedTemp <= 28)
+    else if (config.data.savedTempWater > 26 && config.data.savedTempWater <= 28)
     {
         for (int i = 3; i <= 5; i++)
         {
@@ -142,7 +142,7 @@ bool setFilterState(Aconfig &config, int hour)
             pump[i] = true;
         };
     }
-    else if (config.data.savedTemp > 28 && config.data.savedTemp <= 30)
+    else if (config.data.savedTempWater > 28 && config.data.savedTempWater <= 30)
     {
         for (int i = 3; i <= 6; i++)
         {

@@ -4,7 +4,7 @@
 void loadConfiguration(const char *filename, Aconfig &config)
 {
     // Open file for reading
-    File file = SD.open(filename);
+    File file = saveFile(filename);
 
     // Allocate a temporary JsonDocument
     // Don't forget to change the capacity to match your requirements.
@@ -19,11 +19,10 @@ void loadConfiguration(const char *filename, Aconfig &config)
         doc["network"]["dhcp"] = true;
         for (int i = 0; i < 8; i++)
         {
-            doc["sensors"]["tin"]["addr"][i] = 0;
-            doc["sensors"]["tout"]["addr"][i] = 0;
+            doc["sensors"]["twin"]["addr"][i] = 0;
+            doc["sensors"]["twout"]["addr"][i] = 0;
         }
-        doc["sensors"]["tin"]["enabled"] = false;
-        doc["sensors"]["tdht"]["enabled"] = true;
+        doc["sensors"]["twin"]["enabled"] = false;
         doc["sensors"]["waitForConvertion"] = false;
         doc["sensors"]["tempResolution"] = 12;
         doc["sensors"]["ph"]["enabled"] = false;
@@ -48,22 +47,22 @@ void loadConfiguration(const char *filename, Aconfig &config)
 // Saves the configuration to a file
 bool saveConfiguration(const char *filename, Aconfig &config)
 {
-    // Delete existing file, otherwise the configuration is appended to the file
-    char *file2remove;
-    file2remove = const_cast<char *>(filename);
-    SD.remove(file2remove);
+    // // Delete existing file, otherwise the configuration is appended to the file
+    // char *file2remove;
+    // file2remove = const_cast<char *>(filename);
+    // SD.remove(file2remove);
 
-    Serial.print(F("[Conf] Opening "));
-    Serial.print(filename);
-    Serial.println(F("..."));
-    // Open file for writing
-    File file = SD.open(filename, FILE_WRITE);
-    if (!file)
-    {
-        Serial.println(F("Failed to create file"));
-        return false;
-    }
-
+    // Serial.print(F("[Conf] Opening "));
+    // Serial.print(filename);
+    // Serial.println(F("..."));
+    // // Open file for writing
+    // File file = SD.open(filename, FILE_WRITE);
+    // if (!file)
+    // {
+    //     Serial.println(F("Failed to create file"));
+    //     return false;
+    // }
+    File file = openFile(filename);
     // Allocate a temporary JsonDocument
     // Don't forget to change the capacity to match your requirements.
     // Use arduinojson.org/assistant to compute the capacity.
@@ -116,21 +115,25 @@ void convert2doc(Aconfig &config, JsonDocument &doc)
     doc["network"]["dns"] = config.netConfig.dns;
     doc["sensors"]["waitForConvertion"] = config.sensConfig.waitForConversion;
     doc["sensors"]["tempResolution"] = config.sensConfig.tempResolution;
-    doc["sensors"]["tin"]["enabled"] = config.sensConfig.tin.enabled;
-    doc["sensors"]["tin"]["val"] = config.sensConfig.tin.val;
+    doc["sensors"]["twin"]["enabled"] = config.sensConfig.twin.enabled;
+    doc["sensors"]["twin"]["val"] = config.sensConfig.twin.val;
     for (int i = 0; i < 8; i++)
     {
-        doc["sensors"]["tin"]["addr"][i] = config.sensConfig.tin.addr[i];
+        doc["sensors"]["twin"]["addr"][i] = config.sensConfig.twin.addr[i];
     }
 
-    doc["sensors"]["tout"]["enabled"] = true;
-    doc["sensors"]["tout"]["val"] = config.sensConfig.tout.val;
+    doc["sensors"]["twout"]["enabled"] = true;
+    doc["sensors"]["twout"]["val"] = config.sensConfig.twout.val;
     for (int i = 0; i < 8; i++)
     {
-        doc["sensors"]["tout"]["addr"][i] = config.sensConfig.tout.addr[i];
+        doc["sensors"]["twout"]["addr"][i] = config.sensConfig.twout.addr[i];
     }
-    doc["sensors"]["tdht"]["enabled"] = config.sensConfig.tdht.enabled;
-    doc["sensors"]["tdht"]["val"] = config.sensConfig.tdht.val;
+    doc["sensors"]["tamb"]["enabled"] = true;
+    for (int i = 0; i < 8; i++)
+    {
+        doc["sensors"]["tamb"]["addr"][i] = config.sensConfig.tamb.addr[i];
+    }
+    doc["sensors"]["tamb"]["val"] = config.sensConfig.tamb.val;
     doc["sensors"]["ph"]["enabled"] = config.sensConfig.ph.enabled;
     doc["sensors"]["ph"]["threshold"] = config.sensConfig.ph.threshold;
     doc["sensors"]["ph"]["val"] = config.sensConfig.ph.val;
@@ -155,17 +158,21 @@ void convert2config(JsonDocument &doc, Aconfig &config)
     config.sensConfig.ph.threshold = doc["sensors"]["ph"]["threshold"];
     config.sensConfig.waitForConversion = doc["sensors"]["waitForConvertion"];
     config.sensConfig.tempResolution = doc["sensors"]["tempResolution"];
-    config.sensConfig.tin.enabled = doc["sensors"]["tin"]["enabled"];
+    config.sensConfig.twin.enabled = doc["sensors"]["twin"]["enabled"];
     for (int i = 0; i < 8; i++)
     {
-        config.sensConfig.tin.addr[i] = doc["sensors"]["tin"]["addr"][i];
+        config.sensConfig.twin.addr[i] = doc["sensors"]["twin"]["addr"][i];
     }
-    config.sensConfig.tout.enabled = true;
+    config.sensConfig.twout.enabled = true;
     for (int i = 0; i < 8; i++)
     {
-        config.sensConfig.tout.addr[i] = doc["sensors"]["tout"]["addr"][i];
+        config.sensConfig.twout.addr[i] = doc["sensors"]["twout"]["addr"][i];
     }
-    config.sensConfig.tdht.enabled = doc["sensors"]["tdht"]["enabled"];
+    config.sensConfig.tamb.enabled = true;
+    for (int i = 0; i < 8; i++)
+    {
+        config.sensConfig.tamb.addr[i] = doc["sensors"]["tamb"]["addr"][i];
+    }
     config.pump.forceFilter = doc["pump"]["forceFilter"];
     config.pump.forcePH = doc["pump"]["forcePH"];
     config.pump.forceCH = doc["pump"]["forceCH"];
