@@ -1,3 +1,5 @@
+#include <Alarms.h>
+
 #include <LiquidCrystal.h>
 #include <SD.h>
 

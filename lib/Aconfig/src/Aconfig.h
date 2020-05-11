@@ -1,3 +1,5 @@
+#include <Alarms.h>
+
 #ifdef __AVR_ATmega2560__
 #include <Amega2560.h>
 #endif
@@ -23,6 +25,7 @@ struct Network
 struct Temp
 {
     bool enabled;
+    bool init;
     uint8_t addr[8];
     float val;
 };
@@ -70,7 +73,7 @@ struct Alarms
 {
     bool filter;
     bool ph;
-    bool phVal;
+    float phVal;
     bool rtc;
     bool storage;
 };
@@ -79,6 +82,7 @@ struct Data
 {
     float curTempWater;
     float savedTempWater;
+    bool startup;
     bool filterOn;
     bool phOn;
     int hour;
@@ -100,4 +104,5 @@ bool saveConfiguration(const char *filename, Aconfig &config);
 bool saveJson(String &data, Aconfig &config, const char *filename);
 void convert2doc(Aconfig &config, JsonDocument &doc);
 void convert2config(JsonDocument &doc, Aconfig &config);
+void initConfigData(Aconfig &config);
 #endif

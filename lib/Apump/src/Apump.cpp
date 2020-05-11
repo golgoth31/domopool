@@ -1,7 +1,6 @@
 #include "Apump.h"
 
 bool pump[24];
-char defaultRelayState = HIGH;
 int ton;
 int toff;
 bool phInject = false;
@@ -20,10 +19,16 @@ void pumpFullTime(bool pump[24], bool state)
 
 void pumpInit(int filterPin, int phPin)
 {
+    Serial.print(F("[Filter] Filter pin: "));
+    Serial.println(filterPin);
     pinMode(filterPin, OUTPUT);
+    digitalWrite(filterPin, HIGH);
+
+    Serial.print(F("[Filter] PH pin: "));
+    Serial.println(phPin);
     pinMode(phPin, OUTPUT);
-    digitalWrite(filterPin, defaultRelayState);
-    digitalWrite(phPin, defaultRelayState);
+    digitalWrite(phPin, HIGH);
+
     pumpFilterRelayPin = filterPin;
     pumpPhRelayPin = phPin;
 }
@@ -31,7 +36,6 @@ void pumpInit(int filterPin, int phPin)
 bool setFilterState(Aconfig &config, int hour)
 {
     // first disable all
-    Serial.println(F("[Filter] Setting filter state"));
     pumpFullTime(pump, false);
 
     // keep using water temperature if last chown is below 2 degreC
@@ -166,88 +170,90 @@ bool setFilterState(Aconfig &config, int hour)
             Serial.println(F("[Filter] On"));
             config.data.filterOn = true;
             digitalWrite(pumpFilterRelayPin, LOW);
+            // digitalWrite(pumpFilterRelayPin, HIGH);
         }
         else
         {
             Serial.println(F("[Filter] Off"));
             digitalWrite(pumpFilterRelayPin, HIGH);
+            // digitalWrite(pumpFilterRelayPin, LOW);
             config.data.filterOn = false;
         }
         config.data.hour = hour;
     }
+    Serial.print(F("[Filter] Pump state: "));
+    Serial.println(config.data.filterOn);
     return config.data.filterOn;
 }
 
 bool setPhState(Aconfig &config, bool filterOn)
 {
-    if (config.sensConfig.ph.enabled)
+    // Ph pump have 10m cycles (600s)
+    // activate pump for 20% of 10m if ph val is under threshold+0.15
+    if ((config.sensConfig.ph.val <= config.sensConfig.ph.threshold) && !(phInject))
     {
-        // Ph pump have 10m cycles (600s)
-        // activate pump for 20% of 10m if ph val is under threshold+0.15
-        if ((config.sensConfig.ph.val <= config.sensConfig.ph.threshold) && !(phInject))
-        {
-            ton = 0;
-        }
-        else if ((config.sensConfig.ph.val <= (config.sensConfig.ph.threshold + 0.15)) && !(phInject))
-        {
-            ton = 120;
-            phInject = true;
-            timestamp = now();
-        }
-        // activate pump for 50% of 10m if ph val is under threshold+0.30
-        else if ((config.sensConfig.ph.val <= (config.sensConfig.ph.threshold + 0.30)) && !(phInject))
-        {
-            ton = 300;
-            phInject = true;
-            timestamp = now();
-        }
-        // activate pump for 75% of 10m if ph val is under threshold+0.45
-        else if ((config.sensConfig.ph.val <= (config.sensConfig.ph.threshold + 0.45)) && !(phInject))
-        {
-            ton = 450;
-            phInject = true;
-            timestamp = now();
-        }
-        // activate pump for 100% of 10m if ph val is over threshold+0.45
-        else if ((config.sensConfig.ph.val > (config.sensConfig.ph.threshold + 0.45)) && !(phInject))
-        {
-            ton = 600;
-            phInject = true;
-            timestamp = now();
-        }
-
-        if (phInject)
-        {
-            int curTimestamp = now();
-            int deltaTime = curTimestamp - timestamp;
-            if (deltaTime < ton)
-            {
-                phOn = true;
-            }
-            else
-            {
-                phOn = false;
-            }
-            if (deltaTime >= 600)
-            {
-                phInject = false;
-            }
-        }
+        ton = 0;
     }
-    else
+    else if ((config.sensConfig.ph.val <= (config.sensConfig.ph.threshold + 0.15)) && !(phInject))
     {
-        phOn = false;
+        ton = 120;
+        phInject = true;
+        timestamp = now();
+    }
+    // activate pump for 50% of 10m if ph val is under threshold+0.30
+    else if ((config.sensConfig.ph.val <= (config.sensConfig.ph.threshold + 0.30)) && !(phInject))
+    {
+        ton = 300;
+        phInject = true;
+        timestamp = now();
+    }
+    // activate pump for 75% of 10m if ph val is under threshold+0.45
+    else if ((config.sensConfig.ph.val <= (config.sensConfig.ph.threshold + 0.45)) && !(phInject))
+    {
+        ton = 450;
+        phInject = true;
+        timestamp = now();
+    }
+    // activate pump for 100% of 10m if ph val is over threshold+0.45
+    else if ((config.sensConfig.ph.val > (config.sensConfig.ph.threshold + 0.45)) && !(phInject))
+    {
+        ton = 600;
+        phInject = true;
+        timestamp = now();
+    }
+
+    if (phInject)
+    {
+        int curTimestamp = now();
+        int deltaTime = curTimestamp - timestamp;
+        if (deltaTime < ton)
+        {
+            phOn = true;
+        }
+        else
+        {
+            phOn = false;
+        }
+        if (deltaTime >= 600)
+        {
+            phInject = false;
+        }
     }
 
     // Pilotage Relais Pompe Injection Ph
     if ((phOn || config.pump.forcePH) && filterOn)
     {
+        // digitalWrite(pumpPhRelayPin, HIGH);
         digitalWrite(pumpPhRelayPin, LOW);
-        return true;
+        config.data.phOn = true;
     }
     else
     {
         digitalWrite(pumpPhRelayPin, HIGH);
-        return false;
+        // digitalWrite(pumpPhRelayPin, LOW);
+        config.data.phOn = false;
     }
+    Serial.print(F("[PH] Pump state: "));
+    Serial.println(config.data.phOn);
+    return config.data.phOn;
 }

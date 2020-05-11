@@ -17,9 +17,11 @@ bool initStorage()
     if (!SD.begin(SDCARD_CS_PIN))
     {
         Serial.println(F("[SD] Failed to initialize SD card reader"));
+        setStorageAlarm(true);
         return false;
     }
     Serial.println(F("[SD] Initialized"));
+    setStorageAlarm(false);
     return true;
 }
 

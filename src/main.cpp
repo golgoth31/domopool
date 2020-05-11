@@ -5,6 +5,7 @@
 #include <Asensors.h>
 #include <Atime.h>
 #include <Adisplay.h>
+#include <Alarms.h>
 
 // include the dependencies
 #include <Arduino.h>
@@ -18,8 +19,8 @@
 #define ONE_WIRE_BUS 22
 #define lcdLEDPin 38
 #define lcdLEDButtonPin 34
-#define pumpFilterPin 48
-#define pumpPhPin 49
+#define filterPin 48
+#define phPin 49
 
 // configure timed actions
 unsigned long lastReadingTime = 0;
@@ -32,7 +33,7 @@ OneWire ow(ONE_WIRE_BUS);
 // int numTempSensors = 0;
 // Pass our oneWire reference to Dallas Temperature.
 DallasTemperature tempSensors(&ow);
-// float tempMoy;
+float tempMoy;
 
 // Creates an LCD object. Parameters: (rs, enable, d4, d5, d6, d7)
 LiquidCrystal lcd(12, 11, 9, 8, 7, 6);
@@ -57,7 +58,7 @@ void setup(void)
     ; // wait for serial port to connect. Needed for native USB port only
   }
 
-  pumpInit(pumpFilterPin, pumpPhPin);
+  pumpInit(filterPin, phPin);
 
   // set up the LCD
   pinMode(lcdLEDPin, OUTPUT);
@@ -97,6 +98,7 @@ void setup(void)
   lcd.print(F("[Sens] 3/4"));
   Serial.println(F("[Sens] Registering addresses..."));
   registerDevices(config.sensConfig, tempSensors);
+  showAddressFromEeprom();
 
   lcd.setCursor(0, 0);
   lcd.print(F("[Sens] 4/4"));
@@ -132,8 +134,11 @@ void setup(void)
   saveConfiguration(filename, config);
   Serial.println(F("[Conf] Done"));
 
-  config.data.alarms.storage = storageOk;
+  initConfigData(config);
+  config.data.alarms.storage = getStorageAlarm();
+
   // Setup done, initialize default LCD
+  lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print(F("Startup done"));
 }
@@ -173,25 +178,33 @@ void loop(void)
   {
     tempSensors.requestTemperatures();
 
-    Serial.print(F("Sensor 'twout' value: "));
+    // Serial.print(F("Sensor 'twout' value: "));
     config.sensConfig.twout.val = tempSensors.getTempC(config.sensConfig.twout.addr);
-    Serial.println(config.sensConfig.twout.val);
-    config.data.curTempWater = config.sensConfig.twout.val;
+    // Serial.println(config.sensConfig.twout.val);
+    tempMoy = config.sensConfig.twout.val;
     if (config.sensConfig.twin.enabled)
     {
-      Serial.print(F("Sensor 'twin' value: "));
+      // Serial.print(F("Sensor 'twin' value: "));
       config.sensConfig.twin.val = tempSensors.getTempC(config.sensConfig.twin.addr);
-      Serial.println(config.sensConfig.twin.val);
-      config.data.curTempWater = (config.sensConfig.twout.val + config.sensConfig.twin.val) / 2;
+      // Serial.println(config.sensConfig.twin.val);
+      tempMoy = (config.sensConfig.twout.val + config.sensConfig.twin.val) / 2;
     }
-    config.data.curTempWater = roundTemp(config.data.curTempWater);
+    config.data.curTempWater = roundTemp(tempMoy);
+    Serial.print(F("Sensor water value: "));
+    Serial.println(config.data.curTempWater);
 
     Serial.print(F("Sensor 'tamb' value: "));
     config.sensConfig.tamb.val = tempSensors.getTempC(config.sensConfig.tamb.addr);
     Serial.println(config.sensConfig.tamb.val);
 
-    filterPumpOn = setFilterState(config, hour());
-    phPumpOn = setPhState(config, filterPumpOn);
+    if (!config.data.startup)
+    {
+      filterPumpOn = setFilterState(config, hour());
+      if (config.sensConfig.ph.enabled)
+      {
+        phPumpOn = setPhState(config, filterPumpOn);
+      }
+    }
 
     count_time_30s++; // Count 15 cycles for sending XPL every 30s
     lastReadingTime = millis();
@@ -202,6 +215,12 @@ void loop(void)
     Serial.println(F("*** 30s ***"));
     Serial.print(F("Time: "));
     Serial.println(printTime(true));
+    if (config.data.startup)
+    {
+      Serial.println(F("End of startup blanking time"));
+      config.data.startup = false;
+      config.data.savedTempWater = config.data.curTempWater;
+    }
 
     lcdPage1(lcd, config);
 

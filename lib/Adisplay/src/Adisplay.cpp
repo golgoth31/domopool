@@ -23,17 +23,17 @@ void lcdPage1(LiquidCrystal &lcd, Aconfig &config)
     // print water temp
     lcd.setCursor(0, 0);
     lcd.print(F("Tw:"));
-    lcd.setCursor(4, 0);
+    lcd.setCursor(3, 0);
     lcd.print(config.data.curTempWater);
     lcd.write(byte(0));
     lcd.print(F("C"));
     // print hour
-    lcd.setCursor(12, 0);
+    lcd.setCursor(11, 0);
     lcd.print(printTime(false));
     // print ambiant temp
     lcd.setCursor(0, 1);
     lcd.print(F("Tamb:"));
-    lcd.setCursor(6, 1);
+    lcd.setCursor(5, 1);
     lcd.print(config.sensConfig.tamb.val);
     lcd.write(byte(0));
     lcd.print(F("C"));

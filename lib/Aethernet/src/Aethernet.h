@@ -1,4 +1,5 @@
 #include <Aconfig.h>
+#include <Asensors.h>
 
 #include <Arduino.h>
 #include <ArduinoJson.h>

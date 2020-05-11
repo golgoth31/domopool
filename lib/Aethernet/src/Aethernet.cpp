@@ -131,7 +131,7 @@ void sendData(Aconfig &config)
                 String reqBody = client.readStringUntil('\n');
 
                 // Serial.println(reqType);
-                Serial.println(reqURI);
+                // Serial.println(reqURI);
                 // Serial.println(reqProtocol);
                 // Serial.println(reqBody);
                 StaticJsonDocument<AconfigDocSize> httpResponse;
@@ -144,6 +144,12 @@ void sendData(Aconfig &config)
                         compile += " ";
                         compile += __TIME__;
                         httpResponse["compile"] = compile;
+                        Serial.println(compile);
+                        client.print(F("Content-Length: "));
+                        client.println(measureJsonPretty(httpResponse));
+                        client.println();
+
+                        serializeJsonPretty(httpResponse, client);
                     }
                     else if (reqURI.equals("/config"))
                     {
@@ -151,6 +157,7 @@ void sendData(Aconfig &config)
                         response200(client);
                         client.print(F("Content-Length: "));
                         client.println(measureJsonPretty(httpResponse));
+                        client.println();
 
                         serializeJsonPretty(httpResponse, client);
                     }
@@ -163,6 +170,13 @@ void sendData(Aconfig &config)
                 {
                     if (reqURI.equals("/reboot"))
                     {
+                        response200(client);
+                        postRequest = true;
+                    }
+                    else if (reqURI.equals("/reset"))
+                    {
+                        resetEepromSensorsTemp();
+                        response200(client);
                         postRequest = true;
                     }
                     else if (reqURI.equals("/config"))
