@@ -1,7 +1,7 @@
 #include "Aconfig.h"
 
 // Loads the configuration from a file
-void loadConfiguration(const char *filename, Aconfig &config)
+void loadConfiguration(const char *filename, Config &config)
 {
     // Open file for reading
     File file = openFile(filename);
@@ -9,7 +9,7 @@ void loadConfiguration(const char *filename, Aconfig &config)
     // Allocate a temporary JsonDocument
     // Don't forget to change the capacity to match your requirements.
     // Use arduinojson.org/v6/assistant to compute the capacity.
-    StaticJsonDocument<AconfigDocSize> doc;
+    StaticJsonDocument<ConfigDocSize> doc;
 
     // Deserialize the JSON document
     DeserializationError error = deserializeJson(doc, file);
@@ -49,13 +49,13 @@ void loadConfiguration(const char *filename, Aconfig &config)
 }
 
 // Saves the configuration to a file
-bool saveConfiguration(const char *filename, Aconfig &config)
+bool saveConfiguration(const char *filename, Config &config)
 {
     File file = saveFile(filename);
     // Allocate a temporary JsonDocument
     // Don't forget to change the capacity to match your requirements.
     // Use arduinojson.org/assistant to compute the capacity.
-    StaticJsonDocument<AconfigDocSize> doc;
+    StaticJsonDocument<ConfigDocSize> doc;
     convert2doc(config, doc);
 
     // Serialize JSON to file
@@ -71,9 +71,9 @@ bool saveConfiguration(const char *filename, Aconfig &config)
 }
 
 // Saves the configuration to a file
-bool saveJson(String &data, Aconfig &config, const char *filename)
+bool saveJson(String &data, Config &config, const char *filename)
 {
-    StaticJsonDocument<AconfigDocSize> doc;
+    StaticJsonDocument<ConfigDocSize> doc;
     DeserializationError error = deserializeJson(doc, data);
     if (error)
     {
@@ -89,53 +89,52 @@ bool saveJson(String &data, Aconfig &config, const char *filename)
 }
 
 // Saves the configuration to a file
-// StaticJsonDocument<AconfigDocSize> convert2doc(Aconfig &config)
-void convert2doc(Aconfig &config, JsonDocument &doc)
+// StaticJsonDocument<ConfigDocSize> convert2doc(Config &config)
+void convert2doc(Config &config, JsonDocument &doc)
 {
     doc["global"]["lcdBacklightDuration"] = config.global.lcdBacklightDuration;
     doc["time"]["initialized"] = config.time.initialized;
     doc["time"]["dayLight"] = config.time.dayLight;
     doc["time"]["ntpServer"] = config.time.ntpServer;
     doc["time"]["timeZone"] = config.time.timeZone;
-    doc["data"]["alarms"]["storage"] = getStorageAlarm();
-    doc["network"]["dhcp"] = config.netConfig.dhcp;
-    doc["network"]["ip"] = config.netConfig.ip;
-    doc["network"]["gateway"] = config.netConfig.gateway;
-    doc["network"]["netmask"] = config.netConfig.netmask;
-    doc["network"]["dns"] = config.netConfig.dns;
-    doc["sensors"]["waitForConvertion"] = config.sensConfig.waitForConversion;
-    doc["sensors"]["tempResolution"] = config.sensConfig.tempResolution;
-    doc["sensors"]["twin"]["enabled"] = config.sensConfig.twin.enabled;
-    doc["sensors"]["twin"]["init"] = config.sensConfig.twin.init;
-    doc["sensors"]["twin"]["val"] = config.sensConfig.twin.val;
+    doc["network"]["dhcp"] = config.network.dhcp;
+    doc["network"]["ip"] = config.network.ip;
+    doc["network"]["gateway"] = config.network.gateway;
+    doc["network"]["netmask"] = config.network.netmask;
+    doc["network"]["dns"] = config.network.dns;
+    doc["sensors"]["waitForConvertion"] = config.sensors.waitForConversion;
+    doc["sensors"]["tempResolution"] = config.sensors.tempResolution;
+    doc["sensors"]["twin"]["enabled"] = config.sensors.twin.enabled;
+    doc["sensors"]["twin"]["init"] = config.sensors.twin.init;
+    doc["sensors"]["twin"]["val"] = config.sensors.twin.val;
     for (int i = 0; i < 8; i++)
     {
-        doc["sensors"]["twin"]["addr"][i] = config.sensConfig.twin.addr[i];
+        doc["sensors"]["twin"]["addr"][i] = config.sensors.twin.addr[i];
     }
 
     doc["sensors"]["twout"]["enabled"] = true;
-    doc["sensors"]["twout"]["init"] = config.sensConfig.twout.init;
-    doc["sensors"]["twout"]["val"] = config.sensConfig.twout.val;
+    doc["sensors"]["twout"]["init"] = config.sensors.twout.init;
+    doc["sensors"]["twout"]["val"] = config.sensors.twout.val;
     for (int i = 0; i < 8; i++)
     {
-        doc["sensors"]["twout"]["addr"][i] = config.sensConfig.twout.addr[i];
+        doc["sensors"]["twout"]["addr"][i] = config.sensors.twout.addr[i];
     }
     doc["sensors"]["tamb"]["enabled"] = true;
-    doc["sensors"]["tamb"]["init"] = config.sensConfig.tamb.init;
+    doc["sensors"]["tamb"]["init"] = config.sensors.tamb.init;
     for (int i = 0; i < 8; i++)
     {
-        doc["sensors"]["tamb"]["addr"][i] = config.sensConfig.tamb.addr[i];
+        doc["sensors"]["tamb"]["addr"][i] = config.sensors.tamb.addr[i];
     }
-    doc["sensors"]["tamb"]["val"] = config.sensConfig.tamb.val;
-    doc["sensors"]["ph"]["enabled"] = config.sensConfig.ph.enabled;
-    doc["sensors"]["ph"]["threshold"] = config.sensConfig.ph.threshold;
-    doc["sensors"]["ph"]["val"] = config.sensConfig.ph.val;
+    doc["sensors"]["tamb"]["val"] = config.sensors.tamb.val;
+    doc["sensors"]["ph"]["enabled"] = config.sensors.ph.enabled;
+    doc["sensors"]["ph"]["threshold"] = config.sensors.ph.threshold;
+    doc["sensors"]["ph"]["val"] = config.sensors.ph.val;
     doc["pump"]["forceFilter"] = config.pump.forceFilter;
     doc["pump"]["forcePH"] = config.pump.forcePH;
     doc["pump"]["forceCH"] = config.pump.forceCH;
 }
 
-void convert2config(JsonDocument &doc, Aconfig &config)
+void convert2config(JsonDocument &doc, Config &config)
 {
     config.global.lcdBacklightDuration = doc["global"]["lcdBacklightDuration"];
     config.time.initialized = doc["time"]["initialized"];
@@ -143,39 +142,39 @@ void convert2config(JsonDocument &doc, Aconfig &config)
     config.time.ntpServer = doc["time"]["ntpServer"];
     config.time.timeZone = doc["time"]["timeZone"];
     config.data.alarms.storage = doc["data"]["alarms"]["storage"];
-    config.netConfig.dhcp = doc["network"]["dhcp"];
-    config.netConfig.ip = doc["network"]["ip"];
-    config.netConfig.gateway = doc["network"]["gateway"];
-    config.netConfig.netmask = doc["network"]["netmask"];
-    config.netConfig.dns = doc["network"]["dns"];
-    config.sensConfig.ph.enabled = doc["sensors"]["ph"]["enabled"];
-    config.sensConfig.ph.threshold = doc["sensors"]["ph"]["threshold"];
-    config.sensConfig.waitForConversion = doc["sensors"]["waitForConvertion"];
-    config.sensConfig.tempResolution = doc["sensors"]["tempResolution"];
-    config.sensConfig.twin.enabled = doc["sensors"]["twin"]["enabled"];
-    config.sensConfig.twin.init = doc["sensors"]["twin"]["init"];
+    config.network.dhcp = doc["network"]["dhcp"];
+    config.network.ip = doc["network"]["ip"];
+    config.network.gateway = doc["network"]["gateway"];
+    config.network.netmask = doc["network"]["netmask"];
+    config.network.dns = doc["network"]["dns"];
+    config.sensors.ph.enabled = doc["sensors"]["ph"]["enabled"];
+    config.sensors.ph.threshold = doc["sensors"]["ph"]["threshold"];
+    config.sensors.waitForConversion = doc["sensors"]["waitForConvertion"];
+    config.sensors.tempResolution = doc["sensors"]["tempResolution"];
+    config.sensors.twin.enabled = doc["sensors"]["twin"]["enabled"];
+    config.sensors.twin.init = doc["sensors"]["twin"]["init"];
     for (int i = 0; i < 8; i++)
     {
-        config.sensConfig.twin.addr[i] = doc["sensors"]["twin"]["addr"][i];
+        config.sensors.twin.addr[i] = doc["sensors"]["twin"]["addr"][i];
     }
-    config.sensConfig.twout.enabled = true;
-    config.sensConfig.twout.init = doc["sensors"]["twout"]["init"];
+    config.sensors.twout.enabled = true;
+    config.sensors.twout.init = doc["sensors"]["twout"]["init"];
     for (int i = 0; i < 8; i++)
     {
-        config.sensConfig.twout.addr[i] = doc["sensors"]["twout"]["addr"][i];
+        config.sensors.twout.addr[i] = doc["sensors"]["twout"]["addr"][i];
     }
-    config.sensConfig.tamb.enabled = true;
-    config.sensConfig.tamb.init = doc["sensors"]["tamb"]["init"];
+    config.sensors.tamb.enabled = true;
+    config.sensors.tamb.init = doc["sensors"]["tamb"]["init"];
     for (int i = 0; i < 8; i++)
     {
-        config.sensConfig.tamb.addr[i] = doc["sensors"]["tamb"]["addr"][i];
+        config.sensors.tamb.addr[i] = doc["sensors"]["tamb"]["addr"][i];
     }
     config.pump.forceFilter = doc["pump"]["forceFilter"];
     config.pump.forcePH = doc["pump"]["forcePH"];
     config.pump.forceCH = doc["pump"]["forceCH"];
 }
 
-void initConfigData(Aconfig &config)
+void initConfigData(Config &config)
 {
     config.data.startup = true;
     config.data.filterOn = false;

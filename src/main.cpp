@@ -30,8 +30,6 @@ int count_time_24h = 0;   // used to trigger action every 24h (2880*30)
 
 // Setup a oneWire instance to communicate with any OneWire devices
 OneWire ow(ONE_WIRE_BUS);
-// int numTempSensors = 0;
-// Pass our oneWire reference to Dallas Temperature.
 DallasTemperature tempSensors(&ow);
 float tempMoy;
 
@@ -41,7 +39,7 @@ int lcdLEDButtonState = 0;
 bool lcdLEDBacklightState = true;
 unsigned long lcdBacklightTimer = 0;
 
-Aconfig config;
+Config config;
 const char *filename = "CONFIG.JSN";
 
 bool serverStarted = false;
@@ -51,188 +49,188 @@ bool phPumpOn = false;
 
 void setup(void)
 {
-  // start serial port
-  Serial.begin(115200);
-  while (!Serial)
-  {
-    ; // wait for serial port to connect. Needed for native USB port only
-  }
+    // start serial port
+    Serial.begin(115200);
+    while (!Serial)
+    {
+        ; // wait for serial port to connect. Needed for native USB port only
+    }
 
-  pumpInit(filterPin, phPin);
+    pumpInit(filterPin, phPin);
 
-  // set up the LCD
-  pinMode(lcdLEDPin, OUTPUT);
-  pinMode(lcdLEDButtonPin, INPUT_PULLUP);
-  digitalWrite(lcdLEDPin, HIGH);
-  lcdInit(lcd, 16, 2);
+    // set up the LCD
+    pinMode(lcdLEDPin, OUTPUT);
+    pinMode(lcdLEDButtonPin, INPUT_PULLUP);
+    digitalWrite(lcdLEDPin, HIGH);
+    lcdInit(lcd, 16, 2);
 
-  Serial.println(F("Starting up"));
+    Serial.println(F("Starting up"));
 
-  // Initialize SD library
-  lcd.print(F("[Stor] 1/1"));
-  storageOk = initStorage();
+    // Initialize SD library
+    lcd.print(F("[Stor] 1/1"));
+    storageOk = initStorage();
 
-  // Should load default config if run for the first time
-  lcd.setCursor(0, 0);
-  lcd.print(F("[Conf] 1/2"));
-  Serial.println(F("[Conf] Loading configuration..."));
-  loadConfiguration(filename, config);
+    // Should load default config if run for the first time
+    lcd.setCursor(0, 0);
+    lcd.print(F("[Conf] 1/2"));
+    Serial.println(F("[Conf] Loading configuration..."));
+    loadConfiguration(filename, config);
 
-  // Start up the library
-  lcd.setCursor(0, 0);
-  lcd.print(F("[Sens] 1/4"));
-  Serial.println(F("[Sens] Starting..."));
-  // start ds18b20 sensors
-  tempSensors.begin();
+    // Start up the library
+    lcd.setCursor(0, 0);
+    lcd.print(F("[Sens] 1/4"));
+    Serial.println(F("[Sens] Starting..."));
+    // start ds18b20 sensors
+    tempSensors.begin();
 
-  // locate devices on the bus
-  // lcd.setCursor(0, 0);
-  // lcd.print("[Sens] 2/4");
-  // Serial.println("[Sens] Locating devices...");
-  // Serial.print("[Sens] Found ");
-  // numTempSensors = tempSensors.getDeviceCount();
-  // Serial.print(numTempSensors, DEC);
-  // Serial.println(" devices.");
+    // locate devices on the bus
+    // lcd.setCursor(0, 0);
+    // lcd.print("[Sens] 2/4");
+    // Serial.println("[Sens] Locating devices...");
+    // Serial.print("[Sens] Found ");
+    // numTempSensors = tempSensors.getDeviceCount();
+    // Serial.print(numTempSensors, DEC);
+    // Serial.println(" devices.");
 
-  lcd.setCursor(0, 0);
-  lcd.print(F("[Sens] 3/4"));
-  Serial.println(F("[Sens] Registering addresses..."));
-  registerDevices(config.sensConfig, tempSensors);
-  showAddressFromEeprom();
+    lcd.setCursor(0, 0);
+    lcd.print(F("[Sens] 3/4"));
+    Serial.println(F("[Sens] Registering addresses..."));
+    registerDevices(config.sensors, tempSensors);
+    showAddressFromEeprom();
 
-  lcd.setCursor(0, 0);
-  lcd.print(F("[Sens] 4/4"));
-  Serial.println(F("[Sens] Setting sensors options..."));
-  tempSensors.setWaitForConversion(config.sensConfig.waitForConversion);
-  tempSensors.setResolution(config.sensConfig.tempResolution);
+    lcd.setCursor(0, 0);
+    lcd.print(F("[Sens] 4/4"));
+    Serial.println(F("[Sens] Setting sensors options..."));
+    tempSensors.setWaitForConversion(config.sensors.waitForConversion);
+    tempSensors.setResolution(config.sensors.tempResolution);
 
-  // Start ethernet service
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print(F("[Eth] 1/1"));
-  Serial.println(F("[Eth] Starting server..."));
-  serverStarted = startNetwork(config.netConfig);
-  if (serverStarted)
-  {
-    Serial.println(F("[Eth] Server is up"));
-  }
-  else
-  {
-    Serial.println(F("[Eth] Server not started"));
-  }
+    // Start ethernet service
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("[Eth] 1/1"));
+    Serial.println(F("[Eth] Starting server..."));
+    serverStarted = startNetwork(config.network);
+    if (serverStarted)
+    {
+        Serial.println(F("[Eth] Server is up"));
+    }
+    else
+    {
+        Serial.println(F("[Eth] Server not started"));
+    }
 
-  lcd.print(F("[Time] 1/1"));
-  Serial.println(F("[Time] Setting time..."));
-  initSystemTime(config.time, serverStarted);
-  setSyncProvider(RTC.get);
-  Serial.print(F("[Time] Current time: "));
-  Serial.println(printTime(true));
+    lcd.print(F("[Time] 1/1"));
+    Serial.println(F("[Time] Setting time..."));
+    initSystemTime(config.time, serverStarted);
+    setSyncProvider(RTC.get);
+    Serial.print(F("[Time] Current time: "));
+    Serial.println(printTime(true));
 
-  lcd.setCursor(0, 0);
-  lcd.print(F("[Conf] 2/2"));
-  Serial.println(F("[Conf] Updating sensors config..."));
-  saveConfiguration(filename, config);
-  Serial.println(F("[Conf] Done"));
+    lcd.setCursor(0, 0);
+    lcd.print(F("[Conf] 2/2"));
+    Serial.println(F("[Conf] Updating sensors config..."));
+    saveConfiguration(filename, config);
+    Serial.println(F("[Conf] Done"));
 
-  initConfigData(config);
-  config.data.alarms.storage = getStorageAlarm();
+    initConfigData(config);
+    config.data.alarms.storage = getStorageAlarm();
 
-  // Setup done, initialize default LCD
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print(F("Startup done"));
+    // Setup done, initialize default LCD
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(F("Startup done"));
 }
 
 void loop(void)
 {
-  if (millis() - lastReadingTime < 0)
-  {
-    lastReadingTime = millis();
-    lcdBacklightTimer = millis();
-  }
-
-  lcdLEDButtonState = digitalRead(lcdLEDButtonPin);
-  // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
-  // ToDo: add debounce
-  if (lcdLEDButtonState == LOW)
-  {
-    Serial.println(F("[LCD] Ligth ON"));
-    digitalWrite(lcdLEDPin, HIGH);
-    lcdBacklightTimer = millis();
-    lcdLEDBacklightState = true;
-  }
-  else
-  {
-    if ((millis() - lcdBacklightTimer) >= config.global.lcdBacklightDuration && lcdLEDBacklightState)
+    if (millis() - lastReadingTime < 0)
     {
-      Serial.println(F("[LCD] Ligth OFF"));
-      digitalWrite(lcdLEDPin, LOW);
-      lcdLEDBacklightState = false;
-    }
-  }
-
-  sendData(config);
-
-  // Get sensors every 2 seconds
-  if ((millis() - lastReadingTime) >= 2000)
-  {
-    tempSensors.requestTemperatures();
-
-    // Serial.print(F("Sensor 'twout' value: "));
-    config.sensConfig.twout.val = tempSensors.getTempC(config.sensConfig.twout.addr);
-    // Serial.println(config.sensConfig.twout.val);
-    tempMoy = config.sensConfig.twout.val;
-    if (config.sensConfig.twin.enabled)
-    {
-      // Serial.print(F("Sensor 'twin' value: "));
-      config.sensConfig.twin.val = tempSensors.getTempC(config.sensConfig.twin.addr);
-      // Serial.println(config.sensConfig.twin.val);
-      tempMoy = (config.sensConfig.twout.val + config.sensConfig.twin.val) / 2;
-    }
-    config.data.curTempWater = roundTemp(tempMoy);
-    Serial.print(F("Sensor water value: "));
-    Serial.println(config.data.curTempWater);
-
-    Serial.print(F("Sensor 'tamb' value: "));
-    config.sensConfig.tamb.val = tempSensors.getTempC(config.sensConfig.tamb.addr);
-    Serial.println(config.sensConfig.tamb.val);
-
-    if (!config.data.startup)
-    {
-      filterPumpOn = setFilterState(config, hour());
-      if (config.sensConfig.ph.enabled)
-      {
-        phPumpOn = setPhState(config, filterPumpOn);
-      }
+        lastReadingTime = millis();
+        lcdBacklightTimer = millis();
     }
 
-    count_time_30s++; // Count 15 cycles for sending XPL every 30s
-    lastReadingTime = millis();
-  }
-
-  if (count_time_30s == 15)
-  {
-    Serial.println(F("*** 30s ***"));
-    Serial.print(F("Time: "));
-    Serial.println(printTime(true));
-    if (config.data.startup)
+    lcdLEDButtonState = digitalRead(lcdLEDButtonPin);
+    // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
+    // ToDo: add debounce
+    if (lcdLEDButtonState == LOW)
     {
-      Serial.println(F("End of startup blanking time"));
-      config.data.startup = false;
-      config.data.savedTempWater = config.data.curTempWater;
+        Serial.println(F("[LCD] Ligth ON"));
+        digitalWrite(lcdLEDPin, HIGH);
+        lcdBacklightTimer = millis();
+        lcdLEDBacklightState = true;
+    }
+    else
+    {
+        if ((millis() - lcdBacklightTimer) >= config.global.lcdBacklightDuration && lcdLEDBacklightState)
+        {
+            Serial.println(F("[LCD] Ligth OFF"));
+            digitalWrite(lcdLEDPin, LOW);
+            lcdLEDBacklightState = false;
+        }
     }
 
-    lcdPage1(lcd, config);
+    sendData(config);
 
-    count_time_30min++; // Count 60 cycles for 30 min
-    count_time_30s = 0;
-  }
-  if (count_time_30min == 60)
-  {
-    Serial.println(F("*** 30m ***"));
-    setSytemTime(serverStarted);
-    Serial.print(F("Time: "));
-    Serial.println(printTime(true));
-    count_time_30min = 0;
-  }
+    // Get sensors every 2 seconds
+    if ((millis() - lastReadingTime) >= 2000)
+    {
+        tempSensors.requestTemperatures();
+
+        // Serial.print(F("Sensor 'twout' value: "));
+        config.sensors.twout.val = tempSensors.getTempC(config.sensors.twout.addr);
+        // Serial.println(config.sensors.twout.val);
+        tempMoy = config.sensors.twout.val;
+        if (config.sensors.twin.enabled)
+        {
+            // Serial.print(F("Sensor 'twin' value: "));
+            config.sensors.twin.val = tempSensors.getTempC(config.sensors.twin.addr);
+            // Serial.println(config.sensors.twin.val);
+            tempMoy = (config.sensors.twout.val + config.sensors.twin.val) / 2;
+        }
+        config.data.curTempWater = roundTemp(tempMoy);
+        Serial.print(F("Sensor water value: "));
+        Serial.println(config.data.curTempWater);
+
+        Serial.print(F("Sensor 'tamb' value: "));
+        config.sensors.tamb.val = tempSensors.getTempC(config.sensors.tamb.addr);
+        Serial.println(config.sensors.tamb.val);
+
+        if (!config.data.startup)
+        {
+            filterPumpOn = setFilterState(config, hour());
+            if (config.sensors.ph.enabled)
+            {
+                phPumpOn = setPhState(config, filterPumpOn);
+            }
+        }
+
+        count_time_30s++; // Count 15 cycles for sending XPL every 30s
+        lastReadingTime = millis();
+    }
+
+    if (count_time_30s == 15)
+    {
+        Serial.println(F("*** 30s ***"));
+        Serial.print(F("Time: "));
+        Serial.println(printTime(true));
+        if (config.data.startup)
+        {
+            Serial.println(F("End of startup blanking time"));
+            config.data.startup = false;
+            config.data.savedTempWater = config.data.curTempWater;
+        }
+
+        lcdPage1(lcd, config);
+
+        count_time_30min++; // Count 60 cycles for 30 min
+        count_time_30s = 0;
+    }
+    if (count_time_30min == 60)
+    {
+        Serial.println(F("*** 30m ***"));
+        setSytemTime(serverStarted);
+        Serial.print(F("Time: "));
+        Serial.println(printTime(true));
+        count_time_30min = 0;
+    }
 }

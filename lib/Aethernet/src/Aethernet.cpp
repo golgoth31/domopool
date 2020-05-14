@@ -101,7 +101,7 @@ void response500(EthernetClient &client)
     client.println(F("Content-Type: application/json"));
     client.println(F("Connection: close"));
 }
-void sendData(Aconfig &config)
+void sendData(Config &config)
 {
     EthernetClient client = server.available();
     bool postRequest = false;
@@ -134,7 +134,7 @@ void sendData(Aconfig &config)
                 // Serial.println(reqURI);
                 // Serial.println(reqProtocol);
                 // Serial.println(reqBody);
-                StaticJsonDocument<AconfigDocSize> httpResponse;
+                StaticJsonDocument<ConfigDocSize> httpResponse;
                 if (reqType.equals("GET"))
                 {
                     if (reqURI.equals("/"))

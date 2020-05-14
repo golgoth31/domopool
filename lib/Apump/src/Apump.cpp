@@ -33,7 +33,7 @@ void pumpInit(int filterPin, int phPin)
     pumpPhRelayPin = phPin;
 }
 
-bool setFilterState(Aconfig &config, int hour)
+bool setFilterState(Config &config, int hour)
 {
     // first disable all
     pumpFullTime(pump, false);
@@ -186,36 +186,36 @@ bool setFilterState(Aconfig &config, int hour)
     return config.data.filterOn;
 }
 
-bool setPhState(Aconfig &config, bool filterOn)
+bool setPhState(Config &config, bool filterOn)
 {
     // Ph pump have 10m cycles (600s)
     // activate pump for 20% of 10m if ph val is under threshold+0.15
-    if ((config.sensConfig.ph.val <= config.sensConfig.ph.threshold) && !(phInject))
+    if ((config.sensors.ph.val <= config.sensors.ph.threshold) && !(phInject))
     {
         ton = 0;
     }
-    else if ((config.sensConfig.ph.val <= (config.sensConfig.ph.threshold + 0.15)) && !(phInject))
+    else if ((config.sensors.ph.val <= (config.sensors.ph.threshold + 0.15)) && !(phInject))
     {
         ton = 120;
         phInject = true;
         timestamp = now();
     }
     // activate pump for 50% of 10m if ph val is under threshold+0.30
-    else if ((config.sensConfig.ph.val <= (config.sensConfig.ph.threshold + 0.30)) && !(phInject))
+    else if ((config.sensors.ph.val <= (config.sensors.ph.threshold + 0.30)) && !(phInject))
     {
         ton = 300;
         phInject = true;
         timestamp = now();
     }
     // activate pump for 75% of 10m if ph val is under threshold+0.45
-    else if ((config.sensConfig.ph.val <= (config.sensConfig.ph.threshold + 0.45)) && !(phInject))
+    else if ((config.sensors.ph.val <= (config.sensors.ph.threshold + 0.45)) && !(phInject))
     {
         ton = 450;
         phInject = true;
         timestamp = now();
     }
     // activate pump for 100% of 10m if ph val is over threshold+0.45
-    else if ((config.sensConfig.ph.val > (config.sensConfig.ph.threshold + 0.45)) && !(phInject))
+    else if ((config.sensors.ph.val > (config.sensors.ph.threshold + 0.45)) && !(phInject))
     {
         ton = 600;
         phInject = true;

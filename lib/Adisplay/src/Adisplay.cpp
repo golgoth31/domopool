@@ -17,7 +17,7 @@ void lcdInit(LiquidCrystal &lcd, int Hpix, int Vpix)
     lcd.clear();
     lcd.setCursor(0, 0);
 }
-void lcdPage1(LiquidCrystal &lcd, Aconfig &config)
+void lcdPage1(LiquidCrystal &lcd, Config &config)
 {
     lcd.clear();
     // print water temp
@@ -34,7 +34,7 @@ void lcdPage1(LiquidCrystal &lcd, Aconfig &config)
     lcd.setCursor(0, 1);
     lcd.print(F("Tamb:"));
     lcd.setCursor(5, 1);
-    lcd.print(config.sensConfig.tamb.val);
+    lcd.print(config.sensors.tamb.val);
     lcd.write(byte(0));
     lcd.print(F("C"));
 }

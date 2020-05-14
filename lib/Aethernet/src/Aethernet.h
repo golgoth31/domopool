@@ -21,5 +21,5 @@
 
 bool checkIP(const char *ip);
 bool startNetwork(Network &conf);
-void sendData(Aconfig &config);
+void sendData(Config &config);
 #endif
