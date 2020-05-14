@@ -26,6 +26,14 @@ Other hardware:
 - Get/Set values as json through http request
 - Set time with ntp
 
+### Configuration
+
+The json configuration file is automaticaly genarated on the sdcard with safe default values. If the file as been put on the card before the first boot, it will be used.
+To ease configuration update 2 front-end are under developement:
+
+- CLI: [https://github.com/golgoth31/domopool-cli](https://github.com/golgoth31/domopool-cli)
+- UI: [https://github.com/golgoth31/domopool-ui](https://github.com/golgoth31/domopool-ui)
+
 ### Temp/filter time
 
 The local table is defined like this:
@@ -51,7 +59,7 @@ Other table exemples:
 
 - from [1](https://pool-technologie.com/fichiers/spec_telechargement/MANUEL%20SIMPLEO-FR.pdf)
 
-- from [https://www.piscine-center.net/gestion-de-la-filtration-et-de-l-electrolyseur.html](https://www.piscine-center.net/gestion-de-la-filtration-et-de-l-electrolyseur.html
+- from [https://www.piscine-center.net/gestion-de-la-filtration-et-de-l-electrolyseur.html](https://www.piscine-center.net/gestion-de-la-filtration-et-de-l-electrolyseur.html)
 
     ![](https://uppict.piscine-center.net/fiche/12832/automateau-gestion-de-la-filtration-et-de-l-electrolyseur-piscine-center-95319400.jpg)
 
