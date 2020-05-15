@@ -21,6 +21,7 @@ struct Network
     const char *netmask;
     const char *gateway;
     const char *dns;
+    bool allowPost;
 };
 struct Temp
 {

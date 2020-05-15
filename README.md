@@ -32,7 +32,7 @@ The json configuration file is automaticaly genarated on the sdcard with safe de
 To ease configuration update 2 front-end are under developement:
 
 - CLI: [https://github.com/golgoth31/domopool-cli](https://github.com/golgoth31/domopool-cli)
-- UI: [https://github.com/golgoth31/domopool-cli/web](https://github.com/golgoth31/domopool-cli/web)
+- UI: [https://github.com/golgoth31/domopool-cli/tree/master/web](https://github.com/golgoth31/domopool-cli/tree/master/web)
 
 ### Temp/filter time
 

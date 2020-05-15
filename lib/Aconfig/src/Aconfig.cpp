@@ -17,6 +17,7 @@ void loadConfiguration(const char *filename, Config &config)
     {
         Serial.println(F("[Conf] Failed to read file, using default configuration"));
         doc["network"]["dhcp"] = true;
+        doc["network"]["allowPost"] = false;
         for (int i = 0; i < 8; i++)
         {
             doc["sensors"]["twin"]["addr"][i] = 0;
@@ -143,6 +144,7 @@ void convert2config(JsonDocument &doc, Config &config)
     config.time.timeZone = doc["time"]["timeZone"];
     config.data.alarms.storage = doc["data"]["alarms"]["storage"];
     config.network.dhcp = doc["network"]["dhcp"];
+    config.network.allowPost = doc["network"]["allowPost"];
     config.network.ip = doc["network"]["ip"];
     config.network.gateway = doc["network"]["gateway"];
     config.network.netmask = doc["network"]["netmask"];

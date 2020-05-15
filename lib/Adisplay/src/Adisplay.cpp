@@ -38,3 +38,17 @@ void lcdPage1(LiquidCrystal &lcd, Config &config)
     lcd.write(byte(0));
     lcd.print(F("C"));
 }
+void lcdMenuPage1(LiquidCrystal &lcd, Config &config)
+{
+    lcd.clear();
+    // print water temp
+    lcd.setCursor(0, 0);
+    lcd.print(F("[Time] Set hour ?"));
+}
+void lcdMenuPage2(LiquidCrystal &lcd, Config &config)
+{
+    lcd.clear();
+    // print water temp
+    lcd.setCursor(0, 0);
+    lcd.print(F("[Eth] Allow post?"));
+}
