@@ -166,7 +166,7 @@ void sendData(Config &config)
                         response404(client);
                     }
                 }
-                else if (reqType.equals("POST"))
+                else if (reqType.equals("POST") && config.network.allowPost)
                 {
                     if (reqURI.equals("/reboot"))
                     {

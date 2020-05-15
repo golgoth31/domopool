@@ -15,12 +15,17 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <TimeLib.h>
+#include <Encoder.h>
 
 #define ONE_WIRE_BUS 22
 #define lcdLEDPin 38
 #define lcdLEDButtonPin 34
 #define filterPin 48
 #define phPin 49
+#define clkPin 18
+#define dtPin 19
+
+Encoder myEnc(clkPin, dtPin);
 
 // configure timed actions
 unsigned long lastReadingTime = 0;

@@ -3,6 +3,9 @@
 
 #include <Arduino.h>
 #include <LiquidCrystal.h>
+#include <Encoder.h>
+#include <TimeLib.h>
+#include <DS1307RTC.h>
 
 #ifndef __ADISPLAY_H__
 #define __ADISPLAY_H__
