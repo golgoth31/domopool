@@ -435,10 +435,6 @@ Wire Wire Line
 Wire Wire Line
 	8900 3150 9350 3150
 Wire Wire Line
-	10400 2450 10150 2450
-Wire Wire Line
-	10150 2550 10400 2550
-Wire Wire Line
 	10400 3050 10150 3050
 Wire Wire Line
 	10150 3150 10400 3150
@@ -466,14 +462,6 @@ Wire Wire Line
 	10400 3600 10150 3600
 Wire Wire Line
 	10150 3700 10400 3700
-Wire Wire Line
-	10400 3800 10150 3800
-Wire Wire Line
-	10150 3900 10400 3900
-Wire Wire Line
-	10400 4000 10150 4000
-Wire Wire Line
-	10150 4100 10400 4100
 Wire Wire Line
 	10500 4850 10500 4650
 Wire Wire Line
@@ -702,9 +690,9 @@ F 3 "https://datasheets.maximintegrated.com/en/ds/DS1307.pdf" H 4250 3800 50  00
 	1    4250 4000
 	1    0    0    -1  
 $EndComp
-Text GLabel 10400 4000 2    50   Input ~ 0
+Text GLabel 10850 4000 2    50   Input ~ 0
 SDA
-Text GLabel 10400 4100 2    50   Input ~ 0
+Text GLabel 10850 4100 2    50   Input ~ 0
 SCL
 Wire Wire Line
 	4150 3600 4150 3500
@@ -797,22 +785,16 @@ Wire Wire Line
 	6050 5750 6300 5750
 Wire Wire Line
 	6050 5850 6300 5850
-Text GLabel 10700 2650 2    50   Input ~ 0
+Text GLabel 10850 2450 2    50   Input ~ 0
 LCD4
-Text GLabel 10700 2750 2    50   Input ~ 0
+Text GLabel 10850 2550 2    50   Input ~ 0
 LCD5
-Text GLabel 10700 2850 2    50   Input ~ 0
+Text GLabel 10850 2650 2    50   Input ~ 0
 LCD6
-Text GLabel 10700 2950 2    50   Input ~ 0
+Text GLabel 10850 2750 2    50   Input ~ 0
 LCD7
 Wire Wire Line
-	10150 2650 10700 2650
-Wire Wire Line
-	10150 2750 10700 2750
-Wire Wire Line
 	10150 2850 10700 2850
-Wire Wire Line
-	10150 2950 10700 2950
 Text GLabel 10850 1650 2    50   Input ~ 0
 LCDRS
 Text GLabel 10850 1750 2    50   Input ~ 0
@@ -906,4 +888,28 @@ Wire Wire Line
 	3200 4000 3250 4000
 Wire Wire Line
 	3250 4000 3250 3900
+Wire Wire Line
+	10150 2450 10850 2450
+Wire Wire Line
+	10150 2550 10850 2550
+Wire Wire Line
+	10150 2650 10850 2650
+Wire Wire Line
+	10150 2750 10850 2750
+Wire Wire Line
+	10150 4000 10850 4000
+Wire Wire Line
+	10150 4100 10850 4100
+Text GLabel 10850 3900 2    50   Input ~ 0
+Rotary1
+Text GLabel 10850 3800 2    50   Input ~ 0
+Rotary2
+Text GLabel 10850 2950 2    50   Input ~ 0
+RotaryB
+Wire Wire Line
+	10150 2950 10850 2950
+Wire Wire Line
+	10150 3800 10850 3800
+Wire Wire Line
+	10150 3900 10850 3900
 $EndSCHEMATC
