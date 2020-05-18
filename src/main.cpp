@@ -22,6 +22,7 @@
 #define lcdLEDButtonPin 34
 #define filterPin 48
 #define phPin 49
+#define chPin 47
 #define clkPin 18
 #define dtPin 19
 
@@ -61,7 +62,7 @@ void setup(void)
         ; // wait for serial port to connect. Needed for native USB port only
     }
 
-    pumpInit(filterPin, phPin);
+    pumpInit(filterPin, chPin, phPin);
 
     // set up the LCD
     pinMode(lcdLEDPin, OUTPUT);
@@ -87,15 +88,6 @@ void setup(void)
     Serial.println(F("[Sens] Starting..."));
     // start ds18b20 sensors
     tempSensors.begin();
-
-    // locate devices on the bus
-    // lcd.setCursor(0, 0);
-    // lcd.print("[Sens] 2/4");
-    // Serial.println("[Sens] Locating devices...");
-    // Serial.print("[Sens] Found ");
-    // numTempSensors = tempSensors.getDeviceCount();
-    // Serial.print(numTempSensors, DEC);
-    // Serial.println(" devices.");
 
     lcd.setCursor(0, 0);
     lcd.print(F("[Sens] 3/4"));
@@ -138,7 +130,7 @@ void setup(void)
     Serial.println(F("[Conf] Done"));
 
     initConfigData(config);
-    config.data.alarms.storage = getStorageAlarm();
+    config.metrics.alarms.storage = getStorageAlarm();
 
     // Setup done, initialize default LCD
     lcd.clear();
@@ -192,15 +184,15 @@ void loop(void)
             // Serial.println(config.sensors.twin.val);
             tempMoy = (config.sensors.twout.val + config.sensors.twin.val) / 2;
         }
-        config.data.curTempWater = roundTemp(tempMoy);
+        config.metrics.curTempWater = roundTemp(tempMoy);
         Serial.print(F("Sensor water value: "));
-        Serial.println(config.data.curTempWater);
+        Serial.println(config.metrics.curTempWater);
 
         Serial.print(F("Sensor 'tamb' value: "));
         config.sensors.tamb.val = tempSensors.getTempC(config.sensors.tamb.addr);
         Serial.println(config.sensors.tamb.val);
 
-        if (!config.data.startup)
+        if (!config.metrics.startup)
         {
             filterPumpOn = setFilterState(config, hour());
             if (config.sensors.ph.enabled)
@@ -218,11 +210,11 @@ void loop(void)
         Serial.println(F("*** 30s ***"));
         Serial.print(F("Time: "));
         Serial.println(printTime(true));
-        if (config.data.startup)
+        if (config.metrics.startup)
         {
             Serial.println(F("End of startup blanking time"));
-            config.data.startup = false;
-            config.data.savedTempWater = config.data.curTempWater;
+            config.metrics.startup = false;
+            config.metrics.savedTempWater = config.metrics.curTempWater;
         }
 
         lcdPage1(lcd, config);

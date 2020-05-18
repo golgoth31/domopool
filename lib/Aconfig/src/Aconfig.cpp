@@ -142,7 +142,7 @@ void convert2config(JsonDocument &doc, Config &config)
     config.time.dayLight = doc["time"]["dayLight"];
     config.time.ntpServer = doc["time"]["ntpServer"];
     config.time.timeZone = doc["time"]["timeZone"];
-    config.data.alarms.storage = doc["data"]["alarms"]["storage"];
+    config.metrics.alarms.storage = doc["data"]["alarms"]["storage"];
     config.network.dhcp = doc["network"]["dhcp"];
     config.network.allowPost = doc["network"]["allowPost"];
     config.network.ip = doc["network"]["ip"];
@@ -178,7 +178,7 @@ void convert2config(JsonDocument &doc, Config &config)
 
 void initConfigData(Config &config)
 {
-    config.data.startup = true;
-    config.data.filterOn = false;
-    config.data.phOn = false;
+    config.metrics.startup = true;
+    config.metrics.filterOn = false;
+    config.metrics.phOn = false;
 }

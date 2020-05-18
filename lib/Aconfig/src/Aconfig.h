@@ -76,13 +76,15 @@ struct Alarms
     bool storage;
 };
 
-struct Data
+struct Metrics
 {
     float curTempWater;
     float savedTempWater;
     bool startup;
     bool filterOn;
     bool phOn;
+    bool chOn;
+    int16_t chDuration;
     int hour;
     Alarms alarms;
 };
@@ -94,7 +96,7 @@ struct Config
     Global global;
     Time time;
     Pump pump;
-    Data data;
+    Metrics metrics;
 };
 
 void loadConfiguration(const char *filename, Config &config);

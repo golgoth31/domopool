@@ -26,7 +26,7 @@ void lcdPage1(LiquidCrystal &lcd, Config &config)
     lcd.setCursor(0, 0);
     lcd.print(F("Tw:"));
     lcd.setCursor(3, 0);
-    lcd.print(config.data.curTempWater);
+    lcd.print(config.metrics.curTempWater);
     lcd.write(byte(0));
     lcd.print(F("C"));
     // print hour

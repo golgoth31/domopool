@@ -3,7 +3,7 @@
 #include <EEPROM.h>
 
 // Alarm1 is at offset 24 into eeprom
-const int alarm1Offset = 24;
+const int alarm1Offset = 40;
 byte alarm1 = 0b00000000;
 
 void setStorageAlarm(bool state)
