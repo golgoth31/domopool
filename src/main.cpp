@@ -10,8 +10,6 @@
 // include the dependencies
 #include <Arduino.h>
 #include <Wire.h>
-#include <LiquidCrystal.h>
-#include <SPI.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <TimeLib.h>
