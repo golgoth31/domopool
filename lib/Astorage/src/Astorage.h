@@ -1,6 +1,5 @@
 #include <Alarms.h>
 
-#include <LiquidCrystal.h>
 #include <FS.h>
 #include <SPIFFS.h>
 

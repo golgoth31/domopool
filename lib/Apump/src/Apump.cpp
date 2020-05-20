@@ -10,7 +10,7 @@ int toff;
 bool phInject = false;
 bool phOn = false;
 bool chOn = false;
-int timestamp;
+time_t timestamp;
 int pumpFilterRelayPin;
 int pumpPhRelayPin;
 int pumpChRelayPin;
@@ -231,33 +231,34 @@ bool setPhState(Config &config, bool filterOn)
     {
         ton = 120;
         phInject = true;
-        timestamp = now();
+        time(&timestamp);
     }
     // activate pump for 50% of 10m if ph val is under threshold+0.30
     else if ((config.sensors.ph.val <= (config.sensors.ph.threshold + 0.30)) && !(phInject))
     {
         ton = 300;
         phInject = true;
-        timestamp = now();
+        time(&timestamp);
     }
     // activate pump for 75% of 10m if ph val is under threshold+0.45
     else if ((config.sensors.ph.val <= (config.sensors.ph.threshold + 0.45)) && !(phInject))
     {
         ton = 450;
         phInject = true;
-        timestamp = now();
+        time(&timestamp);
     }
     // activate pump for 100% of 10m if ph val is over threshold+0.45
     else if ((config.sensors.ph.val > (config.sensors.ph.threshold + 0.45)) && !(phInject))
     {
         ton = 600;
         phInject = true;
-        timestamp = now();
+        time(&timestamp);
     }
 
     if (phInject)
     {
-        int curTimestamp = now();
+        time_t curTimestamp;
+        time(&curTimestamp);
         int deltaTime = curTimestamp - timestamp;
         if (deltaTime < ton)
         {

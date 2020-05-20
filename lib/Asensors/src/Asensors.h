@@ -1,7 +1,6 @@
 #include <Aconfig.h>
 
 #include <Arduino.h>
-#include <TimeLib.h>
 #include <DallasTemperature.h>
 
 #ifndef __ASENSORS_H_UNDEFINED__

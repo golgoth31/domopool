@@ -34,9 +34,9 @@ void loadConfiguration(const char *filename, Config &config)
         doc["sensors"]["ph"]["threshold"] = 7.4;
         doc["global"]["lcdBacklightDuration"] = 30000; // 30s
         doc["time"]["initialized"] = false;
-        doc["time"]["dayLight"] = true;
+        doc["time"]["dayLight"] = 3600;
         doc["time"]["ntpServer"] = "europe.pool.ntp.org";
-        doc["time"]["timeZone"] = 2;
+        doc["time"]["timeZone"] = 3600;
         doc["pump"]["forceFilter"] = false;
         doc["pump"]["forcePH"] = false;
         doc["pump"]["forceCH"] = false;

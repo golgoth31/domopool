@@ -1,6 +1,6 @@
 // Local libraries
 #include <Aconfig.h>
-#include <Aethernet.h>
+#include <Anetwork.h>
 #include <Apump.h>
 #include <Asensors.h>
 #include <Atime.h>
@@ -8,15 +8,14 @@
 #include <Alarms.h>
 
 // include the dependencies
-#include <Arduino.h>
 #include <Wire.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
-#include <TimeLib.h>
+#include <WiFi.h>
+#include <time.h>
 #include <Encoder.h>
 
 #define ONE_WIRE_BUS 22
-#define lcdLEDPin 38
 #define lcdLEDButtonPin 34
 #define filterPin 48
 #define phPin 49
@@ -37,12 +36,6 @@ OneWire ow(ONE_WIRE_BUS);
 DallasTemperature tempSensors(&ow);
 float tempMoy;
 
-// Creates an LCD object. Parameters: (rs, enable, d4, d5, d6, d7)
-LiquidCrystal lcd(12, 11, 9, 8, 7, 6);
-int lcdLEDButtonState = 0;
-bool lcdLEDBacklightState = true;
-unsigned long lcdBacklightTimer = 0;
-
 Config config;
 const char *filename = "CONFIG.JSN";
 
@@ -62,47 +55,29 @@ void setup(void)
 
     pumpInit(filterPin, chPin, phPin);
 
-    // set up the LCD
-    pinMode(lcdLEDPin, OUTPUT);
-    pinMode(lcdLEDButtonPin, INPUT_PULLUP);
-    digitalWrite(lcdLEDPin, HIGH);
-    lcdInit(lcd, 16, 2);
-
     Serial.println(F("Starting up"));
 
     // Initialize SD library
-    lcd.print(F("[Stor] 1/1"));
     storageOk = initStorage();
 
     // Should load default config if run for the first time
-    lcd.setCursor(0, 0);
-    lcd.print(F("[Conf] 1/2"));
     Serial.println(F("[Conf] Loading configuration..."));
     loadConfiguration(filename, config);
 
     // Start up the library
-    lcd.setCursor(0, 0);
-    lcd.print(F("[Sens] 1/4"));
     Serial.println(F("[Sens] Starting..."));
     // start ds18b20 sensors
     tempSensors.begin();
 
-    lcd.setCursor(0, 0);
-    lcd.print(F("[Sens] 3/4"));
     Serial.println(F("[Sens] Registering addresses..."));
     registerDevices(config.sensors, tempSensors);
     showAddressFromEeprom();
 
-    lcd.setCursor(0, 0);
-    lcd.print(F("[Sens] 4/4"));
     Serial.println(F("[Sens] Setting sensors options..."));
     tempSensors.setWaitForConversion(config.sensors.waitForConversion);
     tempSensors.setResolution(config.sensors.tempResolution);
 
     // Start ethernet service
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print(F("[Eth] 1/1"));
     Serial.println(F("[Eth] Starting server..."));
     serverStarted = startNetwork(config.network);
     if (serverStarted)
@@ -114,26 +89,18 @@ void setup(void)
         Serial.println(F("[Eth] Server not started"));
     }
 
-    lcd.print(F("[Time] 1/1"));
     Serial.println(F("[Time] Setting time..."));
     initSystemTime(config.time, serverStarted);
     setSyncProvider(RTC.get);
     Serial.print(F("[Time] Current time: "));
     Serial.println(printTime(true));
 
-    lcd.setCursor(0, 0);
-    lcd.print(F("[Conf] 2/2"));
     Serial.println(F("[Conf] Updating sensors config..."));
     saveConfiguration(filename, config);
     Serial.println(F("[Conf] Done"));
 
     initConfigData(config);
     config.metrics.alarms.storage = getStorageAlarm();
-
-    // Setup done, initialize default LCD
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print(F("Startup done"));
 }
 
 void loop(void)
@@ -214,8 +181,6 @@ void loop(void)
             config.metrics.startup = false;
             config.metrics.savedTempWater = config.metrics.curTempWater;
         }
-
-        lcdPage1(lcd, config);
 
         count_time_30min++; // Count 60 cycles for 30 min
         count_time_30s = 0;

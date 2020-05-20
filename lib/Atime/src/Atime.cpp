@@ -1,7 +1,7 @@
 #include "Atime.h"
 
-EthernetUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "europe.pool.ntp.org");
+tm timedata;
+RTC_DS1307 rtc;
 
 String printTime(bool seconds)
 {
@@ -30,49 +30,48 @@ String printTime(bool seconds)
     return time;
 }
 
-void setSytemTime(bool ethServerStarted)
+void setSytemTime(bool rtcOk)
 {
-    if (ethServerStarted)
+    Serial.println(F("[Time] Get ntp time"));
+    if (getLocalTime(&timedata))
     {
-        Serial.println(F("[Time] get ntp time"));
-        timeClient.update();
-        RTC.set(timeClient.getEpochTime());
+        time_t now;
+        time(&now);
+        if (rtcOk)
+        {
+            Serial.println(F("[Time] Set RTC time"));
+            rtc.adjust(
+                DateTime(
+                    timedata.tm_year,
+                    timedata.tm_mon,
+                    timedata.tm_mday,
+                    timedata.tm_hour,
+                    timedata.tm_min,
+                    timedata.tm_sec));
+        }
     }
     else
     {
-        // to be replaced by LCD Hour selection
-        // request on lcd screen; wait for 10min to be filled
-        // if not, start with compiletime (at least we got something)
-        tmElements_t tm;
-        if (!RTC.read(tm))
-        {
-            Serial.println(F("[Time] setup rtc with compile time"));
-            RTC.write(tm);
-        }
+        Serial.println(F("[Time] Unable to get ntp time, using RTC"));
+        DateTime dt = rtc.now();
+        const timeval tv = {dt.unixtime, 0};
+        settimeofday(&tv, );
     }
-    // Serial.print("timestamp: ");
-    // Serial.println(RTC.get());
 }
 
-void initSystemTime(Time &config, bool ethServerStarted)
+void initSystemTime(Time &config)
 {
-    if (RTC.chipPresent)
+    bool rtcOk;
+    configTime(config.timeZone, config.dayLight, config.ntpServer);
+    if (rtc.begin())
     {
         Serial.println(F("[Time] RTC found, setting..."));
-        if (ethServerStarted)
-        {
-            String ntpServ = config.ntpServer;
-            Serial.print(F("[Time] requesting '"));
-            Serial.print(ntpServ);
-            Serial.println(F("'"));
-            timeClient.setTimeOffset(config.timeZone * 3600);
-            timeClient.setUpdateInterval(60000);
-            timeClient.begin();
-        }
-        setSytemTime(ethServerStarted);
+        rtcOk = true;
     }
     else
     {
         Serial.println(F("[Time] no rtc module"));
+        rtcOk = false;
     }
+    setSytemTime(rtcOk);
 }

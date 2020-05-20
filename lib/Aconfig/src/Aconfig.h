@@ -1,14 +1,5 @@
 #include <Alarms.h>
-
-#ifdef __AVR_ATmega2560__
-#include <Amega2560.h>
-#endif
-
-#ifdef ESP32
-#include <Aesp32.h>
-#endif
-
-#include <Arduino.h>
+#include <Astorage.h>
 #include <ArduinoJson.h>
 
 #ifndef __ACONFIG_H_UNDEFINED__
@@ -56,9 +47,9 @@ struct Global
 struct Time
 {
     bool initialized;
-    bool dayLight;
+    int dayLight; // 3600 if daylight is observed or 0 if not
     const char *ntpServer;
-    int timeZone;
+    int timeZone; // UTC offset in s: UTC+1=3600
 };
 struct Pump
 {

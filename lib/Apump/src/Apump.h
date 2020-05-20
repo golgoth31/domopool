@@ -1,11 +1,6 @@
 #include <Aconfig.h>
 
-#ifdef __AVR_ATmega2560__
-#include <Amega2560.h>
-#endif
-
-#include <Arduino.h>
-#include <TimeLib.h>
+#include <time.h>
 
 #ifndef __APUMP_H_UNDEFINED__
 #define __APUMP_H_UNDEFINED__
