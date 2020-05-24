@@ -9,6 +9,6 @@
 #define __AETHERNET_H_UNDEFINED__
 
 bool checkIP(const char *ip);
-bool startNetwork(Network &conf);
+bool startNetwork(const char *ssid, const char *password);
 void sendData(Config &config);
 #endif

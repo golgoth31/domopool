@@ -11,7 +11,7 @@ bool checkAddress(DeviceAddress deviceAddress, int offset)
     bool ret = true;
     for (uint8_t i = 0; i < 8; i++)
     {
-        if (EEPROM[i + offset] != deviceAddress[i])
+        if (EEPROM.read(i + offset) != deviceAddress[i])
         {
             ret = false;
         }
@@ -41,11 +41,11 @@ void printAddressFromEeprom(int offset)
     for (uint8_t i = 0; i < 8; i++)
     {
         Serial.print(F("0x"));
-        if (EEPROM[i + offset] < 0x10)
+        if (EEPROM.read(i + offset) < 0x10)
         {
             Serial.print(F("0"));
         }
-        Serial.print(EEPROM[i + offset], HEX);
+        Serial.print(EEPROM.read(i + offset), HEX);
         if (i < 7)
         {
             Serial.print(F(", "));
@@ -83,7 +83,7 @@ void registerDevices(Sensors &config, DallasTemperature &tempSensors)
                 Serial.print(F("[Sens] twout read address: "));
                 for (uint8_t i = 0; i < 8; i++)
                 {
-                    EEPROM[i + twoutOffset] = deviceAddress[i];
+                    EEPROM.write(i + twoutOffset, deviceAddress[i]);
                     config.twout.addr[i] = deviceAddress[i];
                     config.twout.init = true;
                 }
@@ -104,7 +104,7 @@ void registerDevices(Sensors &config, DallasTemperature &tempSensors)
                 Serial.print(F("[Sens] tamb read address: "));
                 for (uint8_t i = 0; i < 8; i++)
                 {
-                    EEPROM[i + tambOffset] = deviceAddress[i];
+                    EEPROM.write(i + tambOffset, deviceAddress[i]);
                     config.tamb.addr[i] = deviceAddress[i];
                     config.tamb.init = true;
                 }
@@ -127,7 +127,7 @@ void registerDevices(Sensors &config, DallasTemperature &tempSensors)
                     Serial.print(F("[Sens] twin read address: "));
                     for (uint8_t i = 0; i < 8; i++)
                     {
-                        EEPROM[i + twinOffset] = deviceAddress[i];
+                        EEPROM.write(i + twinOffset, deviceAddress[i]);
                         config.twin.addr[i] = deviceAddress[i];
                         config.twin.init = true;
                     }
@@ -178,8 +178,8 @@ void resetEepromSensorsTemp()
 {
     for (uint8_t i = 0; i < 8; i++)
     {
-        EEPROM[i + twoutOffset] = 0;
-        EEPROM[i + tambOffset] = 0;
-        EEPROM[i + twinOffset] = 0;
+        EEPROM.write(i + twoutOffset, 0);
+        EEPROM.write(i + tambOffset, 0);
+        EEPROM.write(i + twinOffset, 0);
     }
 }

@@ -1,23 +1,14 @@
 #include "Anetwork.h"
 
-#ifdef __AVR_ATmega2560__
-EthernetServer server(80);
-#endif
-
-#ifdef ESP32
 WiFiServer server(80);
-#endif
 
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 int ip1, ip2, ip3, ip4;
 
 void software_Reboot()
 {
-    wdt_enable(WDTO_1S);
-
-    while (1)
-    {
-    }
+    delay(1000);
+    esp_restart();
 }
 
 bool checkIP(const char *ip)
@@ -31,71 +22,40 @@ bool checkIP(const char *ip)
     return false;
 }
 
-bool startNetwork(Network &conf)
+bool startNetwork(const char *ssid, const char *password)
 {
-    int ethOK = 1;
-    if (conf.dhcp)
+    bool wifiUp = false;
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED)
     {
-        ethOK = Ethernet.begin(mac);
-    }
-    else
-    {
-        if (checkIP(conf.ip))
-        {
-            IPAddress ip(ip1, ip2, ip3, ip4);
-            checkIP(conf.netmask);
-            IPAddress netmask(ip1, ip2, ip3, ip4);
-            checkIP(conf.gateway);
-            IPAddress gateway(ip1, ip2, ip3, ip4);
-            checkIP(conf.dns);
-            IPAddress dns(ip1, ip2, ip3, ip4);
-            Ethernet.begin(mac, ip, dns, gateway, netmask);
-        }
-        else
-        {
-            return false;
-        }
+        delay(500);
+        Serial.print(".");
+        wifiUp = true;
     }
 
-    // Check for Ethernet hardware present
-    if (Ethernet.hardwareStatus() == EthernetNoHardware)
-    {
-        Serial.println(F("Ethernet shield was not found.  Sorry, can't run without hardware. :("));
-        return false;
-    }
-    if (Ethernet.linkStatus() == LinkOFF) // not working on W5100 shield
-    {
-        Serial.println(F("Ethernet cable is not connected."));
-        return false;
-    }
+    Serial.println("");
+    Serial.println(F("[WiFi] WiFi connected"));
+    Serial.println(F("[WiFi] IP address: "));
+    Serial.println(WiFi.localIP());
 
-    // start the server
-    if (ethOK == 1)
-    {
-        Serial.print(F("server is at "));
-        Serial.println(Ethernet.localIP());
-        return true;
-    }
-    else
-    {
-        Serial.println(F("[Eth] DHCP failed"));
-        return false;
-    }
+    server.begin();
+
+    return wifiUp;
 }
 
-void response200(EthernetClient &client)
+void response200(WiFiClient &client)
 {
     client.println(F("HTTP/1.1 200 OK"));
     client.println(F("Content-Type: application/json"));
     client.println(F("Connection: close"));
 }
-void response404(EthernetClient &client)
+void response404(WiFiClient &client)
 {
     client.println(F("HTTP/1.1 404 NotFound"));
     client.println(F("Content-Type: application/json"));
     client.println(F("Connection: close"));
 }
-void response500(EthernetClient &client)
+void response500(WiFiClient &client)
 {
     client.println(F("HTTP/1.1 500 Error"));
     client.println(F("Content-Type: application/json"));
@@ -103,7 +63,7 @@ void response500(EthernetClient &client)
 }
 void sendData(Config &config)
 {
-    EthernetClient client = server.available();
+    WiFiClient client = server.available();
     bool postRequest = false;
     if (client)
     {

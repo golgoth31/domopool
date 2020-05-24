@@ -1,7 +1,6 @@
 #include "Atime.h"
 
 tm timedata;
-RTC_DS1307 rtc;
 
 String printTime(bool seconds)
 {
@@ -33,45 +32,63 @@ String printTime(bool seconds)
 void setSytemTime(bool rtcOk)
 {
     Serial.println(F("[Time] Get ntp time"));
+
     if (getLocalTime(&timedata))
     {
-        time_t now;
-        time(&now);
+        tmElements_t tmElem;
+        tmElem.Day = timedata.tm_mday;
+        tmElem.Hour = timedata.tm_hour;
+        tmElem.Minute = timedata.tm_min;
+        tmElem.Month = timedata.tm_mon;
+        tmElem.Second = timedata.tm_sec;
+        tmElem.Wday = timedata.tm_wday;
+        tmElem.Year = timedata.tm_year;
+        time_t now = makeTime(tmElem);
+        setTime(now);
         if (rtcOk)
         {
             Serial.println(F("[Time] Set RTC time"));
-            rtc.adjust(
-                DateTime(
-                    timedata.tm_year,
-                    timedata.tm_mon,
-                    timedata.tm_mday,
-                    timedata.tm_hour,
-                    timedata.tm_min,
-                    timedata.tm_sec));
+            RTC.set(now);
         }
     }
     else
     {
-        Serial.println(F("[Time] Unable to get ntp time, using RTC"));
-        DateTime dt = rtc.now();
-        const timeval tv = {dt.unixtime, 0};
-        settimeofday(&tv, );
+        Serial.println(F("[Time] Unable to set NTP Time"));
     }
 }
 
-void initSystemTime(Time &config)
+time_t getNTPTime()
+{
+    tmElements_t tmElem;
+    getLocalTime(&timedata);
+    tmElem.Day = timedata.tm_mday;
+    tmElem.Hour = timedata.tm_hour;
+    tmElem.Minute = timedata.tm_min;
+    tmElem.Month = timedata.tm_mon;
+    tmElem.Second = timedata.tm_sec;
+    tmElem.Wday = timedata.tm_wday;
+    tmElem.Year = timedata.tm_year;
+    return makeTime(tmElem);
+}
+
+bool initSystemTime(Time &config)
 {
     bool rtcOk;
     configTime(config.timeZone, config.dayLight, config.ntpServer);
-    if (rtc.begin())
+    if (RTC.chipPresent())
     {
         Serial.println(F("[Time] RTC found, setting..."));
         rtcOk = true;
+        setSyncProvider(RTC.get);
     }
     else
     {
         Serial.println(F("[Time] no rtc module"));
         rtcOk = false;
+        setSyncProvider(getNTPTime);
     }
+    setSyncInterval(3600);
     setSytemTime(rtcOk);
+
+    return rtcOk;
 }

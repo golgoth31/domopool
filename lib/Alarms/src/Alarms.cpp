@@ -8,7 +8,7 @@ byte alarm1 = 0b00000000;
 
 void setStorageAlarm(bool state)
 {
-    alarm1 = EEPROM[alarm1Offset];
+    alarm1 = EEPROM.read(alarm1Offset);
     if (state)
     {
         bitWrite(alarm1, 0, 1);
@@ -17,11 +17,11 @@ void setStorageAlarm(bool state)
     {
         bitWrite(alarm1, 0, 0);
     }
-    EEPROM[alarm1Offset] = alarm1;
+    EEPROM.write(alarm1Offset, alarm1);
 }
 bool getStorageAlarm()
 {
-    alarm1 = EEPROM[alarm1Offset];
+    alarm1 = EEPROM.read(alarm1Offset);
     int state = bitRead(alarm1, 0);
     if (state == 1)
     {

@@ -2,7 +2,7 @@
 
 bool initStorage()
 {
-    if (!SPIFFS.begin())
+    if (!SPIFFS.begin(true))
     {
         Serial.println("Card Mount Failed");
         return false;
