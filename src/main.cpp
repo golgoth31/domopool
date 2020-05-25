@@ -13,11 +13,12 @@
 #include <DallasTemperature.h>
 #include <TimeLib.h>
 #include <SPI.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_ILI9341.h>
-#include <XPT2046_Touchscreen.h>
-#include <Fonts/FreeSansBold9pt7b.h>
-#include <Fonts/FreeSansBold24pt7b.h>
+#include <TFT_eSPI.h>
+// #include <Adafruit_GFX.h>
+// #include <Adafruit_ILI9341.h>
+// #include <XPT2046_Touchscreen.h>
+// #include <Fonts/FreeSansBold9pt7b.h>
+// #include <Fonts/FreeSansBold24pt7b.h>
 
 #define ONE_WIRE_BUS 22
 #define lcdLEDPin 38
@@ -55,8 +56,9 @@
 #define TS_MAXY 3600
 /*______End of Calibration______*/
 
-Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
-XPT2046_Touchscreen touch(TOUCH_CS, TOUCH_IRQ);
+// Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
+// XPT2046_Touchscreen touch(TOUCH_CS, TOUCH_IRQ);
+TFT_eSPI tft = TFT_eSPI();
 
 // #define _debug
 int X, Y;
@@ -98,29 +100,41 @@ void setup(void)
 
     pinMode(TFT_LED, OUTPUT);
     digitalWrite(TFT_LED, LOW);
-    tft.begin();
-    touch.begin();
+    tft.init();
 
     delay(2000);
     Serial.println(F("Starting up"));
 
-    tft.fillScreen(ILI9341_BLACK);
-    tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-    tft.setFont(&FreeSansBold9pt7b);
+    tft.fillScreen(TFT_BLACK);
 
-    // Modbus Address adjustment
-    tft.setCursor(10, 20);
-    tft.print("Starting up");
+    // Set "cursor" at top left corner of display (0,0) and select font 4
+    tft.setCursor(0, 0, 4);
+
+    // Set the font colour to be white with a black background
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+
+    // We can now plot text on screen using the "print" class
+    tft.println("Intialised default\n");
+    tft.println("White text");
+
+    tft.setTextColor(TFT_RED, TFT_BLACK);
+    tft.println("Red text");
+
+    tft.setTextColor(TFT_GREEN, TFT_BLACK);
+    tft.println("Green text");
+
+    tft.setTextColor(TFT_BLUE, TFT_BLACK);
+    tft.println("Blue text");
 
     // Initialize storage
     storageOk = initStorage();
 
-    if (storageOk)
-    {
-        tft.setFont(&FreeSansBold24pt7b);
-        tft.setCursor(30, 65);
-        tft.print("Storage started");
-    }
+    // if (storageOk)
+    // {
+    //     tft.setFont(&FreeSansBold24pt7b);
+    //     tft.setCursor(30, 65);
+    //     tft.print("Storage started");
+    // }
     // Should load default config if run for the first time
     Serial.println(F("[Conf] Loading configuration..."));
     loadConfiguration(filename, config);
