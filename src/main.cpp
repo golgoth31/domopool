@@ -33,7 +33,7 @@
 #define TFT_CS 5
 #define TFT_DC 4
 #define TFT_MOSI 23
-#define TFT_CLK 18
+#define TFT_SCLK 18
 #define TFT_RST 22
 #define TFT_MISO 19
 #define TFT_LED 15
