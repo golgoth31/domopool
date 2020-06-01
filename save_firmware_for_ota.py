@@ -19,6 +19,4 @@ def save_firmware_for_ota(source, target, env):
 
 
 # Custom upload command and program name
-env.Replace(
-    PROGNAME="firmware_v_%s" % version, UPLOADCMD=save_firmware_for_ota
-)
+env.Replace(PROGNAME="firmware_v%s" % version, UPLOADCMD=save_firmware_for_ota)
