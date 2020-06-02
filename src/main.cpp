@@ -1,3 +1,11 @@
+// include the dependencies
+#include <Wire.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#include <TimeLib.h>
+#include <SPI.h>
+#include <TFT_eSPI.h>
+
 // Local libraries
 #include <Aconfig.h>
 #include <Anetwork.h>
@@ -6,19 +14,6 @@
 #include <Atime.h>
 #include <Alarms.h>
 #include "config.h"
-
-// include the dependencies
-#include <Wire.h>
-#include <OneWire.h>
-#include <DallasTemperature.h>
-#include <TimeLib.h>
-#include <SPI.h>
-#include <TFT_eSPI.h>
-// #include <Adafruit_GFX.h>
-// #include <Adafruit_ILI9341.h>
-// #include <XPT2046_Touchscreen.h>
-// #include <Fonts/FreeSansBold9pt7b.h>
-// #include <Fonts/FreeSansBold24pt7b.h>
 
 #define ONE_WIRE_BUS 22
 #define lcdLEDPin 38
@@ -29,35 +24,6 @@
 #define clkPin 18
 #define dtPin 19
 
-/*______Define LCD pins for ArduiTouch _______*/
-#define TFT_CS 5
-#define TFT_DC 4
-#define TFT_MOSI 23
-#define TFT_SCLK 18
-#define TFT_RST 22
-#define TFT_MISO 19
-#define TFT_LED 15
-
-#define HAVE_TOUCHPAD
-#define TOUCH_CS 14
-#define TOUCH_IRQ 2
-/*_______End of defanitions______*/
-
-/*______Assign pressure_______*/
-#define ILI9341_ULTRA_DARKGREY 0x632C
-#define MINPRESSURE 10
-#define MAXPRESSURE 2000
-/*_______Assigned______*/
-
-/*____Calibrate TFT LCD_____*/
-#define TS_MINX 370
-#define TS_MINY 470
-#define TS_MAXX 3700
-#define TS_MAXY 3600
-/*______End of Calibration______*/
-
-// Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
-// XPT2046_Touchscreen touch(TOUCH_CS, TOUCH_IRQ);
 TFT_eSPI tft = TFT_eSPI();
 
 // #define _debug
@@ -100,31 +66,6 @@ void setup(void)
 
     pinMode(TFT_LED, OUTPUT);
     digitalWrite(TFT_LED, LOW);
-    tft.init();
-
-    delay(2000);
-    Serial.println(F("Starting up"));
-
-    tft.fillScreen(TFT_BLACK);
-
-    // Set "cursor" at top left corner of display (0,0) and select font 4
-    tft.setCursor(0, 0, 4);
-
-    // Set the font colour to be white with a black background
-    tft.setTextColor(TFT_WHITE, TFT_BLACK);
-
-    // We can now plot text on screen using the "print" class
-    tft.println("Intialised default\n");
-    tft.println("White text");
-
-    tft.setTextColor(TFT_RED, TFT_BLACK);
-    tft.println("Red text");
-
-    tft.setTextColor(TFT_GREEN, TFT_BLACK);
-    tft.println("Green text");
-
-    tft.setTextColor(TFT_BLUE, TFT_BLACK);
-    tft.println("Blue text");
 
     // Initialize storage
     storageOk = initStorage();

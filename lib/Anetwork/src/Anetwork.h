@@ -4,9 +4,10 @@
 #include <time.h>
 #include <AsyncTCP.h>
 #include <ESPmDNS.h>
-#include <Thing.h>
-#include <ESPWebThingAdapter.h>
-#include <Update.h>
+// #include <Thing.h>
+// #include <ESPWebThingAdapter.h>
+#include <WiFiUdp.h>
+#include <ArduinoOTA.h>
 
 #include <Aconfig.h>
 #include <Asensors.h>
