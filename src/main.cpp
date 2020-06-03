@@ -13,6 +13,7 @@
 #include <Asensors.h>
 #include <Atime.h>
 #include <Alarms.h>
+#include <Athings.h>
 #include "config.h"
 
 #define ONE_WIRE_BUS 22
@@ -104,6 +105,7 @@ void setup(void)
     {
         Serial.println(F("[Eth] Server not started"));
     }
+    initWebThings();
 
     Serial.println(F("[Time] Setting time..."));
     rtcOk = initSystemTime(config.time);
@@ -116,6 +118,9 @@ void setup(void)
 
     initConfigData(config);
     config.metrics.alarms.storage = getStorageAlarm();
+
+    tft.init();
+    tft.fillScreen(TFT_BLACK);
 }
 
 void loop(void)
@@ -125,6 +130,7 @@ void loop(void)
         lastReadingTime = millis();
         lcdBacklightTimer = millis();
     }
+    handleWebThings();
 
     // lcdLEDButtonState = digitalRead(lcdLEDButtonPin);
     // // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
