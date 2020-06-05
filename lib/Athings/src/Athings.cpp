@@ -34,11 +34,6 @@ void initWebThings()
     // wfilterAlarm.type = ThingDataType::BOOLEAN;
     // wfilterAlarm.atType = "BooleanProperty";
 
-    // ThingDevice wphPump("phPump", "ph pump", pumpTypes);
-    // ThingProperty wphOn("on", "ph pump state", ThingDataType::BOOLEAN, "BooleanProperty");
-    // ThingProperty wphForce("force", "Force ph pump", ThingDataType::BOOLEAN, "OnOffProperty");
-    // ThingProperty wphAlarm("alarm", "ph pump alarm", ThingDataType::BOOLEAN, "BooleanProperty");
-
     adapter = new WebThingAdapter("domopool", WiFi.localIP(), 8080);
 
     wfilterPump.addProperty(&wfilterOn);
