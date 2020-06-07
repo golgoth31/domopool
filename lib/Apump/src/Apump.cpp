@@ -25,18 +25,22 @@ void pumpFullTime(bool pump[24], bool state)
 
 void pumpInit(int filterPin, int chPin, int phPin)
 {
+
     Serial.print(F("[Filter] Filter pin: "));
     Serial.println(filterPin);
+
     pinMode(filterPin, OUTPUT);
     digitalWrite(filterPin, HIGH);
 
     Serial.print(F("[Filter] CH pin: "));
     Serial.println(chPin);
+
     pinMode(chPin, OUTPUT);
     digitalWrite(chPin, HIGH);
 
     Serial.print(F("[Filter] PH pin: "));
     Serial.println(phPin);
+
     pinMode(phPin, OUTPUT);
     digitalWrite(phPin, HIGH);
 
@@ -187,7 +191,9 @@ bool setFilterState(Config &config, int hour)
         EEPROM.get(chEepromOffset, chDuration);
         if (pump[hour] || config.pump.forceFilter)
         {
+
             Serial.println(F("[Filter] On"));
+
             config.metrics.filterOn = true;
             digitalWrite(pumpFilterRelayPin, LOW);
             if ((config.metrics.savedTempWater > 15 && chDuration > 72) || config.metrics.savedTempWater > 18 || config.pump.forceCH)
@@ -198,7 +204,9 @@ bool setFilterState(Config &config, int hour)
         }
         else
         {
+
             Serial.println(F("[Filter] Off"));
+
             digitalWrite(pumpFilterRelayPin, HIGH);
             config.metrics.filterOn = false;
         }
@@ -214,8 +222,10 @@ bool setFilterState(Config &config, int hour)
         EEPROM.put(chEepromOffset, chDuration);
         config.metrics.chDuration = chDuration;
     }
+
     Serial.print(F("[Filter] Pump state: "));
     Serial.println(config.metrics.filterOn);
+
     return config.metrics.filterOn;
 }
 
@@ -223,32 +233,32 @@ bool setPhState(Config &config, bool filterOn)
 {
     // Ph pump have 10m cycles (600s)
     // activate pump for 20% of 10m if ph val is under threshold+0.15
-    if ((config.sensors.ph.val <= config.sensors.ph.threshold) && !(phInject))
+    if ((config.metrics.curPh <= config.sensors.ph.threshold) && !(phInject))
     {
         ton = 0;
     }
-    else if ((config.sensors.ph.val <= (config.sensors.ph.threshold + 0.15)) && !(phInject))
+    else if ((config.metrics.curPh <= (config.sensors.ph.threshold + 0.15)) && !(phInject))
     {
         ton = 120;
         phInject = true;
         time(&timestamp);
     }
     // activate pump for 50% of 10m if ph val is under threshold+0.30
-    else if ((config.sensors.ph.val <= (config.sensors.ph.threshold + 0.30)) && !(phInject))
+    else if ((config.metrics.curPh <= (config.sensors.ph.threshold + 0.30)) && !(phInject))
     {
         ton = 300;
         phInject = true;
         time(&timestamp);
     }
     // activate pump for 75% of 10m if ph val is under threshold+0.45
-    else if ((config.sensors.ph.val <= (config.sensors.ph.threshold + 0.45)) && !(phInject))
+    else if ((config.metrics.curPh <= (config.sensors.ph.threshold + 0.45)) && !(phInject))
     {
         ton = 450;
         phInject = true;
         time(&timestamp);
     }
     // activate pump for 100% of 10m if ph val is over threshold+0.45
-    else if ((config.sensors.ph.val > (config.sensors.ph.threshold + 0.45)) && !(phInject))
+    else if ((config.metrics.curPh > (config.sensors.ph.threshold + 0.45)) && !(phInject))
     {
         ton = 600;
         phInject = true;
@@ -287,7 +297,9 @@ bool setPhState(Config &config, bool filterOn)
         // digitalWrite(pumpPhRelayPin, LOW);
         config.metrics.phOn = false;
     }
+
     Serial.print(F("[PH] Pump state: "));
     Serial.println(config.metrics.phOn);
+
     return config.metrics.phOn;
 }

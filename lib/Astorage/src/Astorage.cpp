@@ -4,7 +4,9 @@ bool initStorage()
 {
     if (!SPIFFS.begin(true))
     {
+
         Serial.println("Card Mount Failed");
+
         return false;
     }
     return true;
@@ -27,8 +29,10 @@ File saveFile(const char *filename)
     Serial.print(F("[Conf] Opening "));
     Serial.print(filename);
     Serial.println(F("..."));
+
     // Open file for writing
     File file = SPIFFS.open(filename, FILE_WRITE);
+
     if (!file)
     {
         Serial.println(F("Failed to create file"));

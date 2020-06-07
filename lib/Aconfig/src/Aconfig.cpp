@@ -15,7 +15,9 @@ void loadConfiguration(const char *filename, Config &config)
     DeserializationError error = deserializeJson(doc, file);
     if (error)
     {
+
         Serial.println(F("[Conf] Failed to read file, using default configuration"));
+
         doc["network"]["dhcp"] = true;
         doc["network"]["allowPost"] = false;
         for (int i = 0; i < 8; i++)
@@ -57,12 +59,14 @@ bool saveConfiguration(const char *filename, Config &config)
     // Don't forget to change the capacity to match your requirements.
     // Use arduinojson.org/assistant to compute the capacity.
     StaticJsonDocument<ConfigDocSize> doc;
-    convert2doc(config, doc);
+    config2doc(config, doc);
 
     // Serialize JSON to file
     if (serializeJson(doc, file) == 0)
     {
+
         Serial.println(F("Failed to write to file"));
+
         return false;
     }
 
@@ -91,7 +95,7 @@ bool saveJson(String &data, Config &config, const char *filename)
 
 // Saves the configuration to a file
 // StaticJsonDocument<ConfigDocSize> convert2doc(Config &config)
-void convert2doc(Config &config, JsonDocument &doc)
+void config2doc(Config &config, JsonDocument &doc)
 {
     doc["global"]["lcdBacklightDuration"] = config.global.lcdBacklightDuration;
     doc["time"]["initialized"] = config.time.initialized;
@@ -107,7 +111,6 @@ void convert2doc(Config &config, JsonDocument &doc)
     doc["sensors"]["tempResolution"] = config.sensors.tempResolution;
     doc["sensors"]["twin"]["enabled"] = config.sensors.twin.enabled;
     doc["sensors"]["twin"]["init"] = config.sensors.twin.init;
-    doc["sensors"]["twin"]["val"] = config.sensors.twin.val;
     for (int i = 0; i < 8; i++)
     {
         doc["sensors"]["twin"]["addr"][i] = config.sensors.twin.addr[i];
@@ -115,7 +118,6 @@ void convert2doc(Config &config, JsonDocument &doc)
 
     doc["sensors"]["twout"]["enabled"] = true;
     doc["sensors"]["twout"]["init"] = config.sensors.twout.init;
-    doc["sensors"]["twout"]["val"] = config.sensors.twout.val;
     for (int i = 0; i < 8; i++)
     {
         doc["sensors"]["twout"]["addr"][i] = config.sensors.twout.addr[i];
@@ -126,13 +128,26 @@ void convert2doc(Config &config, JsonDocument &doc)
     {
         doc["sensors"]["tamb"]["addr"][i] = config.sensors.tamb.addr[i];
     }
-    doc["sensors"]["tamb"]["val"] = config.sensors.tamb.val;
     doc["sensors"]["ph"]["enabled"] = config.sensors.ph.enabled;
     doc["sensors"]["ph"]["threshold"] = config.sensors.ph.threshold;
-    doc["sensors"]["ph"]["val"] = config.sensors.ph.val;
     doc["pump"]["forceFilter"] = config.pump.forceFilter;
     doc["pump"]["forcePH"] = config.pump.forcePH;
     doc["pump"]["forceCH"] = config.pump.forceCH;
+}
+
+void metrics2doc(Config &config, JsonDocument &doc)
+{
+    doc["metrics"]["chDuration"] = config.metrics.chDuration;
+    doc["metrics"]["chOn"] = config.metrics.chOn;
+    doc["metrics"]["curCh"] = config.metrics.curCh;
+    doc["metrics"]["curPh"] = config.metrics.curPh;
+    doc["metrics"]["curTempAmbiant"] = config.metrics.curTempAmbiant;
+    doc["metrics"]["curTempWater"] = config.metrics.curTempWater;
+    doc["metrics"]["filterOn"] = config.metrics.filterOn;
+    doc["metrics"]["hour"] = config.metrics.hour;
+    doc["metrics"]["phOn"] = config.metrics.phOn;
+    doc["metrics"]["savedTempWater"] = config.metrics.savedTempWater;
+    doc["metrics"]["startup"] = config.metrics.startup;
 }
 
 void convert2config(JsonDocument &doc, Config &config)

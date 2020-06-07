@@ -29,7 +29,9 @@ bool startNetwork(const char *ssid, const char *password)
     while (WiFi.status() != WL_CONNECTED)
     {
         delay(500);
+
         Serial.print(".");
+
         wifiUp = true;
     }
 
@@ -62,6 +64,7 @@ bool startNetwork(const char *ssid, const char *password)
                 type = "filesystem";
 
             // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
+            pageOTA();
             Serial.println("Start updating " + type);
         })
         .onEnd([]() {
@@ -120,7 +123,9 @@ void sendData(Config &config)
     bool postRequest = false;
     if (client)
     {
+
         Serial.println(F("[Ethernet] New client request"));
+
         boolean currentLineIsBlank = true;
         while (client.connected())
         {
@@ -157,7 +162,9 @@ void sendData(Config &config)
                         compile += " ";
                         compile += __TIME__;
                         httpResponse["compile"] = compile;
+
                         Serial.println(compile);
+
                         client.print(F("Content-Length: "));
                         client.println(measureJsonPretty(httpResponse));
                         client.println();
@@ -166,7 +173,17 @@ void sendData(Config &config)
                     }
                     else if (reqURI.equals("/config"))
                     {
-                        convert2doc(config, httpResponse);
+                        config2doc(config, httpResponse);
+                        response200(client);
+                        client.print(F("Content-Length: "));
+                        client.println(measureJsonPretty(httpResponse));
+                        client.println();
+
+                        serializeJsonPretty(httpResponse, client);
+                    }
+                    else if (reqURI.equals("/metrics"))
+                    {
+                        metrics2doc(config, httpResponse);
                         response200(client);
                         client.print(F("Content-Length: "));
                         client.println(measureJsonPretty(httpResponse));
@@ -197,6 +214,7 @@ void sendData(Config &config)
 
                         Serial.print(F("[Eth] Post body: "));
                         Serial.println(reqBody);
+
                         bool saved = saveJson(reqBody, config, "config.jsn");
                         if (saved)
                         {
@@ -218,10 +236,14 @@ void sendData(Config &config)
             delay(1);
             // close the connection:
             client.stop();
+
             Serial.println(F("[Eth] Response sent"));
+
             if (postRequest)
             {
+
                 Serial.println(F("[Eth] Rebooting"));
+
                 software_Reboot();
             }
         }

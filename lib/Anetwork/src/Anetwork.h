@@ -9,6 +9,7 @@
 
 #include <Aconfig.h>
 #include <Asensors.h>
+#include <Adisplay.h>
 
 #ifndef __ANETWORK_H_UNDEFINED__
 #define __ANETWORK_H_UNDEFINED__

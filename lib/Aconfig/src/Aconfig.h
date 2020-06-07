@@ -19,12 +19,10 @@ struct Temp
     bool enabled;
     bool init;
     uint8_t addr[8];
-    float val;
 };
 struct AnalogSensor
 {
     bool enabled;
-    float val;
     float threshold;
 };
 
@@ -69,8 +67,11 @@ struct Alarms
 
 struct Metrics
 {
+    float curTempAmbiant;
     float curTempWater;
     float savedTempWater;
+    float curPh;
+    float curCh;
     bool startup;
     bool filterOn;
     bool phOn;
@@ -93,7 +94,8 @@ struct Config
 void loadConfiguration(const char *filename, Config &config);
 bool saveConfiguration(const char *filename, Config &config);
 bool saveJson(String &data, Config &config, const char *filename);
-void convert2doc(Config &config, JsonDocument &doc);
+void config2doc(Config &config, JsonDocument &doc);
+void metrics2doc(Config &config, JsonDocument &doc);
 void convert2config(JsonDocument &doc, Config &config);
 void initConfigData(Config &config);
 #endif

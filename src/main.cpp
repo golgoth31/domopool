@@ -3,8 +3,6 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <TimeLib.h>
-#include <SPI.h>
-#include <TFT_eSPI.h>
 
 // Local libraries
 #include <Aconfig.h>
@@ -14,21 +12,15 @@
 #include <Atime.h>
 #include <Alarms.h>
 #include <Athings.h>
+#include <Adisplay.h>
 #include "config.h"
 
-#define ONE_WIRE_BUS 22
-#define lcdLEDPin 38
-#define lcdLEDButtonPin 34
+#define ONE_WIRE_BUS 24
 #define filterPin 48
 #define phPin 49
 #define chPin 47
 #define clkPin 18
-#define dtPin 19
-
-TFT_eSPI tft = TFT_eSPI();
-
-// #define _debug
-int X, Y;
+// #define dtPin 19
 
 // configure timed actions
 unsigned long lastReadingTime = 0;
@@ -65,8 +57,7 @@ void setup(void)
 
     pumpInit(filterPin, chPin, phPin);
 
-    pinMode(TFT_LED, OUTPUT);
-    digitalWrite(TFT_LED, LOW);
+    initDisplay();
 
     // Initialize storage
     storageOk = initStorage();
@@ -78,25 +69,34 @@ void setup(void)
     //     tft.print("Storage started");
     // }
     // Should load default config if run for the first time
+
     Serial.println(F("[Conf] Loading configuration..."));
+
     loadConfiguration(filename, config);
 
     // Start up the library
+
     Serial.println(F("[Sens] Starting..."));
+
     // start ds18b20 sensors
     tempSensors.begin();
 
     Serial.println(F("[Sens] Registering addresses..."));
+
     registerDevices(config.sensors, tempSensors);
     showAddressFromEeprom();
 
     Serial.println(F("[Sens] Setting sensors options..."));
+
     tempSensors.setWaitForConversion(config.sensors.waitForConversion);
     tempSensors.setResolution(config.sensors.tempResolution);
 
     // Start ethernet service
+
     Serial.println(F("[Eth] Starting server..."));
+
     serverStarted = startNetwork(ssid, password);
+
     if (serverStarted)
     {
         Serial.println(F("[Eth] Server is up"));
@@ -105,22 +105,25 @@ void setup(void)
     {
         Serial.println(F("[Eth] Server not started"));
     }
+
     initWebThings();
 
     Serial.println(F("[Time] Setting time..."));
+
     rtcOk = initSystemTime(config.time);
+
     Serial.print(F("[Time] Current time: "));
     Serial.println(printTime(true));
 
     Serial.println(F("[Conf] Updating sensors config..."));
+
     saveConfiguration(filename, config);
+
     Serial.println(F("[Conf] Done"));
 
     initConfigData(config);
     config.metrics.alarms.storage = getStorageAlarm();
-
-    tft.init();
-    tft.fillScreen(TFT_BLACK);
+    page1(config);
 }
 
 void loop(void)
@@ -130,7 +133,8 @@ void loop(void)
         lastReadingTime = millis();
         lcdBacklightTimer = millis();
     }
-    handleWebThings();
+
+    handleWebThings(config);
 
     // lcdLEDButtonState = digitalRead(lcdLEDButtonPin);
     // // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
@@ -160,23 +164,25 @@ void loop(void)
         tempSensors.requestTemperatures();
 
         // Serial.print(F("Sensor 'twout' value: "));
-        config.sensors.twout.val = tempSensors.getTempC(config.sensors.twout.addr);
+        float twout = tempSensors.getTempC(config.sensors.twout.addr);
         // Serial.println(config.sensors.twout.val);
-        tempMoy = config.sensors.twout.val;
+        tempMoy = twout;
         if (config.sensors.twin.enabled)
         {
             // Serial.print(F("Sensor 'twin' value: "));
-            config.sensors.twin.val = tempSensors.getTempC(config.sensors.twin.addr);
+            float twin = tempSensors.getTempC(config.sensors.twin.addr);
             // Serial.println(config.sensors.twin.val);
-            tempMoy = (config.sensors.twout.val + config.sensors.twin.val) / 2;
+            tempMoy = (twout + twin) / 2;
         }
         config.metrics.curTempWater = roundTemp(tempMoy);
+        config.metrics.curTempAmbiant = tempSensors.getTempC(config.sensors.tamb.addr);
+
         Serial.print(F("Sensor water value: "));
         Serial.println(config.metrics.curTempWater);
-
         Serial.print(F("Sensor 'tamb' value: "));
-        config.sensors.tamb.val = tempSensors.getTempC(config.sensors.tamb.addr);
-        Serial.println(config.sensors.tamb.val);
+        Serial.println(config.metrics.curTempAmbiant);
+
+        displayTemp(config);
 
         if (!config.metrics.startup)
         {
@@ -186,20 +192,24 @@ void loop(void)
                 phPumpOn = setPhState(config, filterPumpOn);
             }
         }
-
+        displayPump(config);
         count_time_30s++; // Count 15 cycles for sending XPL every 30s
         lastReadingTime = millis();
     }
 
     if (count_time_30s == 15)
     {
+
         Serial.println(F("*** 30s ***"));
         // setSytemTime(rtcOk);
         Serial.print(F("Time: "));
         Serial.println(printTime(true));
+
         if (config.metrics.startup)
         {
+
             Serial.println(F("End of startup blanking time"));
+
             config.metrics.startup = false;
             config.metrics.savedTempWater = config.metrics.curTempWater;
         }
@@ -209,10 +219,12 @@ void loop(void)
     }
     if (count_time_30min == 60)
     {
-        Serial.println(F("*** 30m ***"));
         setSytemTime(rtcOk);
+
+        Serial.println(F("*** 30m ***"));
         Serial.print(F("Time: "));
         Serial.println(printTime(true));
+
         count_time_30min = 0;
     }
 }
