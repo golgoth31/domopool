@@ -177,11 +177,6 @@ void loop(void)
         config.metrics.curTempWater = roundTemp(tempMoy);
         config.metrics.curTempAmbiant = tempSensors.getTempC(config.sensors.tamb.addr);
 
-        Serial.print(F("Sensor water value: "));
-        Serial.println(config.metrics.curTempWater);
-        Serial.print(F("Sensor 'tamb' value: "));
-        Serial.println(config.metrics.curTempAmbiant);
-
         displayTemp(config);
 
         if (!config.metrics.startup)
@@ -204,6 +199,8 @@ void loop(void)
         // setSytemTime(rtcOk);
         Serial.print(F("Time: "));
         Serial.println(printTime(true));
+        Serial.print(F("Date: "));
+        Serial.println(printDate());
 
         if (config.metrics.startup)
         {
@@ -224,6 +221,10 @@ void loop(void)
         Serial.println(F("*** 30m ***"));
         Serial.print(F("Time: "));
         Serial.println(printTime(true));
+        Serial.print(F("Sensor 'water' value: "));
+        Serial.println(config.metrics.curTempWater);
+        Serial.print(F("Sensor 'tamb' value: "));
+        Serial.println(config.metrics.curTempAmbiant);
 
         count_time_30min = 0;
     }

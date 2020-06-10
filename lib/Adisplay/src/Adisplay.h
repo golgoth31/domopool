@@ -19,10 +19,17 @@
 // #define TFT_BL 15
 // #define TFT_BACKLIGHT_ON LOW
 
+// #define GFXFF 1
+// #define GLCD 0
+// #define FONT2 2
+// #define FF17 &FreeSans9pt7b
+
 #include <SPI.h>
 #include <TFT_eSPI.h>
+#include <TimeLib.h>
 
 #include <Aconfig.h>
+#include <Atime.h>
 
 #ifndef __ADISPLAY_H_UNDEFINED__
 #define __ADISPLAY_H_UNDEFINED__

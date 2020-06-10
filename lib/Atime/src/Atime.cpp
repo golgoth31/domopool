@@ -28,6 +28,16 @@ String printTime(bool seconds)
     }
     return time;
 }
+String printDate()
+{
+    String date = "";
+    date += day();
+    date += " ";
+    date += monthStr(month());
+    date += " ";
+    date += year();
+    return date;
+}
 
 void setSytemTime(bool rtcOk)
 {
@@ -39,10 +49,10 @@ void setSytemTime(bool rtcOk)
         tmElem.Day = timedata.tm_mday;
         tmElem.Hour = timedata.tm_hour;
         tmElem.Minute = timedata.tm_min;
-        tmElem.Month = timedata.tm_mon;
+        tmElem.Month = timedata.tm_mon + 1;
         tmElem.Second = timedata.tm_sec;
         tmElem.Wday = timedata.tm_wday;
-        tmElem.Year = timedata.tm_year;
+        tmElem.Year = (timedata.tm_year + 1900) - 1970;
         time_t now = makeTime(tmElem);
         setTime(now);
         if (rtcOk)
@@ -64,10 +74,10 @@ time_t getNTPTime()
     tmElem.Day = timedata.tm_mday;
     tmElem.Hour = timedata.tm_hour;
     tmElem.Minute = timedata.tm_min;
-    tmElem.Month = timedata.tm_mon;
+    tmElem.Month = timedata.tm_mon + 1;
     tmElem.Second = timedata.tm_sec;
     tmElem.Wday = timedata.tm_wday;
-    tmElem.Year = timedata.tm_year;
+    tmElem.Year = (timedata.tm_year + 1900) - 1970;
     return makeTime(tmElem);
 }
 

@@ -10,4 +10,5 @@
 bool initSystemTime(Time &config);
 void setSytemTime(bool ethServerStarted);
 String printTime(bool seconds);
+String printDate();
 #endif
