@@ -60,6 +60,7 @@ struct Alarms
 {
     bool filter;
     bool ph;
+    bool ch;
     float phVal;
     bool rtc;
     bool storage;
@@ -72,6 +73,7 @@ struct Metrics
     float savedTempWater;
     float curPh;
     float curCh;
+    float curWaterPressure;
     bool startup;
     bool filterOn;
     bool phOn;

@@ -35,15 +35,26 @@ void displayTemp(Config &config)
     text += config.metrics.curTempWater;
     text += (char)247;
     text += "C";
-    tft.drawString("Water", 60, 10, 1);
-    tft.drawString(text, 60, 53, 1);
+    tft.drawString("Water", 60, 15, 1);
+    tft.drawString(text, 60, 37, 1);
 
     text = "";
     text += config.metrics.curTempAmbiant;
     text += (char)247;
     text += "C";
-    tft.drawString("Ambiant", 180, 10, 1);
-    tft.drawString(text, 180, 53, 1);
+    tft.drawString("Ambiant", 180, 15, 1);
+    tft.drawString(text, 180, 37, 1);
+
+    text = "";
+    text += config.metrics.curPh;
+    tft.drawString("Ph", 60, 65, 1);
+    tft.drawString(text, 60, 87, 1);
+
+    text = "";
+    text += config.metrics.curWaterPressure;
+    text += " Bar";
+    tft.drawString("Pressure", 180, 15, 1);
+    tft.drawString(text, 180, 37, 1);
 }
 void displayPump(Config &config)
 {
@@ -61,11 +72,37 @@ void displayPump(Config &config)
     {
         color = TFT_CYAN;
     }
-    // tft.fillRoundRect(0, 120, 158, 120, 5, color);
-    // tft.setTextColor(TFT_BLACK, color);
-    // printText(0, 180, "Filter", 2, 2, 158);
+    button[0].initButton(&tft, 60, 235, 118, 168, TFT_BLACK, color, TFT_BLACK, "Filter", 2);
+    button[0].drawButton();
 
-    button[0].initButton(&tft, 60, 267, 118, 104, TFT_BLACK, color, TFT_BLACK, "Filter", 2);
+    if (config.metrics.phOn)
+    {
+        color = TFT_GREEN;
+    }
+    else if (config.metrics.alarms.ph)
+    {
+        color = TFT_RED;
+    }
+    else
+    {
+        color = TFT_CYAN;
+    }
+    button[0].initButton(&tft, 180, 193, 118, 84, TFT_BLACK, color, TFT_BLACK, "Ph", 2);
+    button[0].drawButton();
+
+    if (config.metrics.chOn)
+    {
+        color = TFT_GREEN;
+    }
+    else if (config.metrics.alarms.ch)
+    {
+        color = TFT_RED;
+    }
+    else
+    {
+        color = TFT_CYAN;
+    }
+    button[0].initButton(&tft, 180, 277, 118, 84, TFT_BLACK, color, TFT_BLACK, "Ch", 2);
     button[0].drawButton();
 
     // tft.fillRoundRect(162, 120, 158, 120, 5, TFT_BLUE);
@@ -75,16 +112,19 @@ void displayDate()
     tft.setTextColor(TFT_LIGHTGREY, TFT_BLACK);
     tft.setTextSize(2);
     tft.setTextDatum(MC_DATUM);
-    tft.drawCentreString(printDate(), 120, 150, 1);
-    tft.drawCentreString(printTime(false), 120, 170, 1);
+    tft.drawCentreString(printDate(), 120, 108, 1);
+    tft.drawCentreString(printTime(false), 120, 130, 1);
 }
 void page1(Config &config)
 {
     tft.fillScreen(TFT_BLACK);
 
-    tft.drawLine(120, 0, 120, 320, TFT_LIGHTGREY);
-    tft.drawLine(0, 107, 240, 107, TFT_LIGHTGREY);
-    tft.drawLine(0, 214, 240, 214, TFT_LIGHTGREY);
+    tft.drawLine(120, 0, 120, 100, TFT_LIGHTGREY);
+    tft.drawLine(0, 50, 240, 50, TFT_LIGHTGREY);
+    tft.drawLine(0, 100, 240, 100, TFT_LIGHTGREY);
+
+    tft.drawLine(120, 150, 120, 320, TFT_LIGHTGREY);
+    tft.drawLine(0, 150, 240, 150, TFT_LIGHTGREY);
 
     displayTemp(config);
     displayPump(config);

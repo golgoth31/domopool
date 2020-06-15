@@ -143,6 +143,7 @@ void metrics2doc(Config &config, JsonDocument &doc)
     doc["metrics"]["curPh"] = config.metrics.curPh;
     doc["metrics"]["curTempAmbiant"] = config.metrics.curTempAmbiant;
     doc["metrics"]["curTempWater"] = config.metrics.curTempWater;
+    doc["metrics"]["curWaterPressure"] = config.metrics.curWaterPressure;
     doc["metrics"]["filterOn"] = config.metrics.filterOn;
     doc["metrics"]["hour"] = config.metrics.hour;
     doc["metrics"]["phOn"] = config.metrics.phOn;
