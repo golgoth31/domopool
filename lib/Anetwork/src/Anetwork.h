@@ -6,6 +6,7 @@
 #include <time.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
+// #include <SPI.h>
 
 #include <Aconfig.h>
 #include <Asensors.h>

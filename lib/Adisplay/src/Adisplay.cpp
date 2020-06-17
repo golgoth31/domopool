@@ -53,8 +53,8 @@ void displayTemp(Config &config)
     text = "";
     text += config.metrics.curWaterPressure;
     text += " Bar";
-    tft.drawString("Pressure", 180, 15, 1);
-    tft.drawString(text, 180, 37, 1);
+    tft.drawString("Pressure", 180, 65, 1);
+    tft.drawString(text, 180, 87, 1);
 }
 void displayPump(Config &config)
 {

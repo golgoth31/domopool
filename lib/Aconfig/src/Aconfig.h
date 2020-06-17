@@ -66,6 +66,15 @@ struct Alarms
     bool storage;
 };
 
+struct Tests
+{
+    bool enabled;
+    float twater;
+    float tamb;
+    float ph;
+    float pressure;
+};
+
 struct Metrics
 {
     float curTempAmbiant;
@@ -91,6 +100,7 @@ struct Config
     Time time;
     Pump pump;
     Metrics metrics;
+    Tests tests;
 };
 
 void loadConfiguration(const char *filename, Config &config);

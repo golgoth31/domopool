@@ -35,7 +35,6 @@ unsigned long lcdBacklightTimer = 0;
 // Setup a oneWire instance to communicate with any OneWire devices
 OneWire ow(ONE_WIRE_BUS);
 DallasTemperature tempSensors(&ow);
-float tempMoy;
 
 Config config;
 const char *filename = "/config.json";
@@ -79,17 +78,18 @@ void setup(void)
     Serial.println(F("[Sens] Starting..."));
 
     // start ds18b20 sensors
-    tempSensors.begin();
+    initializeDS18B20(config.sensors, tempSensors);
+    // tempSensors.begin();
 
-    Serial.println(F("[Sens] Registering addresses..."));
+    // Serial.println(F("[Sens] Registering addresses..."));
 
-    registerDevices(config.sensors, tempSensors);
-    showAddressFromEeprom();
+    // registerDevices(config.sensors, tempSensors);
+    // showAddressFromEeprom();
 
-    Serial.println(F("[Sens] Setting sensors options..."));
+    // Serial.println(F("[Sens] Setting sensors options..."));
 
-    tempSensors.setWaitForConversion(config.sensors.waitForConversion);
-    tempSensors.setResolution(config.sensors.tempResolution);
+    // tempSensors.setWaitForConversion(config.sensors.waitForConversion);
+    // tempSensors.setResolution(config.sensors.tempResolution);
 
     // Start ethernet service
 
@@ -124,6 +124,10 @@ void setup(void)
     initConfigData(config);
     config.metrics.alarms.storage = getStorageAlarm();
     page1(config);
+    config.tests.enabled = true;
+    config.tests.tamb = 25.38;
+    config.tests.twater = 24.1;
+    config.tests.pressure = 0.8;
 }
 
 void loop(void)
@@ -161,21 +165,8 @@ void loop(void)
     // Get sensors every 2 seconds
     if ((millis() - lastReadingTime) >= 2000)
     {
-        tempSensors.requestTemperatures();
-
-        // Serial.print(F("Sensor 'twout' value: "));
-        float twout = tempSensors.getTempC(config.sensors.twout.addr);
-        // Serial.println(config.sensors.twout.val);
-        tempMoy = twout;
-        if (config.sensors.twin.enabled)
-        {
-            // Serial.print(F("Sensor 'twin' value: "));
-            float twin = tempSensors.getTempC(config.sensors.twin.addr);
-            // Serial.println(config.sensors.twin.val);
-            tempMoy = (twout + twin) / 2;
-        }
-        config.metrics.curTempWater = roundTemp(tempMoy);
-        config.metrics.curTempAmbiant = tempSensors.getTempC(config.sensors.tamb.addr);
+        displayDate();
+        getDS18B20(config, tempSensors);
 
         displayTemp(config);
 

@@ -197,3 +197,45 @@ void resetEepromSensorsTemp()
         EEPROM.write(i + twinOffset, 0);
     }
 }
+
+void initializeDS18B20(Sensors &config, DallasTemperature &tempSensors)
+{
+    tempSensors.begin();
+
+    Serial.println(F("[Sens] Registering addresses..."));
+
+    registerDevices(config, tempSensors);
+    showAddressFromEeprom();
+
+    Serial.println(F("[Sens] Setting sensors options..."));
+
+    tempSensors.setWaitForConversion(config.waitForConversion);
+    tempSensors.setResolution(config.tempResolution);
+}
+
+void getDS18B20(Config &config, DallasTemperature &tempSensors)
+{
+    if (!config.tests.enabled)
+    {
+        tempSensors.requestTemperatures();
+
+        // Serial.print(F("Sensor 'twout' value: "));
+        float twout = tempSensors.getTempC(config.sensors.twout.addr);
+        // Serial.println(config.sensors.twout.val);
+        float tempMoy = twout;
+        if (config.sensors.twin.enabled)
+        {
+            // Serial.print(F("Sensor 'twin' value: "));
+            float twin = tempSensors.getTempC(config.sensors.twin.addr);
+            // Serial.println(config.sensors.twin.val);
+            tempMoy = (twout + twin) / 2;
+        }
+        config.metrics.curTempWater = roundTemp(tempMoy);
+        config.metrics.curTempAmbiant = tempSensors.getTempC(config.sensors.tamb.addr);
+    }
+    else
+    {
+        config.metrics.curTempWater = config.tests.twater;
+        config.metrics.curTempAmbiant = config.tests.tamb;
+    }
+}

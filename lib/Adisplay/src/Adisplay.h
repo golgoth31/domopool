@@ -38,4 +38,5 @@ void page1(Config &config);
 void pageOTA();
 void displayPump(Config &config);
 void displayTemp(Config &config);
+void displayDate();
 #endif
