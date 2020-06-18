@@ -209,6 +209,8 @@ bool setFilterState(Config &config, int hour)
 
             digitalWrite(pumpFilterRelayPin, HIGH);
             config.metrics.filterOn = false;
+            config.metrics.chOn = true;
+            digitalWrite(pumpChRelayPin, HIGH);
         }
         config.metrics.hour = hour;
         if (config.metrics.savedTempWater > 15)
