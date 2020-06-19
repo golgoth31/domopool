@@ -95,7 +95,7 @@ void setup(void)
 
     Serial.println(F("[Eth] Starting server..."));
 
-    serverStarted = startNetwork(ssid, password);
+    serverStarted = startNetwork(ssid, password, config);
 
     if (serverStarted)
     {

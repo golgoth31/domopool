@@ -209,7 +209,7 @@ bool setFilterState(Config &config, int hour)
 
             digitalWrite(pumpFilterRelayPin, HIGH);
             config.metrics.filterOn = false;
-            config.metrics.chOn = true;
+            config.metrics.chOn = false;
             digitalWrite(pumpChRelayPin, HIGH);
         }
         config.metrics.hour = hour;

@@ -1,6 +1,6 @@
 #include "Anetwork.h"
 
-WiFiServer server(80);
+AsyncWebServer server(80);
 
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 int ip1, ip2, ip3, ip4;
@@ -22,7 +22,7 @@ bool checkIP(const char *ip)
     return false;
 }
 
-bool startNetwork(const char *ssid, const char *password)
+bool startNetwork(const char *ssid, const char *password, Config &config)
 {
     bool wifiUp = false;
     WiFi.begin(ssid, password);
@@ -40,6 +40,32 @@ bool startNetwork(const char *ssid, const char *password)
     Serial.println(F("[WiFi] IP address: "));
     Serial.println(WiFi.localIP());
 
+    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+        StaticJsonDocument<ConfigDocSize> httpResponse;
+        httpResponse["version"] = "test";
+        String compile = __DATE__;
+        compile += " ";
+        compile += __TIME__;
+        httpResponse["compile"] = compile;
+        Serial.println(compile);
+        String output;
+        serializeJsonPretty(httpResponse, output);
+        request->send(200, "application/json", output);
+    });
+    server.on("/config", HTTP_GET, [&config](AsyncWebServerRequest *request) {
+        StaticJsonDocument<ConfigDocSize> httpResponse;
+        config2doc(config, httpResponse);
+        String output;
+        serializeJsonPretty(httpResponse, output);
+        request->send(200, "application/json", output);
+    });
+    server.on("/metrics", HTTP_GET, [&config](AsyncWebServerRequest *request) {
+        StaticJsonDocument<ConfigDocSize> httpResponse;
+        metrics2doc(config, httpResponse);
+        String output;
+        serializeJsonPretty(httpResponse, output);
+        request->send(200, "application/json", output);
+    });
     server.begin();
 
     // Port defaults to 3232
@@ -65,10 +91,12 @@ bool startNetwork(const char *ssid, const char *password)
 
             // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
             pageOTA();
+            server.end();
             Serial.println("Start updating " + type);
         })
         .onEnd([]() {
             Serial.println("\nEnd");
+            server.begin();
         })
         .onProgress([](unsigned int progress, unsigned int total) {
             Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
@@ -119,133 +147,133 @@ void sendData(Config &config)
 {
     ArduinoOTA.handle();
 
-    WiFiClient client = server.available();
-    bool postRequest = false;
-    if (client)
-    {
+    // WiFiClient client = server.available();
+    // bool postRequest = false;
+    // if (client)
+    // {
 
-        Serial.println(F("[Ethernet] New client request"));
+    //     Serial.println(F("[Ethernet] New client request"));
 
-        boolean currentLineIsBlank = true;
-        while (client.connected())
-        {
-            if (client.available())
-            {
-                String reqType = client.readStringUntil(' ');
-                String reqURI = client.readStringUntil(' ');
-                String reqProtocol = client.readStringUntil('\n');
+    //     boolean currentLineIsBlank = true;
+    //     while (client.connected())
+    //     {
+    //         if (client.available())
+    //         {
+    //             String reqType = client.readStringUntil(' ');
+    //             String reqURI = client.readStringUntil(' ');
+    //             String reqProtocol = client.readStringUntil('\n');
 
-                // String reqHeaders = client.readStringUntil('\n');
-                String reqHeaders;
-                while (currentLineIsBlank)
-                {
-                    reqHeaders = client.readStringUntil('\n');
-                    if (reqHeaders.startsWith("\r"))
-                    {
-                        currentLineIsBlank = false;
-                    }
-                }
+    //             // String reqHeaders = client.readStringUntil('\n');
+    //             String reqHeaders;
+    //             while (currentLineIsBlank)
+    //             {
+    //                 reqHeaders = client.readStringUntil('\n');
+    //                 if (reqHeaders.startsWith("\r"))
+    //                 {
+    //                     currentLineIsBlank = false;
+    //                 }
+    //             }
 
-                String reqBody = client.readStringUntil('\n');
+    //             String reqBody = client.readStringUntil('\n');
 
-                // Serial.println(reqType);
-                // Serial.println(reqURI);
-                // Serial.println(reqProtocol);
-                // Serial.println(reqBody);
-                StaticJsonDocument<ConfigDocSize> httpResponse;
-                if (reqType.equals("GET"))
-                {
-                    if (reqURI.equals("/"))
-                    {
-                        httpResponse["version"] = "test";
-                        String compile = __DATE__;
-                        compile += " ";
-                        compile += __TIME__;
-                        httpResponse["compile"] = compile;
+    //             // Serial.println(reqType);
+    //             // Serial.println(reqURI);
+    //             // Serial.println(reqProtocol);
+    //             // Serial.println(reqBody);
+    //             StaticJsonDocument<ConfigDocSize> httpResponse;
+    //             if (reqType.equals("GET"))
+    //             {
+    //                 if (reqURI.equals("/"))
+    //                 {
+    //                     httpResponse["version"] = "test";
+    //                     String compile = __DATE__;
+    //                     compile += " ";
+    //                     compile += __TIME__;
+    //                     httpResponse["compile"] = compile;
 
-                        Serial.println(compile);
+    //                     Serial.println(compile);
 
-                        client.print(F("Content-Length: "));
-                        client.println(measureJsonPretty(httpResponse));
-                        client.println();
+    //                     client.print(F("Content-Length: "));
+    //                     client.println(measureJsonPretty(httpResponse));
+    //                     client.println();
 
-                        serializeJsonPretty(httpResponse, client);
-                    }
-                    else if (reqURI.equals("/config"))
-                    {
-                        config2doc(config, httpResponse);
-                        response200(client);
-                        client.print(F("Content-Length: "));
-                        client.println(measureJsonPretty(httpResponse));
-                        client.println();
+    //                     serializeJsonPretty(httpResponse, client);
+    //                 }
+    //                 else if (reqURI.equals("/config"))
+    //                 {
+    //                     config2doc(config, httpResponse);
+    //                     response200(client);
+    //                     client.print(F("Content-Length: "));
+    //                     client.println(measureJsonPretty(httpResponse));
+    //                     client.println();
 
-                        serializeJsonPretty(httpResponse, client);
-                    }
-                    else if (reqURI.equals("/metrics"))
-                    {
-                        metrics2doc(config, httpResponse);
-                        response200(client);
-                        client.print(F("Content-Length: "));
-                        client.println(measureJsonPretty(httpResponse));
-                        client.println();
+    //                     serializeJsonPretty(httpResponse, client);
+    //                 }
+    //                 else if (reqURI.equals("/metrics"))
+    //                 {
+    //                     metrics2doc(config, httpResponse);
+    //                     response200(client);
+    //                     client.print(F("Content-Length: "));
+    //                     client.println(measureJsonPretty(httpResponse));
+    //                     client.println();
 
-                        serializeJsonPretty(httpResponse, client);
-                    }
-                    else
-                    {
-                        response404(client);
-                    }
-                }
-                else if (reqType.equals("POST") && config.network.allowPost)
-                {
-                    if (reqURI.equals("/reboot"))
-                    {
-                        response200(client);
-                        postRequest = true;
-                    }
-                    else if (reqURI.equals("/reset"))
-                    {
-                        resetEepromSensorsTemp();
-                        response200(client);
-                        postRequest = true;
-                    }
-                    else if (reqURI.equals("/config"))
-                    {
+    //                     serializeJsonPretty(httpResponse, client);
+    //                 }
+    //                 else
+    //                 {
+    //                     response404(client);
+    //                 }
+    //             }
+    //             else if (reqType.equals("POST") && config.network.allowPost)
+    //             {
+    //                 if (reqURI.equals("/reboot"))
+    //                 {
+    //                     response200(client);
+    //                     postRequest = true;
+    //                 }
+    //                 else if (reqURI.equals("/reset"))
+    //                 {
+    //                     resetEepromSensorsTemp();
+    //                     response200(client);
+    //                     postRequest = true;
+    //                 }
+    //                 else if (reqURI.equals("/config"))
+    //                 {
 
-                        Serial.print(F("[Eth] Post body: "));
-                        Serial.println(reqBody);
+    //                     Serial.print(F("[Eth] Post body: "));
+    //                     Serial.println(reqBody);
 
-                        bool saved = saveJson(reqBody, config, "config.jsn");
-                        if (saved)
-                        {
-                            response200(client);
-                        }
-                        else
-                        {
-                            response500(client);
-                        }
-                    }
-                    else
-                    {
-                        response404(client);
-                    }
-                }
-                client.println();
-            }
-            // give the web browser time to receive the data
-            delay(1);
-            // close the connection:
-            client.stop();
+    //                     bool saved = saveJson(reqBody, config, "config.jsn");
+    //                     if (saved)
+    //                     {
+    //                         response200(client);
+    //                     }
+    //                     else
+    //                     {
+    //                         response500(client);
+    //                     }
+    //                 }
+    //                 else
+    //                 {
+    //                     response404(client);
+    //                 }
+    //             }
+    //             client.println();
+    //         }
+    //         // give the web browser time to receive the data
+    //         delay(1);
+    //         // close the connection:
+    //         client.stop();
 
-            Serial.println(F("[Eth] Response sent"));
+    //         Serial.println(F("[Eth] Response sent"));
 
-            if (postRequest)
-            {
+    //         if (postRequest)
+    //         {
 
-                Serial.println(F("[Eth] Rebooting"));
+    //             Serial.println(F("[Eth] Rebooting"));
 
-                software_Reboot();
-            }
-        }
-    }
+    //             software_Reboot();
+    //         }
+    //     }
+    // }
 }

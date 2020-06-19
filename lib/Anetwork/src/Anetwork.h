@@ -6,6 +6,7 @@
 #include <time.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
+#include <ESPAsyncWebServer.h>
 // #include <SPI.h>
 
 #include <Aconfig.h>
@@ -15,6 +16,6 @@
 #ifndef __ANETWORK_H_UNDEFINED__
 #define __ANETWORK_H_UNDEFINED__
 bool checkIP(const char *ip);
-bool startNetwork(const char *ssid, const char *password);
+bool startNetwork(const char *ssid, const char *password, Config &config);
 void sendData(Config &config);
 #endif
