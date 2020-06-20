@@ -7,7 +7,7 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include <ESPAsyncWebServer.h>
-// #include <SPI.h>
+#include <AsyncJson.h>
 
 #include <Aconfig.h>
 #include <Asensors.h>

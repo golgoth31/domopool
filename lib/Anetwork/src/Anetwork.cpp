@@ -1,6 +1,7 @@
 #include "Anetwork.h"
 
 AsyncWebServer server(80);
+IPAddress MQTTServer;
 
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 int ip1, ip2, ip3, ip4;
@@ -55,10 +56,17 @@ bool startNetwork(const char *ssid, const char *password, Config &config)
     server.on("/config", HTTP_GET, [&config](AsyncWebServerRequest *request) {
         StaticJsonDocument<ConfigDocSize> httpResponse;
         config2doc(config, httpResponse);
-        String output;
-        serializeJsonPretty(httpResponse, output);
+        String output = "";
+        // serializeJsonPretty(httpResponse, output);
+        serializeJson(httpResponse, output);
         request->send(200, "application/json", output);
     });
+    AsyncCallbackJsonWebHandler *configHandler = new AsyncCallbackJsonWebHandler("/config", [&config](AsyncWebServerRequest *request, JsonVariant &json) {
+        JsonObject jsonObj = json.as<JsonObject>();
+        saveJson(jsonObj, config, "config.jsn");
+        request->send(200);
+    });
+    server.addHandler(configHandler);
     server.on("/metrics", HTTP_GET, [&config](AsyncWebServerRequest *request) {
         StaticJsonDocument<ConfigDocSize> httpResponse;
         metrics2doc(config, httpResponse);
@@ -122,25 +130,6 @@ bool startNetwork(const char *ssid, const char *password, Config &config)
     Serial.println(WiFi.localIP());
 
     return wifiUp;
-}
-
-void response200(WiFiClient &client)
-{
-    client.println(F("HTTP/1.1 200 OK"));
-    client.println(F("Content-Type: application/json"));
-    client.println(F("Connection: close"));
-}
-void response404(WiFiClient &client)
-{
-    client.println(F("HTTP/1.1 404 NotFound"));
-    client.println(F("Content-Type: application/json"));
-    client.println(F("Connection: close"));
-}
-void response500(WiFiClient &client)
-{
-    client.println(F("HTTP/1.1 500 Error"));
-    client.println(F("Content-Type: application/json"));
-    client.println(F("Connection: close"));
 }
 
 void sendData(Config &config)

@@ -5,6 +5,13 @@
 #ifndef __ACONFIG_H_UNDEFINED__
 #define __ACONFIG_H_UNDEFINED__
 const int ConfigDocSize = 1024;
+
+struct MQTT
+{
+    bool enabled;
+    const char *server;
+};
+
 struct Network
 {
     bool dhcp;
@@ -13,7 +20,9 @@ struct Network
     const char *gateway;
     const char *dns;
     bool allowPost;
+    MQTT mqtt;
 };
+
 struct Temp
 {
     bool enabled;
@@ -105,9 +114,10 @@ struct Config
 
 void loadConfiguration(const char *filename, Config &config);
 bool saveConfiguration(const char *filename, Config &config);
-bool saveJson(String &data, Config &config, const char *filename);
+bool saveJson(JsonObject &json, Config &config, const char *filename);
 void config2doc(Config &config, JsonDocument &doc);
 void metrics2doc(Config &config, JsonDocument &doc);
 void convert2config(JsonDocument &doc, Config &config);
 void initConfigData(Config &config);
+void object2config(JsonObject doc, Config &config);
 #endif

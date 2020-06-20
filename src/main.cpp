@@ -11,7 +11,7 @@
 #include <Asensors.h>
 #include <Atime.h>
 #include <Alarms.h>
-#include <Athings.h>
+// #include <Athings.h>
 #include <Adisplay.h>
 #include "config.h"
 
@@ -106,7 +106,7 @@ void setup(void)
         Serial.println(F("[Eth] Server not started"));
     }
 
-    initWebThings();
+    // initWebThings();
 
     Serial.println(F("[Time] Setting time..."));
 
@@ -138,7 +138,7 @@ void loop(void)
         lcdBacklightTimer = millis();
     }
 
-    handleWebThings(config);
+    // handleWebThings(config);
 
     // lcdLEDButtonState = digitalRead(lcdLEDButtonPin);
     // // check if the pushbutton is pressed. If it is, the buttonState is HIGH:

@@ -76,15 +76,9 @@ bool saveConfiguration(const char *filename, Config &config)
 }
 
 // Saves the configuration to a file
-bool saveJson(String &data, Config &config, const char *filename)
+bool saveJson(JsonObject &json, Config &config, const char *filename)
 {
-    StaticJsonDocument<ConfigDocSize> doc;
-    DeserializationError error = deserializeJson(doc, data);
-    if (error)
-    {
-        return false;
-    }
-    convert2config(doc, config);
+    object2config(json, config);
     bool saved = saveConfiguration(filename, config);
     if (!saved)
     {
@@ -107,6 +101,7 @@ void config2doc(Config &config, JsonDocument &doc)
     doc["network"]["gateway"] = config.network.gateway;
     doc["network"]["netmask"] = config.network.netmask;
     doc["network"]["dns"] = config.network.dns;
+    doc["network"]["mqtt"]["enabled"] = config.network.mqtt.enabled;
     doc["sensors"]["waitForConvertion"] = config.sensors.waitForConversion;
     doc["sensors"]["tempResolution"] = config.sensors.tempResolution;
     doc["sensors"]["twin"]["enabled"] = config.sensors.twin.enabled;
@@ -153,6 +148,48 @@ void metrics2doc(Config &config, JsonDocument &doc)
 
 void convert2config(JsonDocument &doc, Config &config)
 {
+    JsonObject jsonObj = doc.as<JsonObject>();
+    object2config(jsonObj, config);
+    // config.global.lcdBacklightDuration = doc["global"]["lcdBacklightDuration"];
+    // config.time.initialized = doc["time"]["initialized"];
+    // config.time.dayLight = doc["time"]["dayLight"];
+    // config.time.ntpServer = doc["time"]["ntpServer"];
+    // config.time.timeZone = doc["time"]["timeZone"];
+    // config.metrics.alarms.storage = doc["data"]["alarms"]["storage"];
+    // config.network.dhcp = doc["network"]["dhcp"];
+    // config.network.allowPost = doc["network"]["allowPost"];
+    // config.network.ip = doc["network"]["ip"];
+    // config.network.gateway = doc["network"]["gateway"];
+    // config.network.netmask = doc["network"]["netmask"];
+    // config.network.dns = doc["network"]["dns"];
+    // config.sensors.ph.enabled = doc["sensors"]["ph"]["enabled"];
+    // config.sensors.ph.threshold = doc["sensors"]["ph"]["threshold"];
+    // config.sensors.waitForConversion = doc["sensors"]["waitForConvertion"];
+    // config.sensors.tempResolution = doc["sensors"]["tempResolution"];
+    // config.sensors.twin.enabled = doc["sensors"]["twin"]["enabled"];
+    // config.sensors.twin.init = doc["sensors"]["twin"]["init"];
+    // for (int i = 0; i < 8; i++)
+    // {
+    //     config.sensors.twin.addr[i] = doc["sensors"]["twin"]["addr"][i];
+    // }
+    // config.sensors.twout.enabled = true;
+    // config.sensors.twout.init = doc["sensors"]["twout"]["init"];
+    // for (int i = 0; i < 8; i++)
+    // {
+    //     config.sensors.twout.addr[i] = doc["sensors"]["twout"]["addr"][i];
+    // }
+    // config.sensors.tamb.enabled = true;
+    // config.sensors.tamb.init = doc["sensors"]["tamb"]["init"];
+    // for (int i = 0; i < 8; i++)
+    // {
+    //     config.sensors.tamb.addr[i] = doc["sensors"]["tamb"]["addr"][i];
+    // }
+    // config.pump.forceFilter = doc["pump"]["forceFilter"];
+    // config.pump.forcePH = doc["pump"]["forcePH"];
+    // config.pump.forceCH = doc["pump"]["forceCH"];
+}
+void object2config(JsonObject doc, Config &config)
+{
     config.global.lcdBacklightDuration = doc["global"]["lcdBacklightDuration"];
     config.time.initialized = doc["time"]["initialized"];
     config.time.dayLight = doc["time"]["dayLight"];
@@ -165,6 +202,7 @@ void convert2config(JsonDocument &doc, Config &config)
     config.network.gateway = doc["network"]["gateway"];
     config.network.netmask = doc["network"]["netmask"];
     config.network.dns = doc["network"]["dns"];
+    config.network.mqtt.enabled = doc["network"]["mqtt"]["enabled"];
     config.sensors.ph.enabled = doc["sensors"]["ph"]["enabled"];
     config.sensors.ph.threshold = doc["sensors"]["ph"]["threshold"];
     config.sensors.waitForConversion = doc["sensors"]["waitForConvertion"];
