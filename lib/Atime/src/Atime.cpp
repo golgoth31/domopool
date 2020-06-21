@@ -58,7 +58,7 @@ void setSytemTime(bool rtcOk)
         if (rtcOk)
         {
             Serial.println(F("[Time] Set RTC time"));
-            RTC.set(now);
+            // RTC.set(now);
         }
     }
     else
@@ -85,18 +85,18 @@ bool initSystemTime(Time &config)
 {
     bool rtcOk;
     configTime(config.timeZone, config.dayLight, config.ntpServer);
-    if (RTC.chipPresent())
-    {
-        Serial.println(F("[Time] RTC found, setting..."));
-        rtcOk = true;
-        setSyncProvider(RTC.get);
-    }
-    else
-    {
-        Serial.println(F("[Time] no rtc module"));
-        rtcOk = false;
-        setSyncProvider(getNTPTime);
-    }
+    // if (RTC.chipPresent())
+    // {
+    //     Serial.println(F("[Time] RTC found, setting..."));
+    //     rtcOk = true;
+    //     setSyncProvider(RTC.get);
+    // }
+    // else
+    // {
+    Serial.println(F("[Time] no rtc module"));
+    rtcOk = false;
+    setSyncProvider(getNTPTime);
+    // }
     setSyncInterval(3600);
     setSytemTime(rtcOk);
 

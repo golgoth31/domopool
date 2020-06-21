@@ -14,7 +14,8 @@ bool initStorage()
 // Loads the configuration from a file
 File openFile(const char *filename)
 {
-    File file = SPIFFS.open(filename);
+    SPIFFS.begin(true);
+    File file = SPIFFS.open(filename, FILE_WRITE);
 
     return file;
 }
@@ -22,9 +23,10 @@ File openFile(const char *filename)
 File saveFile(const char *filename)
 {
     // Delete existing file, otherwise the configuration is appended to the file
-    char *file2remove;
-    file2remove = const_cast<char *>(filename);
-    SPIFFS.remove(file2remove);
+    // char *file2remove;
+    // file2remove = const_cast<char *>(filename);
+    SPIFFS.begin(true);
+    SPIFFS.remove(filename);
 
     Serial.print(F("[Conf] Opening "));
     Serial.print(filename);

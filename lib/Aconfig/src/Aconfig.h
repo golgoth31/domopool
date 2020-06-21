@@ -4,7 +4,7 @@
 
 #ifndef __ACONFIG_H_UNDEFINED__
 #define __ACONFIG_H_UNDEFINED__
-const int ConfigDocSize = 1024;
+const int ConfigDocSize = 2048;
 
 struct MQTT
 {

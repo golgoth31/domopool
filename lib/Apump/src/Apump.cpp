@@ -225,8 +225,8 @@ bool setFilterState(Config &config, int hour)
         config.metrics.chDuration = chDuration;
     }
 
-    Serial.print(F("[Filter] Pump state: "));
-    Serial.println(config.metrics.filterOn);
+    // Serial.print(F("[Filter] Pump state: "));
+    // Serial.println(config.metrics.filterOn);
 
     return config.metrics.filterOn;
 }

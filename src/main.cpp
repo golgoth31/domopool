@@ -15,7 +15,7 @@
 #include <Adisplay.h>
 #include "config.h"
 
-#define ONE_WIRE_BUS 24
+#define ONE_WIRE_BUS 17
 #define filterPin 48
 #define phPin 49
 #define chPin 47
@@ -37,7 +37,7 @@ OneWire ow(ONE_WIRE_BUS);
 DallasTemperature tempSensors(&ow);
 
 Config config;
-const char *filename = "/config.json";
+const char *filename = "/config.jsn";
 
 bool serverStarted = false;
 bool storageOk = true;
@@ -59,7 +59,7 @@ void setup(void)
     initDisplay();
 
     // Initialize storage
-    storageOk = initStorage();
+    // storageOk = initStorage();
 
     // if (storageOk)
     // {
@@ -93,10 +93,7 @@ void setup(void)
 
     // Start ethernet service
 
-    Serial.println(F("[Eth] Starting server..."));
-
     serverStarted = startNetwork(ssid, password, config);
-
     if (serverStarted)
     {
         Serial.println(F("[Eth] Server is up"));
@@ -192,6 +189,10 @@ void loop(void)
         Serial.println(printTime(true));
         Serial.print(F("Date: "));
         Serial.println(printDate());
+        Serial.print(F("Sensor 'water' value: "));
+        Serial.println(config.metrics.curTempWater);
+        Serial.print(F("Sensor 'tamb' value: "));
+        Serial.println(config.metrics.curTempAmbiant);
 
         if (config.metrics.startup)
         {

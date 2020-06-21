@@ -25,6 +25,8 @@ bool checkIP(const char *ip)
 
 bool startNetwork(const char *ssid, const char *password, Config &config)
 {
+    Serial.println(F("[WiFi] Connecting"));
+    Serial.print(F("[WiFi] "));
     bool wifiUp = false;
     WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED)
@@ -37,8 +39,8 @@ bool startNetwork(const char *ssid, const char *password, Config &config)
     }
 
     Serial.println("");
-    Serial.println(F("[WiFi] WiFi connected"));
-    Serial.println(F("[WiFi] IP address: "));
+    Serial.println(F("[WiFi] Connected"));
+    Serial.print(F("[WiFi] IP address: "));
     Serial.println(WiFi.localIP());
 
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -48,7 +50,7 @@ bool startNetwork(const char *ssid, const char *password, Config &config)
         compile += " ";
         compile += __TIME__;
         httpResponse["compile"] = compile;
-        Serial.println(compile);
+        // Serial.println(compile);
         String output;
         serializeJsonPretty(httpResponse, output);
         request->send(200, "application/json", output);
@@ -63,7 +65,7 @@ bool startNetwork(const char *ssid, const char *password, Config &config)
     });
     AsyncCallbackJsonWebHandler *configHandler = new AsyncCallbackJsonWebHandler("/config", [&config](AsyncWebServerRequest *request, JsonVariant &json) {
         JsonObject jsonObj = json.as<JsonObject>();
-        saveJson(jsonObj, config, "config.jsn");
+        saveJson(jsonObj, config, "/config.jsn");
         request->send(200);
     });
     server.addHandler(configHandler);
@@ -125,9 +127,9 @@ bool startNetwork(const char *ssid, const char *password, Config &config)
 
     ArduinoOTA.begin();
 
-    Serial.println("Ready");
-    Serial.print("IP address: ");
-    Serial.println(WiFi.localIP());
+    Serial.println("[WiFi] Ready");
+    // Serial.print("IP address: ");
+    // Serial.println(WiFi.localIP());
 
     return wifiUp;
 }
