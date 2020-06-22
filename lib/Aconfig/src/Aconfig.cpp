@@ -3,15 +3,26 @@
 // Loads the configuration from a file
 void loadConfiguration(const char *filename, Config &config)
 {
-    // Open file for reading
-    File file = openFile(filename);
     StaticJsonDocument<ConfigDocSize> doc;
     JsonObject root;
+
+    if (!SPIFFS.begin(true))
+    {
+        Serial.println("[Conf] An Error has occurred while mounting SPIFFS");
+        return;
+    }
+
+    File file = SPIFFS.open(filename);
+    if (!file)
+    {
+        Serial.println("[Conf] Failed to open file for reading");
+        return;
+    }
     Serial.println(file.readString());
     DeserializationError error = deserializeJson(doc, file);
     if (error)
     {
-        Serial.println(F("[Conf] Failed to read file, using default configuration"));
+        Serial.print(F("[Conf] Failed to read file, using default configuration: "));
         Serial.println(error.c_str());
         root = doc.to<JsonObject>();
         root["network"]["dhcp"] = true;
@@ -49,27 +60,50 @@ void loadConfiguration(const char *filename, Config &config)
 
     // Close the file (Curiously, File's destructor doesn't close the file)
     file.close();
+    SPIFFS.end();
 }
 
 // Saves the configuration to a file
 bool saveConfiguration(const char *filename, Config &config)
 {
-    File file = saveFile(filename);
-    StaticJsonDocument<ConfigDocSize> doc;
-    config2doc(config, doc);
-
-    // Serialize JSON to file
-    // serializeJson(doc, Serial);
-    if (serializeJson(doc, file) == 0)
+    if (!SPIFFS.begin(true))
     {
-
-        Serial.println(F("Failed to write to file"));
-
+        Serial.println("[Conf] An Error has occurred while mounting SPIFFS");
         return false;
     }
+    if (SPIFFS.exists(filename))
+    {
+        Serial.print(F("[Conf] Remove previous file."));
+        SPIFFS.remove(filename);
+    }
 
-    // Close the file
-    file.close();
+    Serial.print(F("[Conf] Saving "));
+    Serial.print(filename);
+    Serial.println(F("..."));
+
+    // Open file for writing
+    File file = SPIFFS.open(filename, FILE_WRITE);
+    if (!file)
+    {
+        Serial.println(F("Failed to create file"));
+        return false;
+    }
+    else
+    {
+
+        StaticJsonDocument<ConfigDocSize> doc;
+        config2doc(config, doc);
+
+        // Serialize JSON to file
+        // serializeJson(doc, Serial);
+        if (serializeJson(doc, file) == 0)
+        {
+            Serial.println(F("Failed to write to file"));
+            return false;
+        }
+        file.close();
+    }
+    SPIFFS.end();
     return true;
 }
 
