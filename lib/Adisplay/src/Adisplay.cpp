@@ -24,6 +24,24 @@ void pageOTA()
     tft.setTextSize(2);
     tft.drawCentreString("Firmware update ...", 120, 160, 1);
 }
+
+void displayPageBoot()
+{
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextColor(TFT_WHITE);
+    tft.setTextSize(1);
+    tft.setCursor(0, 0);
+}
+
+void display2boot(String text, boolean serialOut)
+{
+    tft.println(text);
+    if (serialOut)
+    {
+        Serial.println(text);
+    }
+}
+
 void displayTemp(Config &config)
 {
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
@@ -115,7 +133,7 @@ void displayDate()
     tft.drawCentreString(printDate(), 120, 108, 1);
     tft.drawCentreString(printTime(false), 120, 130, 1);
 }
-void page1(Config &config)
+void displayPageMain(Config &config)
 {
     tft.fillScreen(TFT_BLACK);
 

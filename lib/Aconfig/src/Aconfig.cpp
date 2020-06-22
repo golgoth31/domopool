@@ -3,27 +3,31 @@
 // Loads the configuration from a file
 void loadConfiguration(const char *filename, Config &config)
 {
-    StaticJsonDocument<ConfigDocSize> doc;
+    DynamicJsonDocument doc(ConfigDocSize);
     JsonObject root;
 
     if (!SPIFFS.begin(true))
     {
-        Serial.println("[Conf] An Error has occurred while mounting SPIFFS");
+        display2boot(F("[Conf] Error mounting SPIFFS"), true);
         return;
     }
 
     File file = SPIFFS.open(filename);
     if (!file)
     {
-        Serial.println("[Conf] Failed to open file for reading");
+        display2boot(F("[Conf] Failed to open file for reading"), true);
         return;
     }
     Serial.println(file.readString());
-    DeserializationError error = deserializeJson(doc, file);
+    // String configFromFile = file.readString();
+    // DeserializationError error = deserializeJson(doc, configFromFile);
+    ReadBufferingStream bufferingStream(file, 64);
+    DeserializationError error = deserializeJson(doc, bufferingStream);
     if (error)
     {
-        Serial.print(F("[Conf] Failed to read file, using default configuration: "));
+        Serial.print(F("[Conf] Deserialisation error: "));
         Serial.println(error.c_str());
+        display2boot(F("[Conf] Using default config"), true);
         root = doc.to<JsonObject>();
         root["network"]["dhcp"] = true;
         root["network"]["allowPost"] = false;
@@ -68,12 +72,12 @@ bool saveConfiguration(const char *filename, Config &config)
 {
     if (!SPIFFS.begin(true))
     {
-        Serial.println("[Conf] An Error has occurred while mounting SPIFFS");
+        display2boot(F("[Conf] An Error has occurred while mounting SPIFFS"), true);
         return false;
     }
     if (SPIFFS.exists(filename))
     {
-        Serial.print(F("[Conf] Remove previous file."));
+        display2boot(F("[Conf] Remove previous file."), true);
         SPIFFS.remove(filename);
     }
 
@@ -85,7 +89,7 @@ bool saveConfiguration(const char *filename, Config &config)
     File file = SPIFFS.open(filename, FILE_WRITE);
     if (!file)
     {
-        Serial.println(F("Failed to create file"));
+        display2boot(F("[Conf] Failed to create file"), true);
         return false;
     }
     else
@@ -98,12 +102,13 @@ bool saveConfiguration(const char *filename, Config &config)
         // serializeJson(doc, Serial);
         if (serializeJson(doc, file) == 0)
         {
-            Serial.println(F("Failed to write to file"));
+            display2boot(F("[Conf] Failed to write to file"), true);
             return false;
         }
         file.close();
     }
     SPIFFS.end();
+    display2boot(F("[Conf] Saved successfully !"), true);
     return true;
 }
 

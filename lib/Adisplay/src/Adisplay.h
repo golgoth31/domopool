@@ -28,14 +28,16 @@
 #include <TFT_eSPI.h>
 #include <TimeLib.h>
 
-#include <Aconfig.h>
+#include <Aconfig-struct.h>
 #include <Atime.h>
 
 #ifndef __ADISPLAY_H_UNDEFINED__
 #define __ADISPLAY_H_UNDEFINED__
 void initDisplay();
-void page1(Config &config);
+void displayPageMain(Config &config);
 void pageOTA();
+void displayPageBoot();
+void display2boot(String text, boolean serialOut);
 void displayPump(Config &config);
 void displayTemp(Config &config);
 void displayDate();

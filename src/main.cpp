@@ -57,6 +57,7 @@ void setup(void)
     pumpInit(filterPin, chPin, phPin);
 
     initDisplay();
+    displayPageBoot();
 
     // Initialize storage
     // storageOk = initStorage();
@@ -69,13 +70,15 @@ void setup(void)
     // }
     // Should load default config if run for the first time
 
-    Serial.println(F("[Conf] Loading configuration..."));
+    // Serial.println(F("[Conf] Loading configuration..."));
+    display2boot(F("[Conf] Loading configuration..."), true);
 
     loadConfiguration(filename, config);
 
     // Start up the library
 
-    Serial.println(F("[Sens] Starting..."));
+    // Serial.println(F("[Sens] Starting..."));
+    display2boot(F("[Sens] Starting..."), true);
 
     // start ds18b20 sensors
     initializeDS18B20(config.sensors, tempSensors);
@@ -120,11 +123,13 @@ void setup(void)
 
     initConfigData(config);
     config.metrics.alarms.storage = getStorageAlarm();
-    page1(config);
+
     config.tests.enabled = true;
     config.tests.tamb = 25.38;
     config.tests.twater = 24.1;
     config.tests.pressure = 0.8;
+
+    // displayPageMain(config);
 }
 
 void loop(void)
@@ -162,10 +167,10 @@ void loop(void)
     // Get sensors every 2 seconds
     if ((millis() - lastReadingTime) >= 2000)
     {
-        displayDate();
+        // displayDate();
         getDS18B20(config, tempSensors);
 
-        displayTemp(config);
+        // displayTemp(config);
 
         if (!config.metrics.startup)
         {
@@ -175,7 +180,7 @@ void loop(void)
                 phPumpOn = setPhState(config, filterPumpOn);
             }
         }
-        displayPump(config);
+        // displayPump(config);
         count_time_30s++; // Count 15 cycles for sending XPL every 30s
         lastReadingTime = millis();
     }
