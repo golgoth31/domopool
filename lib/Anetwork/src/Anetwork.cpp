@@ -6,6 +6,8 @@ IPAddress MQTTServer;
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 int ip1, ip2, ip3, ip4;
 
+const int ConfigDocSize = 2048;
+
 void software_Reboot()
 {
     delay(1000);
@@ -56,10 +58,9 @@ bool startNetwork(const char *ssid, const char *password, Config &config)
         request->send(200, "application/json", output);
     });
     server.on("/config", HTTP_GET, [&config](AsyncWebServerRequest *request) {
-        StaticJsonDocument<ConfigDocSize> httpResponse;
+        DynamicJsonDocument httpResponse(ConfigDocSize);
         config2doc(config, httpResponse);
         String output = "";
-        // serializeJsonPretty(httpResponse, output);
         serializeJson(httpResponse, output);
         request->send(200, "application/json", output);
     });

@@ -9,10 +9,9 @@
 
 #ifndef __ACONFIG_H__
 #define __ACONFIG_H__
-const int ConfigDocSize = 2048;
 void loadConfiguration(const char *filename, Config &config);
 bool saveConfiguration(const char *filename, Config &config);
-bool saveJson(JsonObject &json, Config &config, const char *filename);
+bool saveJson(JsonObject json, Config &config, const char *filename);
 void config2doc(Config &config, JsonDocument &doc);
 void metrics2doc(Config &config, JsonDocument &doc);
 void convert2config(JsonDocument &doc, Config &config);

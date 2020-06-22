@@ -1,5 +1,7 @@
 #include "Aconfig.h"
 
+const int ConfigDocSize = 8192;
+
 // Loads the configuration from a file
 void loadConfiguration(const char *filename, Config &config)
 {
@@ -72,7 +74,7 @@ bool saveConfiguration(const char *filename, Config &config)
 {
     if (!SPIFFS.begin(true))
     {
-        display2boot(F("[Conf] An Error has occurred while mounting SPIFFS"), true);
+        display2boot(F("[Conf] Error mounting SPIFFS"), true);
         return false;
     }
     if (SPIFFS.exists(filename))
@@ -94,18 +96,20 @@ bool saveConfiguration(const char *filename, Config &config)
     }
     else
     {
-
-        StaticJsonDocument<ConfigDocSize> doc;
+        DynamicJsonDocument doc(ConfigDocSize);
         config2doc(config, doc);
 
         // Serialize JSON to file
         // serializeJson(doc, Serial);
+        // String output;
         if (serializeJson(doc, file) == 0)
         {
             display2boot(F("[Conf] Failed to write to file"), true);
             return false;
         }
+        // file.println(output);
         file.close();
+        // Serial.println(output);
     }
     SPIFFS.end();
     display2boot(F("[Conf] Saved successfully !"), true);
@@ -113,7 +117,7 @@ bool saveConfiguration(const char *filename, Config &config)
 }
 
 // Saves the configuration to a file
-bool saveJson(JsonObject &json, Config &config, const char *filename)
+bool saveJson(JsonObject json, Config &config, const char *filename)
 {
     object2config(json, config);
     bool saved = saveConfiguration(filename, config);
@@ -140,6 +144,7 @@ void config2doc(Config &config, JsonDocument &doc)
     jsonObj["network"]["netmask"] = config.network.netmask;
     jsonObj["network"]["dns"] = config.network.dns;
     jsonObj["network"]["mqtt"]["enabled"] = config.network.mqtt.enabled;
+    jsonObj["network"]["mqtt"]["server"] = config.network.mqtt.server;
     jsonObj["sensors"]["waitForConvertion"] = config.sensors.waitForConversion;
     jsonObj["sensors"]["tempResolution"] = config.sensors.tempResolution;
     jsonObj["sensors"]["twin"]["enabled"] = config.sensors.twin.enabled;
@@ -242,6 +247,7 @@ void object2config(JsonObject doc, Config &config)
     config.network.netmask = doc["network"]["netmask"];
     config.network.dns = doc["network"]["dns"];
     config.network.mqtt.enabled = doc["network"]["mqtt"]["enabled"];
+    config.network.mqtt.server = doc["network"]["mqtt"]["server"];
     config.sensors.ph.enabled = doc["sensors"]["ph"]["enabled"];
     config.sensors.ph.threshold = doc["sensors"]["ph"]["threshold"];
     config.sensors.waitForConversion = doc["sensors"]["waitForConvertion"];
