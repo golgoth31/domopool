@@ -84,7 +84,7 @@ time_t getNTPTime()
 bool initSystemTime(Time &config)
 {
     bool rtcOk;
-    configTime(config.timeZone, config.dayLight, config.ntpServer);
+    configTime(config.timeZone, config.dayLight, config.ntpServer.c_str());
     // if (RTC.chipPresent())
     // {
     //     Serial.println(F("[Time] RTC found, setting..."));

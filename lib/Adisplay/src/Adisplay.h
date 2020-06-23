@@ -23,7 +23,7 @@
 // #define GLCD 0
 // #define FONT2 2
 // #define FF17 &FreeSans9pt7b
-
+#include <Arduino.h>
 #include <SPI.h>
 #include <TFT_eSPI.h>
 #include <TimeLib.h>
@@ -40,5 +40,5 @@ void displayPageBoot();
 void display2boot(String text, boolean serialOut);
 void displayPump(Config &config);
 void displayTemp(Config &config);
-void displayDate();
+void displayDate(Config &config);
 #endif

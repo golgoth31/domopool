@@ -90,7 +90,7 @@ void displayPump(Config &config)
     {
         color = TFT_CYAN;
     }
-    button[0].initButton(&tft, 60, 235, 118, 168, TFT_BLACK, color, TFT_BLACK, "Filter", 2);
+    button[0].initButton(&tft, 60, 235, 118, 148, TFT_BLACK, color, TFT_BLACK, "Filter", 2);
     button[0].drawButton();
 
     if (config.metrics.phOn)
@@ -125,13 +125,14 @@ void displayPump(Config &config)
 
     // tft.fillRoundRect(162, 120, 158, 120, 5, TFT_BLUE);
 }
-void displayDate()
+void displayDate(Config &config)
 {
     tft.setTextColor(TFT_LIGHTGREY, TFT_BLACK);
     tft.setTextSize(2);
     tft.setTextDatum(MC_DATUM);
     tft.drawCentreString(printDate(), 120, 108, 1);
     tft.drawCentreString(printTime(false), 120, 130, 1);
+    tft.drawCentreString(config.network.ip, 120, 152, 1);
 }
 void displayPageMain(Config &config)
 {
@@ -141,10 +142,10 @@ void displayPageMain(Config &config)
     tft.drawLine(0, 50, 240, 50, TFT_LIGHTGREY);
     tft.drawLine(0, 100, 240, 100, TFT_LIGHTGREY);
 
-    tft.drawLine(120, 150, 120, 320, TFT_LIGHTGREY);
-    tft.drawLine(0, 150, 240, 150, TFT_LIGHTGREY);
+    tft.drawLine(120, 170, 120, 320, TFT_LIGHTGREY);
+    tft.drawLine(0, 170, 240, 170, TFT_LIGHTGREY);
 
     displayTemp(config);
     displayPump(config);
-    displayDate();
+    displayDate(config);
 }

@@ -2,7 +2,7 @@
 
 AsyncWebServer server(80);
 IPAddress MQTTServer;
-
+const char *localIP;
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 int ip1, ip2, ip3, ip4;
 
@@ -45,6 +45,8 @@ bool startNetwork(const char *ssid, const char *password, Config &config)
     Serial.print(F("[WiFi] IP address: "));
     Serial.println(WiFi.localIP());
 
+    config.network.ip = WiFi.localIP().toString();
+
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
         StaticJsonDocument<ConfigDocSize> httpResponse;
         httpResponse["version"] = "test";
@@ -64,12 +66,12 @@ bool startNetwork(const char *ssid, const char *password, Config &config)
         serializeJson(httpResponse, output);
         request->send(200, "application/json", output);
     });
-    AsyncCallbackJsonWebHandler *configHandler = new AsyncCallbackJsonWebHandler("/config", [&config](AsyncWebServerRequest *request, JsonVariant &json) {
-        JsonObject jsonObj = json.as<JsonObject>();
-        saveJson(jsonObj, config, "/config.jsn");
-        request->send(200);
-    });
-    server.addHandler(configHandler);
+    // AsyncCallbackJsonWebHandler *configHandler = new AsyncCallbackJsonWebHandler("/config", [&config](AsyncWebServerRequest *request, JsonVariant &json) {
+    //     JsonObject jsonObj = json.as<JsonObject>();
+    //     saveJson(jsonObj, config, "/config.jsn");
+    //     request->send(200);
+    // });
+    // server.addHandler(configHandler);
     server.on("/metrics", HTTP_GET, [&config](AsyncWebServerRequest *request) {
         StaticJsonDocument<ConfigDocSize> httpResponse;
         metrics2doc(config, httpResponse);

@@ -1,4 +1,5 @@
 // include the dependencies
+#include <Arduino.h>
 #include <Wire.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
@@ -11,7 +12,6 @@
 #include <Asensors.h>
 #include <Atime.h>
 #include <Alarms.h>
-// #include <Athings.h>
 #include <Adisplay.h>
 #include "config.h"
 
@@ -37,7 +37,6 @@ OneWire ow(ONE_WIRE_BUS);
 DallasTemperature tempSensors(&ow);
 
 Config config;
-const char *filename = "/config.jsn";
 
 bool serverStarted = false;
 bool storageOk = true;
@@ -58,43 +57,12 @@ void setup(void)
 
     initDisplay();
     displayPageBoot();
+    loadConfiguration(config);
 
-    // Initialize storage
-    // storageOk = initStorage();
-
-    // if (storageOk)
-    // {
-    //     tft.setFont(&FreeSansBold24pt7b);
-    //     tft.setCursor(30, 65);
-    //     tft.print("Storage started");
-    // }
-    // Should load default config if run for the first time
-
-    // Serial.println(F("[Conf] Loading configuration..."));
-    display2boot(F("[Conf] Loading configuration..."), true);
-
-    loadConfiguration(filename, config);
-
-    // Start up the library
-
-    // Serial.println(F("[Sens] Starting..."));
     display2boot(F("[Sens] Starting..."), true);
 
     // start ds18b20 sensors
     initializeDS18B20(config.sensors, tempSensors);
-    // tempSensors.begin();
-
-    // Serial.println(F("[Sens] Registering addresses..."));
-
-    // registerDevices(config.sensors, tempSensors);
-    // showAddressFromEeprom();
-
-    // Serial.println(F("[Sens] Setting sensors options..."));
-
-    // tempSensors.setWaitForConversion(config.sensors.waitForConversion);
-    // tempSensors.setResolution(config.sensors.tempResolution);
-
-    // Start ethernet service
 
     serverStarted = startNetwork(ssid, password, config);
     if (serverStarted)
@@ -115,11 +83,7 @@ void setup(void)
     Serial.print(F("[Time] Current time: "));
     Serial.println(printTime(true));
 
-    Serial.println(F("[Conf] Updating sensors config..."));
-
-    saveConfiguration(filename, config);
-
-    Serial.println(F("[Conf] Done"));
+    saveConfiguration(config);
 
     initConfigData(config);
     config.metrics.alarms.storage = getStorageAlarm();
@@ -129,7 +93,7 @@ void setup(void)
     config.tests.twater = 24.1;
     config.tests.pressure = 0.8;
 
-    // displayPageMain(config);
+    displayPageMain(config);
 }
 
 void loop(void)
@@ -167,10 +131,10 @@ void loop(void)
     // Get sensors every 2 seconds
     if ((millis() - lastReadingTime) >= 2000)
     {
-        // displayDate();
+        displayDate(config);
         getDS18B20(config, tempSensors);
 
-        // displayTemp(config);
+        displayTemp(config);
 
         if (!config.metrics.startup)
         {
@@ -180,14 +144,13 @@ void loop(void)
                 phPumpOn = setPhState(config, filterPumpOn);
             }
         }
-        // displayPump(config);
+        displayPump(config);
         count_time_30s++; // Count 15 cycles for sending XPL every 30s
         lastReadingTime = millis();
     }
 
     if (count_time_30s == 15)
     {
-
         Serial.println(F("*** 30s ***"));
         // setSytemTime(rtcOk);
         Serial.print(F("Time: "));
@@ -211,6 +174,7 @@ void loop(void)
         count_time_30min++; // Count 60 cycles for 30 min
         count_time_30s = 0;
     }
+
     if (count_time_30min == 60)
     {
         setSytemTime(rtcOk);

@@ -1,135 +1,101 @@
 #include "Aconfig.h"
 
-const int ConfigDocSize = 8192;
+const int ConfigDocSize = 1024;
+const char *networkFile = "/network.jsn";
+Preferences prefs;
 
-// Loads the configuration from a file
-void loadConfiguration(const char *filename, Config &config)
+void pref2config(Config &config)
 {
-    DynamicJsonDocument doc(ConfigDocSize);
-    JsonObject root;
-
-    if (!SPIFFS.begin(true))
-    {
-        display2boot(F("[Conf] Error mounting SPIFFS"), true);
-        return;
-    }
-
-    File file = SPIFFS.open(filename);
-    if (!file)
-    {
-        display2boot(F("[Conf] Failed to open file for reading"), true);
-        return;
-    }
-    Serial.println(file.readString());
-    // String configFromFile = file.readString();
-    // DeserializationError error = deserializeJson(doc, configFromFile);
-    ReadBufferingStream bufferingStream(file, 64);
-    DeserializationError error = deserializeJson(doc, bufferingStream);
-    if (error)
-    {
-        Serial.print(F("[Conf] Deserialisation error: "));
-        Serial.println(error.c_str());
-        display2boot(F("[Conf] Using default config"), true);
-        root = doc.to<JsonObject>();
-        root["network"]["dhcp"] = true;
-        root["network"]["allowPost"] = false;
-        for (int i = 0; i < 8; i++)
-        {
-            root["sensors"]["twin"]["addr"][i] = 0;
-            root["sensors"]["twout"]["addr"][i] = 0;
-            root["sensors"]["tamb"]["addr"][i] = 0;
-        }
-        root["sensors"]["twin"]["enabled"] = false;
-        root["sensors"]["twout"]["init"] = false;
-        root["sensors"]["tamb"]["init"] = false;
-        root["sensors"]["twin"]["init"] = false;
-        root["sensors"]["waitForConvertion"] = true;
-        root["sensors"]["tempResolution"] = 12;
-        root["sensors"]["ph"]["enabled"] = false;
-        root["sensors"]["ph"]["threshold"] = 7.4;
-        root["global"]["lcdBacklightDuration"] = 30000; // 30s
-        root["time"]["initialized"] = false;
-        root["time"]["dayLight"] = 3600;
-        root["time"]["ntpServer"] = "europe.pool.ntp.org";
-        root["time"]["timeZone"] = 3600;
-        root["pump"]["forceFilter"] = false;
-        root["pump"]["forcePH"] = false;
-        root["pump"]["forceCH"] = false;
-    }
-    else
-    {
-        root = doc.as<JsonObject>();
-    }
-
-    // Copy values from the JsonDocument to the Config
-    object2config(root, config);
-
-    // Close the file (Curiously, File's destructor doesn't close the file)
-    file.close();
-    SPIFFS.end();
+    config.global.lcdBacklightDuration = prefs.getShort("BacklightTime");
+    config.time.initialized = prefs.getBool("time_init");
+    config.time.dayLight = prefs.getShort("dayLight");
+    config.time.ntpServer = prefs.getString("ntpServer");
+    config.time.timeZone = prefs.getShort("timeZone");
+    config.network.dhcp = prefs.getBool("dhcp");
+    config.network.allowPost = prefs.getBool("allowPost");
+    config.network.mqtt.enabled = prefs.getBool("mqtt_enabled");
+    config.network.mqtt.server = prefs.getString("mqtt_server");
+    config.sensors.ph.enabled = prefs.getBool("ph_enabled");
+    config.sensors.ph.threshold = prefs.getFloat("ph_threshold");
+    config.sensors.waitForConversion = prefs.getBool("waitConvertion");
+    config.sensors.tempResolution = prefs.getShort("tempResolution");
+    config.sensors.twin.enabled = prefs.getBool("twin_enabled");
+    config.sensors.twin.init = prefs.getBool("twin_init");
+    config.sensors.twout.enabled = true;
+    config.sensors.twout.init = prefs.getBool("twout_init");
+    config.sensors.tamb.enabled = true;
+    config.sensors.tamb.init = prefs.getBool("tamb_init");
+    config.pump.forceFilter = prefs.getBool("forceFilter");
+    config.pump.forcePH = prefs.getBool("forcePH");
+    config.pump.forceCH = prefs.getBool("forceCH");
 }
 
-// Saves the configuration to a file
-bool saveConfiguration(const char *filename, Config &config)
+void loadConfiguration(Config &config)
 {
-    if (!SPIFFS.begin(true))
+    display2boot(F("[Conf] Loading configuration..."), true);
+    prefs.begin("domopool");
+    boolean init = prefs.getBool("init");
+    if (!init)
     {
-        display2boot(F("[Conf] Error mounting SPIFFS"), true);
-        return false;
+        display2boot(F("[Conf] Preferences not set; setting default."), true);
+        prefs.clear();
+        prefs.putBool("init", true);
+        prefs.putBool("dhcp", true);
+        prefs.putBool("allowPost", true);
+        prefs.putBool("twin_enabled", false);
+        prefs.putBool("twin_init", false);
+        prefs.putBool("twout_init", false);
+        prefs.putBool("tamb_init", false);
+        prefs.putBool("waitConvertion", false);
+        prefs.putShort("tempResolution", 12);
+        prefs.putBool("ph_enabled", false);
+        prefs.putFloat("ph_threshold", 7.4);
+        prefs.putShort("BacklightTime", 30000);
+        prefs.putBool("time_init", false);
+        prefs.putShort("dayLight", 3600);
+        prefs.putShort("timeZone", 3600);
+        prefs.putString("ntpServer", "europe.pool.ntp.org");
+        prefs.putBool("forceFilter", true);
+        prefs.putBool("forcePH", false);
+        prefs.putBool("forceCH", false);
+        prefs.putString("mqtt_server", "192.168.10.194");
+        prefs.putBool("mqtt_enabled", true);
     }
-    if (SPIFFS.exists(filename))
-    {
-        display2boot(F("[Conf] Remove previous file."), true);
-        SPIFFS.remove(filename);
-    }
-
-    Serial.print(F("[Conf] Saving "));
-    Serial.print(filename);
-    Serial.println(F("..."));
-
-    // Open file for writing
-    File file = SPIFFS.open(filename, FILE_WRITE);
-    if (!file)
-    {
-        display2boot(F("[Conf] Failed to create file"), true);
-        return false;
-    }
-    else
-    {
-        DynamicJsonDocument doc(ConfigDocSize);
-        config2doc(config, doc);
-
-        // Serialize JSON to file
-        // serializeJson(doc, Serial);
-        // String output;
-        if (serializeJson(doc, file) == 0)
-        {
-            display2boot(F("[Conf] Failed to write to file"), true);
-            return false;
-        }
-        // file.println(output);
-        file.close();
-        // Serial.println(output);
-    }
-    SPIFFS.end();
-    display2boot(F("[Conf] Saved successfully !"), true);
-    return true;
+    pref2config(config);
+    display2boot(F("[Conf] Done"), true);
 }
 
-// Saves the configuration to a file
-bool saveJson(JsonObject json, Config &config, const char *filename)
+void config2pref(Config &config)
 {
-    object2config(json, config);
-    bool saved = saveConfiguration(filename, config);
-    if (!saved)
-    {
-        return false;
-    }
-    return true;
+    prefs.putBool("dhcp", config.network.dhcp);
+    prefs.putBool("allowPost", config.network.allowPost);
+    prefs.putBool("twin_enabled", config.sensors.twin.enabled);
+    prefs.putBool("twin_init", config.sensors.twin.init);
+    prefs.putBool("twout_init", config.sensors.twout.init);
+    prefs.putBool("tamb_init", config.sensors.tamb.init);
+    prefs.putBool("waitConvertion", config.sensors.waitForConversion);
+    prefs.putInt("tempResolution", config.sensors.tempResolution);
+    prefs.putBool("ph_enabled", config.sensors.ph.enabled);
+    prefs.putFloat("ph_threshold", config.sensors.ph.threshold);
+    prefs.putShort("BacklightTime", config.global.lcdBacklightDuration);
+    prefs.putBool("time_init", config.time.initialized);
+    prefs.putShort("dayLight", config.time.dayLight);
+    prefs.putShort("timeZone", config.time.timeZone);
+    prefs.putString("ntpServer", config.time.ntpServer);
+    prefs.putBool("forceFilter", config.pump.forceFilter);
+    prefs.putBool("forcePH", config.pump.forcePH);
+    prefs.putBool("forceCH", config.pump.forceCH);
+    prefs.putString("mqtt_server", config.network.mqtt.server);
+    prefs.putBool("mqtt_enabled", config.network.mqtt.enabled);
 }
 
-// Saves the configuration to a file
-// StaticJsonDocument<ConfigDocSize> convert2doc(Config &config)
+void saveConfiguration(Config &config)
+{
+    display2boot(F("[Conf] Saving config to preferences"), true);
+    config2pref(config);
+    display2boot(F("[Conf] Done"), true);
+}
+
 void config2doc(Config &config, JsonDocument &doc)
 {
     JsonObject jsonObj = doc.to<JsonObject>();
@@ -188,91 +154,6 @@ void metrics2doc(Config &config, JsonDocument &doc)
     jsonObj["metrics"]["phOn"] = config.metrics.phOn;
     jsonObj["metrics"]["savedTempWater"] = config.metrics.savedTempWater;
     jsonObj["metrics"]["startup"] = config.metrics.startup;
-}
-
-void convert2config(JsonDocument &doc, Config &config)
-{
-    JsonObject jsonObj = doc.as<JsonObject>();
-    object2config(jsonObj, config);
-    // config.global.lcdBacklightDuration = doc["global"]["lcdBacklightDuration"];
-    // config.time.initialized = doc["time"]["initialized"];
-    // config.time.dayLight = doc["time"]["dayLight"];
-    // config.time.ntpServer = doc["time"]["ntpServer"];
-    // config.time.timeZone = doc["time"]["timeZone"];
-    // config.metrics.alarms.storage = doc["data"]["alarms"]["storage"];
-    // config.network.dhcp = doc["network"]["dhcp"];
-    // config.network.allowPost = doc["network"]["allowPost"];
-    // config.network.ip = doc["network"]["ip"];
-    // config.network.gateway = doc["network"]["gateway"];
-    // config.network.netmask = doc["network"]["netmask"];
-    // config.network.dns = doc["network"]["dns"];
-    // config.sensors.ph.enabled = doc["sensors"]["ph"]["enabled"];
-    // config.sensors.ph.threshold = doc["sensors"]["ph"]["threshold"];
-    // config.sensors.waitForConversion = doc["sensors"]["waitForConvertion"];
-    // config.sensors.tempResolution = doc["sensors"]["tempResolution"];
-    // config.sensors.twin.enabled = doc["sensors"]["twin"]["enabled"];
-    // config.sensors.twin.init = doc["sensors"]["twin"]["init"];
-    // for (int i = 0; i < 8; i++)
-    // {
-    //     config.sensors.twin.addr[i] = doc["sensors"]["twin"]["addr"][i];
-    // }
-    // config.sensors.twout.enabled = true;
-    // config.sensors.twout.init = doc["sensors"]["twout"]["init"];
-    // for (int i = 0; i < 8; i++)
-    // {
-    //     config.sensors.twout.addr[i] = doc["sensors"]["twout"]["addr"][i];
-    // }
-    // config.sensors.tamb.enabled = true;
-    // config.sensors.tamb.init = doc["sensors"]["tamb"]["init"];
-    // for (int i = 0; i < 8; i++)
-    // {
-    //     config.sensors.tamb.addr[i] = doc["sensors"]["tamb"]["addr"][i];
-    // }
-    // config.pump.forceFilter = doc["pump"]["forceFilter"];
-    // config.pump.forcePH = doc["pump"]["forcePH"];
-    // config.pump.forceCH = doc["pump"]["forceCH"];
-}
-void object2config(JsonObject doc, Config &config)
-{
-    config.global.lcdBacklightDuration = doc["global"]["lcdBacklightDuration"];
-    config.time.initialized = doc["time"]["initialized"];
-    config.time.dayLight = doc["time"]["dayLight"];
-    config.time.ntpServer = doc["time"]["ntpServer"];
-    config.time.timeZone = doc["time"]["timeZone"];
-    config.metrics.alarms.storage = doc["data"]["alarms"]["storage"];
-    config.network.dhcp = doc["network"]["dhcp"];
-    config.network.allowPost = doc["network"]["allowPost"];
-    config.network.ip = doc["network"]["ip"];
-    config.network.gateway = doc["network"]["gateway"];
-    config.network.netmask = doc["network"]["netmask"];
-    config.network.dns = doc["network"]["dns"];
-    config.network.mqtt.enabled = doc["network"]["mqtt"]["enabled"];
-    config.network.mqtt.server = doc["network"]["mqtt"]["server"];
-    config.sensors.ph.enabled = doc["sensors"]["ph"]["enabled"];
-    config.sensors.ph.threshold = doc["sensors"]["ph"]["threshold"];
-    config.sensors.waitForConversion = doc["sensors"]["waitForConvertion"];
-    config.sensors.tempResolution = doc["sensors"]["tempResolution"];
-    config.sensors.twin.enabled = doc["sensors"]["twin"]["enabled"];
-    config.sensors.twin.init = doc["sensors"]["twin"]["init"];
-    for (int i = 0; i < 8; i++)
-    {
-        config.sensors.twin.addr[i] = doc["sensors"]["twin"]["addr"][i];
-    }
-    config.sensors.twout.enabled = true;
-    config.sensors.twout.init = doc["sensors"]["twout"]["init"];
-    for (int i = 0; i < 8; i++)
-    {
-        config.sensors.twout.addr[i] = doc["sensors"]["twout"]["addr"][i];
-    }
-    config.sensors.tamb.enabled = true;
-    config.sensors.tamb.init = doc["sensors"]["tamb"]["init"];
-    for (int i = 0; i < 8; i++)
-    {
-        config.sensors.tamb.addr[i] = doc["sensors"]["tamb"]["addr"][i];
-    }
-    config.pump.forceFilter = doc["pump"]["forceFilter"];
-    config.pump.forcePH = doc["pump"]["forcePH"];
-    config.pump.forceCH = doc["pump"]["forceCH"];
 }
 
 void initConfigData(Config &config)

@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <time.h>
 
 #include <Aconfig-struct.h>

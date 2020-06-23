@@ -5,13 +5,13 @@
 struct MQTT
 {
     bool enabled;
-    const char *server;
+    String server;
 };
 
 struct Network
 {
     bool dhcp;
-    const char *ip;
+    String ip;
     const char *netmask;
     const char *gateway;
     const char *dns;
@@ -51,7 +51,7 @@ struct Time
 {
     bool initialized;
     int dayLight; // 3600 if daylight is observed or 0 if not
-    const char *ntpServer;
+    String ntpServer;
     int timeZone; // UTC offset in s: UTC+1=3600
 };
 struct Pump
