@@ -5,7 +5,7 @@ IPAddress MQTTServer;
 const char *localIP;
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 int ip1, ip2, ip3, ip4;
-
+int8_t OTAdot = 0;
 const int ConfigDocSize = 2048;
 
 void software_Reboot()
@@ -54,7 +54,6 @@ bool startNetwork(const char *ssid, const char *password, Config &config)
         compile += " ";
         compile += __TIME__;
         httpResponse["compile"] = compile;
-        // Serial.println(compile);
         String output;
         serializeJsonPretty(httpResponse, output);
         request->send(200, "application/json", output);
@@ -63,7 +62,7 @@ bool startNetwork(const char *ssid, const char *password, Config &config)
         DynamicJsonDocument httpResponse(ConfigDocSize);
         config2doc(config, httpResponse);
         String output = "";
-        serializeJson(httpResponse, output);
+        serializeJsonPretty(httpResponse, output);
         request->send(200, "application/json", output);
     });
     // AsyncCallbackJsonWebHandler *configHandler = new AsyncCallbackJsonWebHandler("/config", [&config](AsyncWebServerRequest *request, JsonVariant &json) {
@@ -73,11 +72,23 @@ bool startNetwork(const char *ssid, const char *password, Config &config)
     // });
     // server.addHandler(configHandler);
     server.on("/metrics", HTTP_GET, [&config](AsyncWebServerRequest *request) {
-        StaticJsonDocument<ConfigDocSize> httpResponse;
+        DynamicJsonDocument httpResponse(ConfigDocSize);
         metrics2doc(config, httpResponse);
-        String output;
+        String output = "";
         serializeJsonPretty(httpResponse, output);
         request->send(200, "application/json", output);
+    });
+    server.on("/stop-filter", HTTP_POST, [](AsyncWebServerRequest *request) {
+        stopPump(1);
+        request->send(200, "application/json", "{}");
+    });
+    server.on("/start-filter", HTTP_POST, [](AsyncWebServerRequest *request) {
+        startPump(1);
+        request->send(200, "application/json", "{}");
+    });
+    server.on("/set-pump-auto", HTTP_POST, [](AsyncWebServerRequest *request) {
+        setPumpAuto();
+        request->send(200, "application/json", "{}");
     });
     server.begin();
 
@@ -109,10 +120,17 @@ bool startNetwork(const char *ssid, const char *password, Config &config)
         })
         .onEnd([]() {
             Serial.println("\nEnd");
+            OTAdot = 0;
             server.begin();
         })
         .onProgress([](unsigned int progress, unsigned int total) {
             Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+            pageOTAdot(OTAdot);
+            OTAdot++;
+            if (OTAdot > 5)
+            {
+                OTAdot = 0;
+            }
         })
         .onError([](ota_error_t error) {
             Serial.printf("Error[%u]: ", error);

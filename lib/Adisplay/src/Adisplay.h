@@ -36,6 +36,7 @@
 void initDisplay();
 void displayPageMain(Config &config);
 void pageOTA();
+void pageOTAdot(int8_t dot);
 void displayPageBoot();
 void display2boot(String text, boolean serialOut);
 void displayPump(Config &config);

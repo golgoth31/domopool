@@ -28,13 +28,14 @@ void pref2config(Config &config)
     config.pump.forceFilter = prefs.getBool("forceFilter");
     config.pump.forcePH = prefs.getBool("forcePH");
     config.pump.forceCH = prefs.getBool("forceCH");
+    config.pump.automatic = prefs.getBool("auto");
 }
 
 void loadConfiguration(Config &config)
 {
     display2boot(F("[Conf] Loading configuration..."), true);
     prefs.begin("domopool");
-    boolean init = prefs.getBool("init");
+    boolean init = prefs.getBool("init", false);
     if (!init)
     {
         display2boot(F("[Conf] Preferences not set; setting default."), true);
@@ -55,13 +56,15 @@ void loadConfiguration(Config &config)
         prefs.putShort("dayLight", 3600);
         prefs.putShort("timeZone", 3600);
         prefs.putString("ntpServer", "europe.pool.ntp.org");
-        prefs.putBool("forceFilter", true);
+        prefs.putBool("forceFilter", false);
         prefs.putBool("forcePH", false);
         prefs.putBool("forceCH", false);
+        prefs.putBool("auto", true);
         prefs.putString("mqtt_server", "192.168.10.194");
         prefs.putBool("mqtt_enabled", true);
     }
     pref2config(config);
+    config.metrics.startup = true;
     display2boot(F("[Conf] Done"), true);
 }
 
@@ -137,23 +140,23 @@ void config2doc(Config &config, JsonDocument &doc)
     jsonObj["pump"]["forceFilter"] = config.pump.forceFilter;
     jsonObj["pump"]["forcePH"] = config.pump.forcePH;
     jsonObj["pump"]["forceCH"] = config.pump.forceCH;
+    jsonObj["pump"]["auto"] = config.pump.automatic;
 }
 
 void metrics2doc(Config &config, JsonDocument &doc)
 {
-    JsonObject jsonObj = doc.as<JsonObject>();
-    jsonObj["metrics"]["chDuration"] = config.metrics.chDuration;
-    jsonObj["metrics"]["chOn"] = config.metrics.chOn;
-    jsonObj["metrics"]["curCh"] = config.metrics.curCh;
-    jsonObj["metrics"]["curPh"] = config.metrics.curPh;
-    jsonObj["metrics"]["curTempAmbiant"] = config.metrics.curTempAmbiant;
-    jsonObj["metrics"]["curTempWater"] = config.metrics.curTempWater;
-    jsonObj["metrics"]["curWaterPressure"] = config.metrics.curWaterPressure;
-    jsonObj["metrics"]["filterOn"] = config.metrics.filterOn;
-    jsonObj["metrics"]["hour"] = config.metrics.hour;
-    jsonObj["metrics"]["phOn"] = config.metrics.phOn;
-    jsonObj["metrics"]["savedTempWater"] = config.metrics.savedTempWater;
-    jsonObj["metrics"]["startup"] = config.metrics.startup;
+    doc["metrics"]["chDuration"] = config.metrics.chDuration;
+    doc["metrics"]["chOn"] = config.metrics.chOn;
+    doc["metrics"]["curCh"] = config.metrics.curCh;
+    doc["metrics"]["curPh"] = config.metrics.curPh;
+    doc["metrics"]["curTempAmbiant"] = config.metrics.curTempAmbiant;
+    doc["metrics"]["curTempWater"] = config.metrics.curTempWater;
+    doc["metrics"]["curWaterPressure"] = config.metrics.curWaterPressure;
+    doc["metrics"]["filterOn"] = config.metrics.filterOn;
+    doc["metrics"]["hour"] = config.metrics.hour;
+    doc["metrics"]["phOn"] = config.metrics.phOn;
+    doc["metrics"]["savedTempWater"] = config.metrics.savedTempWater;
+    doc["metrics"]["startup"] = config.metrics.startup;
 }
 
 void initConfigData(Config &config)
@@ -161,4 +164,52 @@ void initConfigData(Config &config)
     config.metrics.startup = true;
     config.metrics.filterOn = false;
     config.metrics.phOn = false;
+}
+
+bool stopPump(const int8_t p)
+{
+    prefs.putBool("auto", false);
+    switch (p)
+    {
+    case 1:
+        prefs.putBool("forceFilter", false);
+        break;
+    case 2:
+        prefs.putBool("forceCH", false);
+        break;
+    case 3:
+        prefs.putBool("forcePH", false);
+        break;
+
+    default:
+        return false;
+        break;
+    }
+    return true;
+}
+bool startPump(const int8_t p)
+{
+    prefs.putBool("auto", false);
+    switch (p)
+    {
+    case 1:
+        prefs.putBool("forceFilter", true);
+        break;
+    case 2:
+        prefs.putBool("forceCH", true);
+        break;
+    case 3:
+        prefs.putBool("forcePH", true);
+        break;
+
+    default:
+        return false;
+        break;
+    }
+    return true;
+}
+bool setPumpAuto()
+{
+    prefs.putBool("auto", true);
+    return true;
 }

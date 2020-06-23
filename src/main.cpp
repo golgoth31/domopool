@@ -83,7 +83,7 @@ void setup(void)
     Serial.print(F("[Time] Current time: "));
     Serial.println(printTime(true));
 
-    saveConfiguration(config);
+    // saveConfiguration(config);
 
     initConfigData(config);
     config.metrics.alarms.storage = getStorageAlarm();
@@ -131,6 +131,7 @@ void loop(void)
     // Get sensors every 2 seconds
     if ((millis() - lastReadingTime) >= 2000)
     {
+        pref2config(config);
         displayDate(config);
         getDS18B20(config, tempSensors);
 
@@ -164,9 +165,7 @@ void loop(void)
 
         if (config.metrics.startup)
         {
-
             Serial.println(F("End of startup blanking time"));
-
             config.metrics.startup = false;
             config.metrics.savedTempWater = config.metrics.curTempWater;
         }

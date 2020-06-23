@@ -20,9 +20,35 @@ void initDisplay()
 void pageOTA()
 {
     tft.fillScreen(TFT_BLACK);
-    tft.setTextColor(TFT_RED);
+    tft.setTextColor(TFT_RED, TFT_BLACK);
     tft.setTextSize(2);
-    tft.drawCentreString("Firmware update ...", 120, 160, 1);
+    tft.drawCentreString("Firmware update", 120, 150, 1);
+}
+
+void pageOTAdot(int8_t dot)
+{
+
+    switch (dot)
+    {
+    case 1:
+        tft.drawCentreString("    .    ", 120, 170, 1);
+        break;
+    case 2:
+        tft.drawCentreString("   ...   ", 120, 170, 1);
+        break;
+    case 3:
+        tft.drawCentreString("  .....  ", 120, 170, 1);
+        break;
+    case 4:
+        tft.drawCentreString(" ....... ", 120, 170, 1);
+        break;
+    case 5:
+        tft.drawCentreString(".........", 120, 170, 1);
+        break;
+
+    default:
+        break;
+    }
 }
 
 void displayPageBoot()
@@ -90,7 +116,7 @@ void displayPump(Config &config)
     {
         color = TFT_CYAN;
     }
-    button[0].initButton(&tft, 60, 235, 118, 148, TFT_BLACK, color, TFT_BLACK, "Filter", 2);
+    button[0].initButton(&tft, 60, 245, 118, 148, TFT_BLACK, color, TFT_BLACK, "Filter", 2);
     button[0].drawButton();
 
     if (config.metrics.phOn)
@@ -105,7 +131,7 @@ void displayPump(Config &config)
     {
         color = TFT_CYAN;
     }
-    button[0].initButton(&tft, 180, 193, 118, 84, TFT_BLACK, color, TFT_BLACK, "Ph", 2);
+    button[0].initButton(&tft, 180, 208, 118, 74, TFT_BLACK, color, TFT_BLACK, "Ph", 2);
     button[0].drawButton();
 
     if (config.metrics.chOn)
@@ -120,7 +146,7 @@ void displayPump(Config &config)
     {
         color = TFT_CYAN;
     }
-    button[0].initButton(&tft, 180, 277, 118, 84, TFT_BLACK, color, TFT_BLACK, "Ch", 2);
+    button[0].initButton(&tft, 180, 283, 118, 74, TFT_BLACK, color, TFT_BLACK, "Ch", 2);
     button[0].drawButton();
 
     // tft.fillRoundRect(162, 120, 158, 120, 5, TFT_BLUE);

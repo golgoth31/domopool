@@ -1,9 +1,10 @@
 #include "Apump.h"
 
-#include <EEPROM.h>
-
-const int chEepromOffset = 24;
+Preferences pumpPrefs;
+// store in eeprom time from temp starts to be upper then 15
+// if more then 3 days, activate ch
 int16_t chDuration = 0; // means water temp is over 15°C
+const int8_t chWaitThreshold = 72;
 bool pump[24];
 int ton;
 int toff;
@@ -48,11 +49,12 @@ void pumpInit(int filterPin, int chPin, int phPin)
     pumpPhRelayPin = phPin;
     pumpChRelayPin = chPin;
 
-    EEPROM.get(chEepromOffset, chDuration);
-    if (chDuration == 10000) // more then 1 year, seems the data have never been initialized correctly
+    pumpPrefs.begin("pump");
+    chDuration = pumpPrefs.getShort("chDuration", 0);
+    if (chDuration >= 10000) // more then 1 year, seems the data have never been initialized correctly
     {
         chDuration = 0;
-        EEPROM.put(chEepromOffset, chDuration);
+        pumpPrefs.putShort("chDuration", 0);
     }
 }
 
@@ -186,9 +188,8 @@ bool setFilterState(Config &config, int hour)
     }
 
     // Start the filter pump if needed
-    if (config.metrics.hour != hour)
+    if (config.metrics.hour != hour || !config.pump.automatic)
     {
-        EEPROM.get(chEepromOffset, chDuration);
         if (pump[hour] || config.pump.forceFilter)
         {
 
@@ -196,7 +197,7 @@ bool setFilterState(Config &config, int hour)
 
             config.metrics.filterOn = true;
             digitalWrite(pumpFilterRelayPin, LOW);
-            if ((config.metrics.savedTempWater > 15 && chDuration > 72) || config.metrics.savedTempWater > 18 || config.pump.forceCH)
+            if ((config.metrics.savedTempWater > 15 && chDuration > chWaitThreshold) || config.metrics.savedTempWater > 18 || config.pump.forceCH)
             {
                 config.metrics.chOn = true;
                 digitalWrite(pumpChRelayPin, LOW);
@@ -213,20 +214,17 @@ bool setFilterState(Config &config, int hour)
             digitalWrite(pumpChRelayPin, HIGH);
         }
         config.metrics.hour = hour;
-        if (config.metrics.savedTempWater > 15)
+        if (config.metrics.savedTempWater > 15 && chDuration <= 72)
         {
             chDuration++;
+            pumpPrefs.putShort("chDuration", chDuration);
         }
         else if (config.metrics.savedTempWater < 15 && chDuration > 72)
         {
             chDuration = 0;
         }
-        EEPROM.put(chEepromOffset, chDuration);
         config.metrics.chDuration = chDuration;
     }
-
-    // Serial.print(F("[Filter] Pump state: "));
-    // Serial.println(config.metrics.filterOn);
 
     return config.metrics.filterOn;
 }

@@ -59,6 +59,7 @@ struct Pump
     bool forceFilter;
     bool forcePH;
     bool forceCH;
+    bool automatic;
 };
 
 struct Alarms

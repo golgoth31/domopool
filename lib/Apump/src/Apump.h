@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <time.h>
+#include <Preferences.h>
 
 #include <Aconfig-struct.h>
 
