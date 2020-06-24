@@ -17,4 +17,7 @@ bool stopPump(const int8_t p);
 bool startPump(const int8_t p);
 bool setPumpAuto();
 void pref2config(Config &config);
+void unsetForceCheck();
+void startMqtt();
+void stopMqtt();
 #endif

@@ -3,6 +3,7 @@
 #include <Preferences.h>
 
 #include <Aconfig-struct.h>
+#include <Anetwork.h>
 
 #ifndef __APUMP_H_UNDEFINED__
 #define __APUMP_H_UNDEFINED__

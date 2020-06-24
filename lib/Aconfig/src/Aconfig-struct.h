@@ -60,6 +60,7 @@ struct Pump
     bool forcePH;
     bool forceCH;
     bool automatic;
+    bool forceCheck;
 };
 
 struct Alarms

@@ -29,6 +29,7 @@ void pref2config(Config &config)
     config.pump.forcePH = prefs.getBool("forcePH");
     config.pump.forceCH = prefs.getBool("forceCH");
     config.pump.automatic = prefs.getBool("auto");
+    config.pump.forceCheck = prefs.getBool("forceCheck");
 }
 
 void loadConfiguration(Config &config)
@@ -61,7 +62,8 @@ void loadConfiguration(Config &config)
         prefs.putBool("forceCH", false);
         prefs.putBool("auto", true);
         prefs.putString("mqtt_server", "192.168.10.194");
-        prefs.putBool("mqtt_enabled", true);
+        prefs.putBool("mqtt_enabled", false);
+        prefs.putBool("forceCheck", false);
     }
     pref2config(config);
     config.metrics.startup = true;
@@ -88,6 +90,7 @@ void config2pref(Config &config)
     prefs.putBool("forceFilter", config.pump.forceFilter);
     prefs.putBool("forcePH", config.pump.forcePH);
     prefs.putBool("forceCH", config.pump.forceCH);
+    prefs.putBool("forceCheck", config.pump.forceCheck);
     prefs.putString("mqtt_server", config.network.mqtt.server);
     prefs.putBool("mqtt_enabled", config.network.mqtt.enabled);
 }
@@ -140,6 +143,7 @@ void config2doc(Config &config, JsonDocument &doc)
     jsonObj["pump"]["forceFilter"] = config.pump.forceFilter;
     jsonObj["pump"]["forcePH"] = config.pump.forcePH;
     jsonObj["pump"]["forceCH"] = config.pump.forceCH;
+    jsonObj["pump"]["forceCheck"] = config.pump.forceCheck;
     jsonObj["pump"]["auto"] = config.pump.automatic;
 }
 
@@ -211,5 +215,19 @@ bool startPump(const int8_t p)
 bool setPumpAuto()
 {
     prefs.putBool("auto", true);
+    prefs.putBool("forceCheck", true);
+    prefs.putBool("forceFilter", false);
     return true;
+}
+void unsetForceCheck()
+{
+    prefs.putBool("forceCheck", false);
+}
+void startMqtt()
+{
+    prefs.putBool("mqtt_enabled", true);
+}
+void stopMqtt()
+{
+    prefs.putBool("mqtt_enabled", false);
 }

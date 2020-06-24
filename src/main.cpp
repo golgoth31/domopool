@@ -169,7 +169,7 @@ void loop(void)
             config.metrics.startup = false;
             config.metrics.savedTempWater = config.metrics.curTempWater;
         }
-
+        sendMetricsMqtt(config);
         count_time_30min++; // Count 60 cycles for 30 min
         count_time_30s = 0;
     }

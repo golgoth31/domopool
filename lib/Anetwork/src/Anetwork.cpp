@@ -1,5 +1,7 @@
 #include "Anetwork.h"
 
+WiFiClient espClient;
+PubSubClient client(espClient);
 AsyncWebServer server(80);
 IPAddress MQTTServer;
 const char *localIP;
@@ -7,6 +9,47 @@ byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 int ip1, ip2, ip3, ip4;
 int8_t OTAdot = 0;
 const int ConfigDocSize = 2048;
+
+void callback(char *topic, byte *payload, unsigned int length)
+{
+    Serial.print("[MQTT] Message arrived [");
+    Serial.print(topic);
+    Serial.print("] ");
+    for (int i = 0; i < length; i++)
+    {
+        Serial.print((char)payload[i]);
+    }
+    Serial.println();
+}
+
+void reconnect()
+{
+    // Loop until we're reconnected
+    while (!client.connected())
+    {
+        Serial.print("[MQTT] Attempting MQTT connection...");
+        // Create a random client ID
+        String clientId = "domopool-";
+        clientId += String(random(0xffff), HEX);
+        // Attempt to connect
+        if (client.connect(clientId.c_str()))
+        {
+            Serial.println("[MQTT] connected");
+            // // Once connected, publish an announcement...
+            // client.publish("metrics", "hello world");
+            // // ... and resubscribe
+            // client.subscribe("inTopic");
+        }
+        else
+        {
+            Serial.print("[MQTT] failed, rc=");
+            Serial.print(client.state());
+            Serial.println("[MQTT] try again in 5 seconds");
+            // Wait 5 seconds before retrying
+            delay(5000);
+        }
+    }
+}
 
 void software_Reboot()
 {
@@ -90,6 +133,14 @@ bool startNetwork(const char *ssid, const char *password, Config &config)
         setPumpAuto();
         request->send(200, "application/json", "{}");
     });
+    server.on("/start-mqtt", HTTP_POST, [](AsyncWebServerRequest *request) {
+        startMqtt();
+        request->send(200, "application/json", "{}");
+    });
+    server.on("/stop-mqtt", HTTP_POST, [](AsyncWebServerRequest *request) {
+        stopMqtt();
+        request->send(200, "application/json", "{}");
+    });
     server.begin();
 
     // Port defaults to 3232
@@ -152,13 +203,39 @@ bool startNetwork(const char *ssid, const char *password, Config &config)
     // Serial.print("IP address: ");
     // Serial.println(WiFi.localIP());
 
+    client.setServer(config.network.mqtt.server.c_str(), 1883);
+    client.setCallback(callback);
+
     return wifiUp;
+}
+
+void sendMetricsMqtt(Config &config)
+{
+    DynamicJsonDocument doc(ConfigDocSize);
+    metrics2doc(config, doc);
+    String output = "";
+    serializeJson(doc, output);
+    client.publish("domopool/metrics", output.c_str());
 }
 
 void sendData(Config &config)
 {
     ArduinoOTA.handle();
-
+    if (config.network.mqtt.enabled)
+    {
+        if (!client.connected())
+        {
+            reconnect();
+        }
+        client.loop();
+    }
+    else
+    {
+        if (client.connected())
+        {
+            client.disconnect();
+        }
+    }
     // WiFiClient client = server.available();
     // bool postRequest = false;
     // if (client)

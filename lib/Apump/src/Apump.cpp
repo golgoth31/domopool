@@ -188,8 +188,12 @@ bool setFilterState(Config &config, int hour)
     }
 
     // Start the filter pump if needed
-    if (config.metrics.hour != hour || !config.pump.automatic)
+    if (config.metrics.hour != hour || !config.pump.automatic || config.pump.forceCheck)
     {
+        if (config.pump.forceCheck)
+        {
+            unsetForceCheck();
+        }
         if (pump[hour] || config.pump.forceFilter)
         {
 
@@ -224,6 +228,7 @@ bool setFilterState(Config &config, int hour)
             chDuration = 0;
         }
         config.metrics.chDuration = chDuration;
+        sendMetricsMqtt(config);
     }
 
     return config.metrics.filterOn;

@@ -8,6 +8,7 @@
 #include <ArduinoOTA.h>
 #include <ESPAsyncWebServer.h>
 #include <AsyncJson.h>
+#include <PubSubClient.h>
 
 #include <Aconfig.h>
 #include <Asensors.h>
@@ -18,4 +19,5 @@
 bool checkIP(const char *ip);
 bool startNetwork(const char *ssid, const char *password, Config &config);
 void sendData(Config &config);
+void sendMetricsMqtt(Config &config);
 #endif
