@@ -53,7 +53,7 @@ void setup(void)
         ; // wait for serial port to connect. Needed for native USB port only
     }
 
-    pumpInit(filterPin, chPin, phPin);
+    pumpInit(config, filterPin, chPin, phPin);
 
     initDisplay();
     displayPageBoot();

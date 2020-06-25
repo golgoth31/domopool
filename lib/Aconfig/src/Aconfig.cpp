@@ -6,30 +6,30 @@ Preferences prefs;
 
 void pref2config(Config &config)
 {
-    config.global.lcdBacklightDuration = prefs.getShort("BacklightTime");
-    config.time.initialized = prefs.getBool("time_init");
-    config.time.dayLight = prefs.getShort("dayLight");
-    config.time.ntpServer = prefs.getString("ntpServer");
-    config.time.timeZone = prefs.getShort("timeZone");
-    config.network.dhcp = prefs.getBool("dhcp");
-    config.network.allowPost = prefs.getBool("allowPost");
-    config.network.mqtt.enabled = prefs.getBool("mqtt_enabled");
-    config.network.mqtt.server = prefs.getString("mqtt_server");
-    config.sensors.ph.enabled = prefs.getBool("ph_enabled");
-    config.sensors.ph.threshold = prefs.getFloat("ph_threshold");
-    config.sensors.waitForConversion = prefs.getBool("waitConvertion");
-    config.sensors.tempResolution = prefs.getShort("tempResolution");
-    config.sensors.twin.enabled = prefs.getBool("twin_enabled");
-    config.sensors.twin.init = prefs.getBool("twin_init");
+    config.global.lcdBacklightDuration = prefs.getShort("BacklightTime", 30000);
+    config.time.initialized = prefs.getBool("time_init", false);
+    config.time.dayLight = prefs.getShort("dayLight", 3600);
+    config.time.ntpServer = prefs.getString("ntpServer", "europe.pool.ntp.org");
+    config.time.timeZone = prefs.getShort("timeZone", 3600);
+    config.network.dhcp = prefs.getBool("dhcp", true);
+    config.network.allowPost = prefs.getBool("allowPost", true);
+    config.network.mqtt.enabled = prefs.getBool("mqtt_enabled", false);
+    config.network.mqtt.server = prefs.getString("mqtt_server", "192.168.10.194");
+    config.sensors.ph.enabled = prefs.getBool("ph_enabled", false);
+    config.sensors.ph.threshold = prefs.getFloat("ph_threshold", 7.4);
+    config.sensors.waitForConversion = prefs.getBool("waitConvertion", false);
+    config.sensors.tempResolution = prefs.getShort("tempResolution", 12);
+    config.sensors.twin.enabled = prefs.getBool("twin_enabled", false);
+    config.sensors.twin.init = prefs.getBool("twin_init", false);
     config.sensors.twout.enabled = true;
-    config.sensors.twout.init = prefs.getBool("twout_init");
+    config.sensors.twout.init = prefs.getBool("twout_init", false);
     config.sensors.tamb.enabled = true;
-    config.sensors.tamb.init = prefs.getBool("tamb_init");
-    config.pump.forceFilter = prefs.getBool("forceFilter");
-    config.pump.forcePH = prefs.getBool("forcePH");
-    config.pump.forceCH = prefs.getBool("forceCH");
-    config.pump.automatic = prefs.getBool("auto");
-    config.pump.forceCheck = prefs.getBool("forceCheck");
+    config.sensors.tamb.init = prefs.getBool("tamb_init", false);
+    config.pump.forceFilter = prefs.getBool("forceFilter", false);
+    config.pump.forcePH = prefs.getBool("forcePH", false);
+    config.pump.forceCH = prefs.getBool("forceCH", false);
+    config.pump.automatic = prefs.getBool("auto", false);
+    config.pump.forceCheck = prefs.getBool("forceCheck", false);
 }
 
 void loadConfiguration(Config &config)
@@ -39,31 +39,9 @@ void loadConfiguration(Config &config)
     boolean init = prefs.getBool("init", false);
     if (!init)
     {
-        display2boot(F("[Conf] Preferences not set; setting default."), true);
+        display2boot(F("[Conf] Preferences not set; using default."), true);
         prefs.clear();
         prefs.putBool("init", true);
-        prefs.putBool("dhcp", true);
-        prefs.putBool("allowPost", true);
-        prefs.putBool("twin_enabled", false);
-        prefs.putBool("twin_init", false);
-        prefs.putBool("twout_init", false);
-        prefs.putBool("tamb_init", false);
-        prefs.putBool("waitConvertion", false);
-        prefs.putShort("tempResolution", 12);
-        prefs.putBool("ph_enabled", false);
-        prefs.putFloat("ph_threshold", 7.4);
-        prefs.putShort("BacklightTime", 30000);
-        prefs.putBool("time_init", false);
-        prefs.putShort("dayLight", 3600);
-        prefs.putShort("timeZone", 3600);
-        prefs.putString("ntpServer", "europe.pool.ntp.org");
-        prefs.putBool("forceFilter", false);
-        prefs.putBool("forcePH", false);
-        prefs.putBool("forceCH", false);
-        prefs.putBool("auto", true);
-        prefs.putString("mqtt_server", "192.168.10.194");
-        prefs.putBool("mqtt_enabled", false);
-        prefs.putBool("forceCheck", false);
     }
     pref2config(config);
     config.metrics.startup = true;

@@ -3,7 +3,7 @@
 Preferences pumpPrefs;
 // store in eeprom time from temp starts to be upper then 15
 // if more then 3 days, activate ch
-int16_t chDuration = 0; // means water temp is over 15°C
+// int16_t chDuration = 0; // means water temp is over 15°C
 const int8_t chWaitThreshold = 72;
 bool pump[24];
 int ton;
@@ -24,7 +24,7 @@ void pumpFullTime(bool pump[24], bool state)
     };
 }
 
-void pumpInit(int filterPin, int chPin, int phPin)
+void pumpInit(Config &config, int filterPin, int chPin, int phPin)
 {
 
     Serial.print(F("[Filter] Filter pin: "));
@@ -50,10 +50,10 @@ void pumpInit(int filterPin, int chPin, int phPin)
     pumpChRelayPin = chPin;
 
     pumpPrefs.begin("pump");
-    chDuration = pumpPrefs.getShort("chDuration", 0);
-    if (chDuration >= 10000) // more then 1 year, seems the data have never been initialized correctly
+    config.metrics.chDuration = pumpPrefs.getShort("chDuration", 0);
+    if (config.metrics.chDuration >= 10000) // more then 1 year, seems the data have never been initialized correctly
     {
-        chDuration = 0;
+        config.metrics.chDuration = 0;
         pumpPrefs.putShort("chDuration", 0);
     }
 }
@@ -190,18 +190,19 @@ bool setFilterState(Config &config, int hour)
     // Start the filter pump if needed
     if (config.metrics.hour != hour || !config.pump.automatic || config.pump.forceCheck)
     {
+        // setting forceCheck to false in case of automatic toggle (from false to true)
         if (config.pump.forceCheck)
         {
             unsetForceCheck();
         }
-        if (pump[hour] || config.pump.forceFilter)
+
+        // set the pump state based on table calculation or forced
+        if ((pump[hour] && config.pump.automatic) || config.pump.forceFilter)
         {
-
             Serial.println(F("[Filter] On"));
-
             config.metrics.filterOn = true;
             digitalWrite(pumpFilterRelayPin, LOW);
-            if ((config.metrics.savedTempWater > 15 && chDuration > chWaitThreshold) || config.metrics.savedTempWater > 18 || config.pump.forceCH)
+            if ((config.metrics.savedTempWater > 15 && config.metrics.chDuration > chWaitThreshold) || config.metrics.savedTempWater > 18 || config.pump.forceCH)
             {
                 config.metrics.chOn = true;
                 digitalWrite(pumpChRelayPin, LOW);
@@ -209,25 +210,27 @@ bool setFilterState(Config &config, int hour)
         }
         else
         {
-
             Serial.println(F("[Filter] Off"));
-
             digitalWrite(pumpFilterRelayPin, HIGH);
             config.metrics.filterOn = false;
             config.metrics.chOn = false;
             digitalWrite(pumpChRelayPin, HIGH);
         }
+
+        // update chduration only once per hour
+        if (config.metrics.hour != hour)
+        {
+            if (config.metrics.savedTempWater > 15 && config.metrics.chDuration <= 72)
+            {
+                config.metrics.chDuration++;
+                pumpPrefs.putShort("chDuration", config.metrics.chDuration);
+            }
+            else if (config.metrics.savedTempWater < 15 && config.metrics.chDuration > 72)
+            {
+                config.metrics.chDuration = 0;
+            }
+        }
         config.metrics.hour = hour;
-        if (config.metrics.savedTempWater > 15 && chDuration <= 72)
-        {
-            chDuration++;
-            pumpPrefs.putShort("chDuration", chDuration);
-        }
-        else if (config.metrics.savedTempWater < 15 && chDuration > 72)
-        {
-            chDuration = 0;
-        }
-        config.metrics.chDuration = chDuration;
         sendMetricsMqtt(config);
     }
 
