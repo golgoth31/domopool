@@ -1,17 +1,13 @@
 #include "Asensors.h"
 
-#include <EEPROM.h>
+Preferences sensPrefs;
 
-const int twoutOffset = 0;
-const int twinOffset = 16;
-const int tambOffset = 8;
-
-bool checkAddress(DeviceAddress deviceAddress, int offset)
+bool checkAddress(DeviceAddress deviceAddress, const char *temp)
 {
     bool ret = true;
     for (uint8_t i = 0; i < 8; i++)
     {
-        if (EEPROM.read(i + offset) != deviceAddress[i])
+        if (sensPrefs.getUChar(temp + i, 0) != deviceAddress[i])
         {
             ret = false;
         }
@@ -21,7 +17,6 @@ bool checkAddress(DeviceAddress deviceAddress, int offset)
 
 void printAddress(DeviceAddress deviceAddress)
 {
-
     for (uint8_t i = 0; i < 8; i++)
     {
         Serial.print(F("0x"));
@@ -37,17 +32,17 @@ void printAddress(DeviceAddress deviceAddress)
     }
 }
 
-void printAddressFromEeprom(int offset)
+void printAddressFromPref(const char *temp)
 {
 
     for (uint8_t i = 0; i < 8; i++)
     {
         Serial.print(F("0x"));
-        if (EEPROM.read(i + offset) < 0x10)
+        if (sensPrefs.getUChar(temp + i, 0) < 0x10)
         {
             Serial.print(F("0"));
         }
-        Serial.print(EEPROM.read(i + offset), HEX);
+        Serial.print(sensPrefs.getUChar(temp + i, 0), HEX);
         if (i < 7)
         {
             Serial.print(F(", "));
@@ -73,9 +68,9 @@ void registerDevices(Sensors &config, DallasTemperature &tempSensors)
         bool devOk = tempSensors.getAddress(deviceAddress, j);
         if (devOk)
         {
-            twout = checkAddress(deviceAddress, twoutOffset);
-            tamb = checkAddress(deviceAddress, tambOffset);
-            twin = checkAddress(deviceAddress, twinOffset);
+            twout = checkAddress(deviceAddress, "twout");
+            tamb = checkAddress(deviceAddress, "tamb");
+            twin = checkAddress(deviceAddress, "twin");
 
             if (twout)
             {
@@ -88,7 +83,7 @@ void registerDevices(Sensors &config, DallasTemperature &tempSensors)
 
                 for (uint8_t i = 0; i < 8; i++)
                 {
-                    EEPROM.write(i + twoutOffset, deviceAddress[i]);
+                    sensPrefs.putUChar("twout" + i, deviceAddress[i]);
                     config.twout.addr[i] = deviceAddress[i];
                     config.twout.init = true;
                 }
@@ -113,7 +108,7 @@ void registerDevices(Sensors &config, DallasTemperature &tempSensors)
 
                 for (uint8_t i = 0; i < 8; i++)
                 {
-                    EEPROM.write(i + tambOffset, deviceAddress[i]);
+                    sensPrefs.putUChar("tamb" + i, deviceAddress[i]);
                     config.tamb.addr[i] = deviceAddress[i];
                     config.tamb.init = true;
                 }
@@ -139,7 +134,7 @@ void registerDevices(Sensors &config, DallasTemperature &tempSensors)
 
                     for (uint8_t i = 0; i < 8; i++)
                     {
-                        EEPROM.write(i + twinOffset, deviceAddress[i]);
+                        sensPrefs.putUChar("twin" + i, deviceAddress[i]);
                         config.twin.addr[i] = deviceAddress[i];
                         config.twin.init = true;
                     }
@@ -174,38 +169,31 @@ float roundTemp(float temp)
     return temp;
 }
 
-void showAddressFromEeprom()
+void showAddressFromPref()
 {
 
-    Serial.print(F("[Sens] twout eeprom address: "));
-    printAddressFromEeprom(twoutOffset);
-    Serial.println();
-    Serial.print(F("[Sens] tamb eeprom address: "));
-    printAddressFromEeprom(tambOffset);
-    Serial.println();
-    Serial.print(F("[Sens] twin eeprom address: "));
-    printAddressFromEeprom(twinOffset);
-    Serial.println();
+    Serial.print(F("[Sens] twout pref address: "));
+    Serial.println(sensPrefs.getString("twout", "not saved"));
+    Serial.print(F("[Sens] tamb pref address: "));
+    Serial.println(sensPrefs.getString("tamb", "not saved"));
+    Serial.print(F("[Sens] twin pref address: "));
+    Serial.println(sensPrefs.getString("twin", "not saved"));
 }
 
-void resetEepromSensorsTemp()
+void resetSensorsTempAddr()
 {
-    for (uint8_t i = 0; i < 8; i++)
-    {
-        EEPROM.write(i + twoutOffset, 0);
-        EEPROM.write(i + tambOffset, 0);
-        EEPROM.write(i + twinOffset, 0);
-    }
+    sensPrefs.clear();
 }
 
 void initializeDS18B20(Sensors &config, DallasTemperature &tempSensors)
 {
     tempSensors.begin();
+    sensPrefs.begin("sensors");
 
     Serial.println(F("[Sens] Registering addresses..."));
 
     registerDevices(config, tempSensors);
-    showAddressFromEeprom();
+    showAddressFromPref();
 
     Serial.println(F("[Sens] Setting sensors options..."));
 
