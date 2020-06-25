@@ -55,6 +55,7 @@ void setup(void)
 
     pumpInit(config, filterPin, chPin, phPin);
 
+    initAlarms();
     initDisplay();
     displayPageBoot();
     loadConfiguration(config);
@@ -86,7 +87,6 @@ void setup(void)
     // saveConfiguration(config);
 
     initConfigData(config);
-    config.metrics.alarms.storage = getStorageAlarm();
 
     config.tests.enabled = true;
     config.tests.tamb = 25.38;
@@ -133,6 +133,7 @@ void loop(void)
     {
         pref2config(config);
         displayDate(config);
+        displayServices(config);
         getDS18B20(config, tempSensors);
 
         displayTemp(config);

@@ -156,9 +156,32 @@ void displayDate(Config &config)
     tft.setTextColor(TFT_LIGHTGREY, TFT_BLACK);
     tft.setTextSize(2);
     tft.setTextDatum(MC_DATUM);
-    tft.drawCentreString(printDate(), 120, 108, 1);
-    tft.drawCentreString(printTime(false), 120, 130, 1);
-    tft.drawCentreString(config.network.ip, 120, 152, 1);
+    tft.drawString(printDate(), 0, 115, 1);
+    tft.drawString(printTime(false), 0, 137, 1);
+    tft.drawString(config.network.ip, 0, 159, 1);
+}
+void displayServices(Config &config)
+{
+    tft.setTextSize(2);
+    tft.setTextDatum(MC_DATUM);
+    if (config.network.mqtt.enabled)
+    {
+        tft.setTextColor(TFT_GREEN, TFT_BLACK);
+    }
+    else
+    {
+        tft.setTextColor(TFT_LIGHTGREY, TFT_BLACK);
+    }
+    tft.drawRightString("MQTT", 240, 108, 1);
+    if (config.time.initialized)
+    {
+        tft.setTextColor(TFT_GREEN, TFT_BLACK);
+    }
+    else
+    {
+        tft.setTextColor(TFT_RED, TFT_BLACK);
+    }
+    tft.drawRightString("TIME", 240, 130, 1);
 }
 void displayPageMain(Config &config)
 {

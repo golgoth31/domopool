@@ -42,4 +42,5 @@ void display2boot(String text, boolean serialOut);
 void displayPump(Config &config);
 void displayTemp(Config &config);
 void displayDate(Config &config);
+void displayServices(Config &config);
 #endif
