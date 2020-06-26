@@ -64,8 +64,8 @@ void setup(void)
     // start ds18b20 sensors
     initializeDS18B20(config.sensors, tempSensors);
 
-    config.network.active = startNetwork(ssid, password, config);
-    if (config.network.active)
+    config.states.net_active = startNetwork(ssid, password, config);
+    if (config.states.net_active)
     {
         Serial.println(F("[Eth] Network is up"));
     }
@@ -137,7 +137,7 @@ void loop(void)
 
         displayTemp(config);
 
-        if (!config.metrics.startup)
+        if (!config.states.startup)
         {
             filterPumpOn = setFilterState(config, hour());
             if (config.sensors.ph.enabled)
@@ -146,6 +146,8 @@ void loop(void)
             }
         }
         displayPump(config);
+        sendMetricsMqtt(config);
+        sendStatesMqtt(config);
         count_time_30s++; // Count 15 cycles for sending XPL every 30s
         lastReadingTime = millis();
     }
@@ -163,13 +165,14 @@ void loop(void)
         Serial.print(F("Sensor 'tamb' value: "));
         Serial.println(config.metrics.curTempAmbiant);
 
-        if (config.metrics.startup)
+        if (config.states.startup)
         {
             Serial.println(F("End of startup blanking time"));
-            config.metrics.startup = false;
+            config.states.startup = false;
             config.metrics.savedTempWater = config.metrics.curTempWater;
         }
-        sendMetricsMqtt(config);
+        // sendMetricsMqtt(config);
+        // sendStatesMqtt(config);
         count_time_30min++; // Count 60 cycles for 30 min
         count_time_30s = 0;
     }

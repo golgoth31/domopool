@@ -20,4 +20,5 @@ bool checkIP(const char *ip);
 bool startNetwork(const char *ssid, const char *password, Config &config);
 void sendData(Config &config);
 void sendMetricsMqtt(Config &config);
+void sendStatesMqtt(Config &config);
 #endif

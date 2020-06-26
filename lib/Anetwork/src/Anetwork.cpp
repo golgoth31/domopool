@@ -68,28 +68,68 @@ bool checkIP(const char *ip)
     return false;
 }
 
-bool startNetwork(const char *ssid, const char *password, Config &config)
+void startOTA()
 {
-    Serial.println(F("[WiFi] Connecting"));
-    Serial.print(F("[WiFi] "));
-    bool wifiUp = false;
-    WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED)
-    {
-        delay(500);
+    // Port defaults to 3232
+    // ArduinoOTA.setPort(3232);
 
-        Serial.print(".");
+    // Hostname defaults to esp3232-[MAC]
+    ArduinoOTA.setHostname("domopool");
 
-        wifiUp = true;
-    }
+    // No authentication by default
+    // ArduinoOTA.setPassword("admin");
 
-    Serial.println("");
-    Serial.println(F("[WiFi] Connected"));
-    Serial.print(F("[WiFi] IP address: "));
-    Serial.println(WiFi.localIP());
+    // Password can be set with it's md5 value as well
+    // MD5(admin) = 21232f297a57a5a743894a0e4a801fc3
+    // ArduinoOTA.setPasswordHash("21232f297a57a5a743894a0e4a801fc3");
+    ArduinoOTA.setMdnsEnabled(true);
+    ArduinoOTA
+        .onStart([]() {
+            String type;
+            if (ArduinoOTA.getCommand() == U_FLASH)
+                type = "sketch";
+            else // U_SPIFFS
+                type = "filesystem";
 
-    config.network.ip = WiFi.localIP().toString();
+            // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
+            pageOTA();
+            server.end();
+            Serial.println("Start updating " + type);
+        })
+        .onEnd([]() {
+            Serial.println("\nEnd");
+            OTAdot = 0;
+            // server.begin();
+        })
+        .onProgress([](unsigned int progress, unsigned int total) {
+            int percent = progress / (total / 100);
+            Serial.printf("Progress: %u%%\r", percent);
+            pageOTAdot(OTAdot, percent);
+            OTAdot++;
+            if (OTAdot > 5)
+            {
+                OTAdot = 0;
+            }
+        })
+        .onError([](ota_error_t error) {
+            Serial.printf("Error[%u]: ", error);
+            if (error == OTA_AUTH_ERROR)
+                Serial.println("Auth Failed");
+            else if (error == OTA_BEGIN_ERROR)
+                Serial.println("Begin Failed");
+            else if (error == OTA_CONNECT_ERROR)
+                Serial.println("Connect Failed");
+            else if (error == OTA_RECEIVE_ERROR)
+                Serial.println("Receive Failed");
+            else if (error == OTA_END_ERROR)
+                Serial.println("End Failed");
+        });
 
+    ArduinoOTA.begin();
+}
+
+void startServer(Config &config)
+{
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
         StaticJsonDocument<ConfigDocSize> httpResponse;
         httpResponse["version"] = "test";
@@ -117,6 +157,13 @@ bool startNetwork(const char *ssid, const char *password, Config &config)
     server.on("/metrics", HTTP_GET, [&config](AsyncWebServerRequest *request) {
         DynamicJsonDocument httpResponse(ConfigDocSize);
         metrics2doc(config, httpResponse);
+        String output = "";
+        serializeJsonPretty(httpResponse, output);
+        request->send(200, "application/json", output);
+    });
+    server.on("/states", HTTP_GET, [&config](AsyncWebServerRequest *request) {
+        DynamicJsonDocument httpResponse(ConfigDocSize);
+        states2doc(config, httpResponse);
         String output = "";
         serializeJsonPretty(httpResponse, output);
         request->send(200, "application/json", output);
@@ -182,62 +229,32 @@ bool startNetwork(const char *ssid, const char *password, Config &config)
     // server.addHandler(testHandler);
 
     server.begin();
+}
+bool startNetwork(const char *ssid, const char *password, Config &config)
+{
+    Serial.println(F("[WiFi] Connecting"));
+    Serial.print(F("[WiFi] "));
+    bool wifiUp = false;
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED)
+    {
+        delay(500);
 
-    // Port defaults to 3232
-    // ArduinoOTA.setPort(3232);
+        Serial.print(".");
 
-    // Hostname defaults to esp3232-[MAC]
-    ArduinoOTA.setHostname("domopool");
+        wifiUp = true;
+    }
 
-    // No authentication by default
-    // ArduinoOTA.setPassword("admin");
+    Serial.println("");
+    Serial.println(F("[WiFi] Connected"));
+    Serial.print(F("[WiFi] IP address: "));
+    Serial.println(WiFi.localIP());
 
-    // Password can be set with it's md5 value as well
-    // MD5(admin) = 21232f297a57a5a743894a0e4a801fc3
-    // ArduinoOTA.setPasswordHash("21232f297a57a5a743894a0e4a801fc3");
-    ArduinoOTA.setMdnsEnabled(true);
-    ArduinoOTA
-        .onStart([]() {
-            String type;
-            if (ArduinoOTA.getCommand() == U_FLASH)
-                type = "sketch";
-            else // U_SPIFFS
-                type = "filesystem";
+    config.network.ip = WiFi.localIP().toString();
 
-            // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-            pageOTA();
-            server.end();
-            Serial.println("Start updating " + type);
-        })
-        .onEnd([]() {
-            Serial.println("\nEnd");
-            OTAdot = 0;
-            server.begin();
-        })
-        .onProgress([](unsigned int progress, unsigned int total) {
-            Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-            pageOTAdot(OTAdot);
-            OTAdot++;
-            if (OTAdot > 5)
-            {
-                OTAdot = 0;
-            }
-        })
-        .onError([](ota_error_t error) {
-            Serial.printf("Error[%u]: ", error);
-            if (error == OTA_AUTH_ERROR)
-                Serial.println("Auth Failed");
-            else if (error == OTA_BEGIN_ERROR)
-                Serial.println("Begin Failed");
-            else if (error == OTA_CONNECT_ERROR)
-                Serial.println("Connect Failed");
-            else if (error == OTA_RECEIVE_ERROR)
-                Serial.println("Receive Failed");
-            else if (error == OTA_END_ERROR)
-                Serial.println("End Failed");
-        });
+    startServer(config);
 
-    ArduinoOTA.begin();
+    startOTA();
 
     Serial.println("[WiFi] Ready");
     // Serial.print("IP address: ");
@@ -256,6 +273,14 @@ void sendMetricsMqtt(Config &config)
     String output = "";
     serializeJson(doc, output);
     client.publish("domopool/metrics", output.c_str());
+}
+void sendStatesMqtt(Config &config)
+{
+    DynamicJsonDocument doc(ConfigDocSize);
+    states2doc(config, doc);
+    String output = "";
+    serializeJson(doc, output);
+    client.publish("domopool/states", output.c_str());
 }
 
 void sendData(Config &config)

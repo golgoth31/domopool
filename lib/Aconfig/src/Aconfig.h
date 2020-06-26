@@ -12,6 +12,7 @@ void loadConfiguration(Config &config);
 void saveConfiguration(Config &config);
 void config2doc(Config &config, JsonDocument &doc);
 void metrics2doc(Config &config, JsonDocument &doc);
+void states2doc(Config &config, JsonDocument &doc);
 void initConfigData(Config &config);
 bool stopPump(const int8_t p);
 bool startPump(const int8_t p);

@@ -44,7 +44,7 @@ void loadConfiguration(Config &config)
         prefs.putBool("init", true);
     }
     pref2config(config);
-    config.metrics.startup = true;
+    config.states.startup = true;
     Serial.println(F("[Conf] Done"));
 }
 
@@ -132,24 +132,28 @@ void config2doc(Config &config, JsonDocument &doc)
 void metrics2doc(Config &config, JsonDocument &doc)
 {
     doc["metrics"]["chDuration"] = config.metrics.chDuration;
-    doc["metrics"]["chOn"] = config.metrics.chOn;
     doc["metrics"]["curCh"] = config.metrics.curCh;
     doc["metrics"]["curPh"] = config.metrics.curPh;
     doc["metrics"]["curTempAmbiant"] = config.metrics.curTempAmbiant;
     doc["metrics"]["curTempWater"] = config.metrics.curTempWater;
     doc["metrics"]["curWaterPressure"] = config.metrics.curWaterPressure;
-    doc["metrics"]["filterOn"] = config.metrics.filterOn;
     doc["metrics"]["hour"] = config.metrics.hour;
-    doc["metrics"]["phOn"] = config.metrics.phOn;
     doc["metrics"]["savedTempWater"] = config.metrics.savedTempWater;
-    doc["metrics"]["startup"] = config.metrics.startup;
+}
+void states2doc(Config &config, JsonDocument &doc)
+{
+    doc["states"]["filterOn"] = config.states.filterOn;
+    doc["states"]["phOn"] = config.states.phOn;
+    doc["states"]["chOn"] = config.states.chOn;
+    doc["states"]["automatic"] = config.states.automatic;
+    doc["states"]["startup"] = config.states.startup;
 }
 
 void initConfigData(Config &config)
 {
-    config.metrics.startup = true;
-    config.metrics.filterOn = false;
-    config.metrics.phOn = false;
+    config.states.startup = true;
+    config.states.filterOn = false;
+    config.states.phOn = false;
 }
 
 bool stopPump(const int8_t p)

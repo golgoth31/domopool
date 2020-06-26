@@ -83,9 +83,8 @@ void pageOTA()
     tft.drawCentreString("Firmware update", 120, 150, 1);
 }
 
-void pageOTAdot(int8_t dot)
+void pageOTAdot(int8_t dot, int percent)
 {
-
     switch (dot)
     {
     case 1:
@@ -103,10 +102,14 @@ void pageOTAdot(int8_t dot)
     case 5:
         tft.drawCentreString(".........", 120, 170, 1);
         break;
-
     default:
         break;
     }
+    String perc = "";
+    perc += "- ";
+    perc += percent;
+    perc += " % -";
+    tft.drawCentreString(perc, 120, 190, 1);
 }
 
 void displayPageBoot()
@@ -179,11 +182,11 @@ void displayPump(Config &config)
     tft.drawString("Auto", AUTO_TEXT_X, AUTO_TEXT_Y);
 
     // filter button
-    if (config.metrics.filterOn)
+    if (config.states.filterOn)
     {
         color = TFT_GREEN;
     }
-    else if (config.metrics.alarms.filter)
+    else if (config.alarms.filter)
     {
         color = TFT_RED;
     }
@@ -197,11 +200,11 @@ void displayPump(Config &config)
     tft.setTextDatum(MC_DATUM);
     tft.drawString("Filter", FILTER_TEXT_X, FILTER_TEXT_Y);
 
-    if (config.metrics.phOn)
+    if (config.states.phOn)
     {
         color = TFT_GREEN;
     }
-    else if (config.metrics.alarms.ph)
+    else if (config.alarms.ph)
     {
         color = TFT_RED;
     }
@@ -215,11 +218,11 @@ void displayPump(Config &config)
     tft.setTextDatum(MC_DATUM);
     tft.drawString("Ph", PH_TEXT_X, PH_TEXT_Y);
 
-    if (config.metrics.chOn)
+    if (config.states.chOn)
     {
         color = TFT_GREEN;
     }
-    else if (config.metrics.alarms.ch)
+    else if (config.alarms.ch)
     {
         color = TFT_RED;
     }
@@ -247,7 +250,7 @@ void displayServices(Config &config)
     tft.setTextSize(2);
     tft.setTextDatum(MC_DATUM);
 
-    if (config.network.active)
+    if (config.states.net_active)
     {
         tft.setTextColor(TFT_GREEN, TFT_BLACK);
     }
@@ -308,7 +311,7 @@ void displayPressed(Config &config)
             if ((y > FILTER_Y) && (y <= FILTER_Y + FILTER_H))
             {
                 Serial.println("filter");
-                if (config.metrics.filterOn)
+                if (config.states.filterOn)
                 {
                     stopPump(1);
                 }
@@ -323,7 +326,7 @@ void displayPressed(Config &config)
             if ((y > AUTO_Y) && (y <= AUTO_Y + AUTO_H))
             {
                 Serial.println("auto");
-                if (config.pump.automatic)
+                if (config.states.automatic)
                 {
                     unsetPumpAuto();
                 }

@@ -64,7 +64,7 @@ bool setFilterState(Config &config, int hour)
     pumpFullTime(pump, false);
 
     // keep using water temperature if last chown is below 2 degreC
-    if (config.metrics.filterOn || config.metrics.curTempWater <= 2)
+    if (config.states.filterOn || config.metrics.curTempWater <= 2)
     {
         config.metrics.savedTempWater = config.metrics.curTempWater;
     }
@@ -197,21 +197,21 @@ bool setFilterState(Config &config, int hour)
         }
 
         // keep filter state when swithcing from automatic mode
-        if (!config.pump.forceFilter && !config.pump.automatic && config.metrics.automatic)
+        if (!config.pump.forceFilter && !config.pump.automatic && config.states.automatic)
         {
-            config.pump.forceFilter = config.metrics.filterOn;
+            config.pump.forceFilter = config.states.filterOn;
         }
-        config.metrics.automatic = config.pump.automatic;
+        config.states.automatic = config.pump.automatic;
 
         // set the pump state based on table calculation or forced
         if ((pump[hour] && config.pump.automatic) || config.pump.forceFilter)
         {
             Serial.println(F("[Filter] On"));
-            config.metrics.filterOn = true;
+            config.states.filterOn = true;
             digitalWrite(pumpFilterRelayPin, LOW);
             if ((config.metrics.savedTempWater > 15 && config.metrics.chDuration > chWaitThreshold) || config.metrics.savedTempWater > 18 || config.pump.forceCH)
             {
-                config.metrics.chOn = true;
+                config.states.chOn = true;
                 digitalWrite(pumpChRelayPin, LOW);
             }
         }
@@ -219,8 +219,8 @@ bool setFilterState(Config &config, int hour)
         {
             Serial.println(F("[Filter] Off"));
             digitalWrite(pumpFilterRelayPin, HIGH);
-            config.metrics.filterOn = false;
-            config.metrics.chOn = false;
+            config.states.filterOn = false;
+            config.states.chOn = false;
             digitalWrite(pumpChRelayPin, HIGH);
         }
 
@@ -239,10 +239,10 @@ bool setFilterState(Config &config, int hour)
             }
         }
         config.metrics.hour = hour;
-        sendMetricsMqtt(config);
     }
-
-    return config.metrics.filterOn;
+    // sendMetricsMqtt(config);
+    // sendStatesMqtt(config);
+    return config.states.filterOn;
 }
 
 bool setPhState(Config &config, bool filterOn)
@@ -305,17 +305,17 @@ bool setPhState(Config &config, bool filterOn)
     {
         // digitalWrite(pumpPhRelayPin, HIGH);
         digitalWrite(pumpPhRelayPin, LOW);
-        config.metrics.phOn = true;
+        config.states.phOn = true;
     }
     else
     {
         digitalWrite(pumpPhRelayPin, HIGH);
         // digitalWrite(pumpPhRelayPin, LOW);
-        config.metrics.phOn = false;
+        config.states.phOn = false;
     }
 
     Serial.print(F("[PH] Pump state: "));
-    Serial.println(config.metrics.phOn);
+    Serial.println(config.states.phOn);
 
-    return config.metrics.phOn;
+    return config.states.phOn;
 }

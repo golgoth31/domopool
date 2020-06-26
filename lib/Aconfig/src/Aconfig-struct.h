@@ -16,7 +16,6 @@ struct Network
     const char *gateway;
     const char *dns;
     bool allowPost;
-    bool active;
     MQTT mqtt;
 };
 
@@ -91,14 +90,18 @@ struct Metrics
     float curPh;
     float curCh;
     float curWaterPressure;
+    int16_t chDuration;
+    int hour;
+};
+
+struct States
+{
     bool startup;
     bool filterOn;
     bool phOn;
     bool chOn;
     bool automatic;
-    int16_t chDuration;
-    int hour;
-    Alarms alarms;
+    bool net_active;
 };
 
 struct Config
@@ -109,6 +112,8 @@ struct Config
     Time time;
     Pump pump;
     Metrics metrics;
+    States states;
+    Alarms alarms;
     Tests tests;
 };
 #endif
