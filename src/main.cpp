@@ -38,7 +38,6 @@ DallasTemperature tempSensors(&ow);
 
 Config config;
 
-bool serverStarted = false;
 bool storageOk = true;
 bool filterPumpOn = false;
 bool phPumpOn = false;
@@ -65,14 +64,14 @@ void setup(void)
     // start ds18b20 sensors
     initializeDS18B20(config.sensors, tempSensors);
 
-    serverStarted = startNetwork(ssid, password, config);
-    if (serverStarted)
+    config.network.active = startNetwork(ssid, password, config);
+    if (config.network.active)
     {
-        Serial.println(F("[Eth] Server is up"));
+        Serial.println(F("[Eth] Network is up"));
     }
     else
     {
-        Serial.println(F("[Eth] Server not started"));
+        Serial.println(F("[Eth] Network not started"));
     }
 
     // initWebThings();
@@ -90,7 +89,7 @@ void setup(void)
 
     config.tests.enabled = true;
     config.tests.tamb = 25.38;
-    config.tests.twater = 17;
+    config.tests.twater = 25;
     config.tests.pressure = 0.8;
 
     displayPageMain(config);
@@ -125,7 +124,7 @@ void loop(void)
     //         lcdLEDBacklightState = false;
     //     }
     // }
-
+    displayPressed(config);
     sendData(config);
 
     // Get sensors every 2 seconds

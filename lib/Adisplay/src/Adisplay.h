@@ -28,11 +28,12 @@
 #include <TFT_eSPI.h>
 #include <TimeLib.h>
 
+#include <Aconfig.h>
 #include <Aconfig-struct.h>
 #include <Atime.h>
 
-#ifndef __ADISPLAY_H_UNDEFINED__
-#define __ADISPLAY_H_UNDEFINED__
+#ifndef __ADISPLAY_H__
+#define __ADISPLAY_H__
 void initDisplay();
 void displayPageMain(Config &config);
 void pageOTA();
@@ -43,4 +44,5 @@ void displayPump(Config &config);
 void displayTemp(Config &config);
 void displayDate(Config &config);
 void displayServices(Config &config);
+void displayPressed(Config &config);
 #endif

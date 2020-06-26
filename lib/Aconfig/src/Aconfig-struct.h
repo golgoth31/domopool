@@ -16,6 +16,7 @@ struct Network
     const char *gateway;
     const char *dns;
     bool allowPost;
+    bool active;
     MQTT mqtt;
 };
 

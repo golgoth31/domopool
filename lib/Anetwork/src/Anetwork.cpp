@@ -27,7 +27,7 @@ void reconnect()
     // Loop until we're reconnected
     while (!client.connected())
     {
-        Serial.print("[MQTT] Attempting MQTT connection...");
+        Serial.println("[MQTT] Attempting MQTT connection...");
         // Create a random client ID
         String clientId = "domopool-";
         clientId += String(random(0xffff), HEX);

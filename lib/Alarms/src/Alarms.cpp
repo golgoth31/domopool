@@ -4,16 +4,16 @@ Preferences alarmPrefs;
 
 void initAlarms(bool forceInit)
 {
-    display2boot(F("[Alm] Starting..."), true);
+    Serial.println(F("[Alm] Starting..."));
     alarmPrefs.begin("alarms");
     if (alarmPrefs.getBool("init", false) || forceInit)
     {
-        display2boot(F("[Alm] Initializing..."), true);
+        Serial.println(F("[Alm] Initializing..."));
         alarmPrefs.putBool("init", true);
         alarmPrefs.putBool("storage", false);
         alarmPrefs.putBool("ofa", false);
     }
-    display2boot(F("[Alm] Done"), true);
+    Serial.println(F("[Alm] Done"));
 }
 
 void setStorageAlarm(bool state)

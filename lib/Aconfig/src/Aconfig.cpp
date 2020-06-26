@@ -34,18 +34,18 @@ void pref2config(Config &config)
 
 void loadConfiguration(Config &config)
 {
-    display2boot(F("[Conf] Loading configuration..."), true);
+    Serial.println(F("[Conf] Loading configuration..."));
     prefs.begin("domopool");
     boolean init = prefs.getBool("init", false);
     if (!init)
     {
-        display2boot(F("[Conf] Preferences not set; using default."), true);
+        Serial.println(F("[Conf] Preferences not set; using default."));
         prefs.clear();
         prefs.putBool("init", true);
     }
     pref2config(config);
     config.metrics.startup = true;
-    display2boot(F("[Conf] Done"), true);
+    Serial.println(F("[Conf] Done"));
 }
 
 void config2pref(Config &config)
@@ -75,9 +75,9 @@ void config2pref(Config &config)
 
 void saveConfiguration(Config &config)
 {
-    display2boot(F("[Conf] Saving config to preferences"), true);
+    Serial.println(F("[Conf] Saving config to preferences"));
     config2pref(config);
-    display2boot(F("[Conf] Done"), true);
+    Serial.println(F("[Conf] Done"));
 }
 
 void config2doc(Config &config, JsonDocument &doc)
@@ -199,6 +199,11 @@ bool setPumpAuto()
     prefs.putBool("auto", true);
     prefs.putBool("forceCheck", true);
     prefs.putBool("forceFilter", false);
+    return true;
+}
+bool unsetPumpAuto()
+{
+    prefs.putBool("auto", false);
     return true;
 }
 void unsetForceCheck()

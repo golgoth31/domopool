@@ -2,7 +2,7 @@
 #include <ArduinoJson.h>
 #include <Preferences.h>
 
-#include <Adisplay.h>
+// #include <Adisplay.h>
 #include <Alarms.h>
 #include "Aconfig-struct.h"
 
@@ -16,6 +16,7 @@ void initConfigData(Config &config);
 bool stopPump(const int8_t p);
 bool startPump(const int8_t p);
 bool setPumpAuto();
+bool unsetPumpAuto();
 void pref2config(Config &config);
 void unsetForceCheck();
 void startMqtt();

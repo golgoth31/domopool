@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <Preferences.h>
 
-#include <Adisplay.h>
+// #include <Adisplay.h>
 
 #ifndef __ALARMS_H__
 #define __ALARMS_H__
