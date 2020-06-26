@@ -95,6 +95,7 @@ struct Metrics
     bool filterOn;
     bool phOn;
     bool chOn;
+    bool automatic;
     int16_t chDuration;
     int hour;
     Alarms alarms;

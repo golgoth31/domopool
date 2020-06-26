@@ -196,6 +196,13 @@ bool setFilterState(Config &config, int hour)
             unsetForceCheck();
         }
 
+        // keep filter state when swithcing from automatic mode
+        if (!config.pump.forceFilter && !config.pump.automatic && config.metrics.automatic)
+        {
+            config.pump.forceFilter = config.metrics.filterOn;
+        }
+        config.metrics.automatic = config.pump.automatic;
+
         // set the pump state based on table calculation or forced
         if ((pump[hour] && config.pump.automatic) || config.pump.forceFilter)
         {
