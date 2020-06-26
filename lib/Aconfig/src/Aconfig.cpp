@@ -123,6 +123,10 @@ void config2doc(Config &config, JsonDocument &doc)
     jsonObj["pump"]["forceCH"] = config.pump.forceCH;
     jsonObj["pump"]["forceCheck"] = config.pump.forceCheck;
     jsonObj["pump"]["auto"] = config.pump.automatic;
+    jsonObj["tests"]["enabled"] = config.tests.enabled;
+    jsonObj["tests"]["tamb"] = config.tests.tamb;
+    jsonObj["tests"]["twater"] = config.tests.twater;
+    jsonObj["tests"]["pressure"] = config.tests.pressure;
 }
 
 void metrics2doc(Config &config, JsonDocument &doc)

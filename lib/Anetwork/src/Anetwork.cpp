@@ -121,26 +121,66 @@ bool startNetwork(const char *ssid, const char *password, Config &config)
         serializeJsonPretty(httpResponse, output);
         request->send(200, "application/json", output);
     });
-    server.on("/stop-filter", HTTP_POST, [](AsyncWebServerRequest *request) {
-        stopPump(1);
+    server.on("/healthz", HTTP_GET, [](AsyncWebServerRequest *request) {
+        request->send(200);
+    });
+    AsyncCallbackJsonWebHandler *filterHandler = new AsyncCallbackJsonWebHandler("/api/v1/filter", [](AsyncWebServerRequest *request, JsonVariant &json) {
+        JsonObject jsonObj = json.as<JsonObject>();
+        if (jsonObj["state"] == "force")
+        {
+            startPump(1);
+        }
+        else if (jsonObj["state"] == "stop")
+        {
+            stopPump(1);
+        }
+        else if (jsonObj["state"] == "auto")
+        {
+            setPumpAuto();
+        }
+        else
+        {
+            request->send(500);
+        }
         request->send(200, "application/json", "{}");
     });
-    server.on("/start-filter", HTTP_POST, [](AsyncWebServerRequest *request) {
-        startPump(1);
+    server.addHandler(filterHandler);
+    AsyncCallbackJsonWebHandler *mqttHandler = new AsyncCallbackJsonWebHandler("/api/v1/mqtt", [](AsyncWebServerRequest *request, JsonVariant &json) {
+        JsonObject jsonObj = json.as<JsonObject>();
+        if (jsonObj["state"] == "start")
+        {
+            startMqtt();
+        }
+        else if (jsonObj["state"] == "stop")
+        {
+            stopMqtt();
+        }
+        else
+        {
+            request->send(500);
+        }
         request->send(200, "application/json", "{}");
     });
-    server.on("/set-pump-auto", HTTP_POST, [](AsyncWebServerRequest *request) {
-        setPumpAuto();
-        request->send(200, "application/json", "{}");
-    });
-    server.on("/start-mqtt", HTTP_POST, [](AsyncWebServerRequest *request) {
-        startMqtt();
-        request->send(200, "application/json", "{}");
-    });
-    server.on("/stop-mqtt", HTTP_POST, [](AsyncWebServerRequest *request) {
-        stopMqtt();
-        request->send(200, "application/json", "{}");
-    });
+    server.addHandler(mqttHandler);
+
+    // AsyncCallbackJsonWebHandler *testHandler = new AsyncCallbackJsonWebHandler("/api/v1/test", [&config](AsyncWebServerRequest *request, JsonVariant &json) {
+    //     JsonObject jsonObj = json.as<JsonObject>();
+    //     if (jsonObj["twater"])
+    //     {
+    //         config.tests.twater = jsonObj["twater"];
+    //     }
+    //     if (jsonObj["tamb"])
+    //     {
+    //         config.tests.tamb = jsonObj["tamb"];
+    //     }
+    //     if (jsonObj["enabled"])
+    //     {
+    //         config.tests.enabled = jsonObj["enabled"];
+    //     }
+    //     request->send(200, "application/json", "{}");
+    // });
+    // server.addHandler(testHandler);
+
     server.begin();
 
     // Port defaults to 3232

@@ -220,14 +220,15 @@ bool setFilterState(Config &config, int hour)
         // update chduration only once per hour
         if (config.metrics.hour != hour)
         {
-            if (config.metrics.savedTempWater > 15 && config.metrics.chDuration <= 72)
+            if (config.metrics.savedTempWater > 15 && config.metrics.chDuration <= chWaitThreshold)
             {
                 config.metrics.chDuration++;
                 pumpPrefs.putShort("chDuration", config.metrics.chDuration);
             }
-            else if (config.metrics.savedTempWater < 15 && config.metrics.chDuration > 72)
+            else if (config.metrics.savedTempWater < 14 && config.metrics.chDuration > 72)
             {
                 config.metrics.chDuration = 0;
+                pumpPrefs.putShort("chDuration", 0);
             }
         }
         config.metrics.hour = hour;

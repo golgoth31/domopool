@@ -90,7 +90,7 @@ void setup(void)
 
     config.tests.enabled = true;
     config.tests.tamb = 25.38;
-    config.tests.twater = 24.1;
+    config.tests.twater = 17;
     config.tests.pressure = 0.8;
 
     displayPageMain(config);
