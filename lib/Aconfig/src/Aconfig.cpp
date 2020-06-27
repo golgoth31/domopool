@@ -7,6 +7,10 @@ Preferences prefs;
 void pref2config(Config &config)
 {
     config.global.lcdBacklightDuration = prefs.getShort("BacklightTime", 30000);
+    config.global.ackTone = prefs.getDouble("ackTone", 4000);
+    config.global.ackDuration = prefs.getInt("ackDuration", 100);
+    config.global.serialOut = prefs.getBool("serialOut", true);
+    config.global.displayStartup = prefs.getBool("displayStartup", false);
     config.time.initialized = prefs.getBool("time_init", false);
     config.time.dayLight = prefs.getShort("dayLight", 3600);
     config.time.ntpServer = prefs.getString("ntpServer", "europe.pool.ntp.org");
@@ -61,6 +65,10 @@ void config2pref(Config &config)
     prefs.putBool("ph_enabled", config.sensors.ph.enabled);
     prefs.putFloat("ph_threshold", config.sensors.ph.threshold);
     prefs.putShort("BacklightTime", config.global.lcdBacklightDuration);
+    prefs.putDouble("ackTone", config.global.ackTone);
+    prefs.putInt("ackDuration", config.global.ackDuration);
+    prefs.putBool("serialOut", config.global.serialOut);
+    prefs.putBool("displayStartup", config.global.displayStartup);
     prefs.putBool("time_init", config.time.initialized);
     prefs.putShort("dayLight", config.time.dayLight);
     prefs.putShort("timeZone", config.time.timeZone);
@@ -84,6 +92,10 @@ void config2doc(Config &config, JsonDocument &doc)
 {
     JsonObject jsonObj = doc.to<JsonObject>();
     jsonObj["global"]["lcdBacklightDuration"] = config.global.lcdBacklightDuration;
+    jsonObj["global"]["ackTone"] = config.global.ackTone;
+    jsonObj["global"]["ackDuration"] = config.global.ackDuration;
+    jsonObj["global"]["serialOut"] = config.global.serialOut;
+    jsonObj["global"]["displayStartup"] = config.global.displayStartup;
     jsonObj["time"]["initialized"] = config.time.initialized;
     jsonObj["time"]["dayLight"] = config.time.dayLight;
     jsonObj["time"]["ntpServer"] = config.time.ntpServer;

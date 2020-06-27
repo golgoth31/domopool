@@ -3,6 +3,8 @@
 TFT_eSPI tft = TFT_eSPI();
 TFT_eSPI_Button button[2];
 
+#define ACK_TONE 4000
+#define ACK_DURATION 100
 #define BUTTON_BOX_X 0
 #define BUTTON_BOX_Y 170
 #define BUTTON_BOX_W 240
@@ -33,6 +35,13 @@ int CH_H;
 int CH_TEXT_X;
 int CH_TEXT_Y;
 
+void Button_ACK_Tone()
+{
+    ledcWriteTone(0, ACK_TONE);
+    delay(ACK_DURATION);
+    ledcWriteTone(0, 0);
+}
+
 void initDisplay()
 {
     tft.init();
@@ -45,6 +54,9 @@ void initDisplay()
     tft.setTextColor(TFT_DARKCYAN);
     tft.setTextSize(2);
     tft.drawCentreString("Domopool startup !", 120, 160, 1);
+    delay(1000);
+    ledcSetup(0, 1E5, 12);
+    ledcAttachPin(21, 0);
 
     AUTO_X = BUTTON_BOX_X + 1;
     AUTO_Y = BUTTON_BOX_Y + 2;
@@ -120,45 +132,99 @@ void displayPageBoot()
     tft.setCursor(0, 0);
 }
 
-void display2boot(String text, boolean serialOut)
+void display2boot(String text, Config &config)
 {
-    tft.println(text);
-    if (serialOut)
+    if (config.global.displayStartup)
+    {
+        tft.println(text);
+    }
+    if (config.global.serialOut)
     {
         Serial.println(text);
     }
 }
 
+// void displayStartup()
+// {
+//     tft.fillRoundRect(BUTTON_BOX_X, BUTTON_BOX_Y, BUTTON_BOX_W, BUTTON_BOX_H, 10, TFT_SKYBLUE);
+//     tft.setTextColor(TFT_BLACK);
+//     tft.setTextSize(2);
+//     tft.setTextDatum(MC_DATUM);
+//     tft.drawString("Startup", BUTTON_BOX_X + (BUTTON_BOX_W / 2), BUTTON_BOX_Y + (BUTTON_BOX_H / 2));
+// }
+
 void displayTemp(Config &config)
 {
-    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+
     tft.setTextDatum(MC_DATUM);
     tft.setTextSize(2);
-    // tft.setFreeFont(FF17);
 
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.drawString("Water", 60, 15, 1);
+    if (config.metrics.curTempWater < 2)
+    {
+        tft.setTextColor(TFT_RED, TFT_BLACK);
+    }
+    else if (config.metrics.curTempWater <= 15)
+    {
+        tft.setTextColor(TFT_ORANGE, TFT_BLACK);
+    }
+    else
+    {
+        tft.setTextColor(TFT_GREEN, TFT_BLACK);
+    }
     String text = "";
     text += config.metrics.curTempWater;
     text += (char)247;
     text += "C";
-    tft.drawString("Water", 60, 15, 1);
     tft.drawString(text, 60, 37, 1);
 
     text = "";
     text += config.metrics.curTempAmbiant;
     text += (char)247;
     text += "C";
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.drawString("Ambiant", 180, 15, 1);
     tft.drawString(text, 180, 37, 1);
 
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.drawString("Ph", 60, 65, 1);
+    if (config.metrics.curPh < 7 || config.metrics.curPh > 7.8)
+    {
+        tft.setTextColor(TFT_RED, TFT_BLACK);
+    }
+    else if (config.metrics.curPh <= 7.3 || config.metrics.curPh >= 7.5)
+    {
+        tft.setTextColor(TFT_ORANGE, TFT_BLACK);
+    }
+    else if (config.metrics.curPh > 7.3 || config.metrics.curPh < 7.5)
+    {
+        tft.setTextColor(TFT_GREEN, TFT_BLACK);
+    }
     text = "";
     text += config.metrics.curPh;
-    tft.drawString("Ph", 60, 65, 1);
     tft.drawString(text, 60, 87, 1);
 
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.drawString("Pressure", 180, 65, 1);
+    if (config.states.filterOn)
+    {
+        if (config.metrics.curWaterPressure <= 0.8 || config.metrics.curWaterPressure > 1.1)
+        {
+            tft.setTextColor(TFT_RED, TFT_BLACK);
+        }
+        else if (config.metrics.curWaterPressure > 0.8 || config.metrics.curWaterPressure <= 1.1)
+        {
+            tft.setTextColor(TFT_GREEN, TFT_BLACK);
+        }
+    }
+    else
+    {
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    }
     text = "";
     text += config.metrics.curWaterPressure;
     text += " Bar";
-    tft.drawString("Pressure", 180, 65, 1);
     tft.drawString(text, 180, 87, 1);
 }
 void displayPump(Config &config)
@@ -293,8 +359,8 @@ void displayPageMain(Config &config)
     // tft.drawLine(0, 245, 240, 245, TFT_LIGHTGREY);
 
     displayTemp(config);
-    displayPump(config);
     displayDate(config);
+    // displayPump(config);
 }
 void displayPressed(Config &config)
 {
@@ -303,9 +369,10 @@ void displayPressed(Config &config)
     // See if there's any touch data for us
     boolean pressed = tft.getTouch(&x, &y);
 
-    if (pressed)
+    if (pressed && !config.states.startup)
     {
         Serial.println("touched");
+        Button_ACK_Tone();
         if ((x > FILTER_X) && (x < FILTER_X + FILTER_W))
         {
             if ((y > FILTER_Y) && (y <= FILTER_Y + FILTER_H))

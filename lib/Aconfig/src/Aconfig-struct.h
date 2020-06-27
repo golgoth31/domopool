@@ -45,6 +45,10 @@ struct Sensors
 struct Global
 {
     unsigned long lcdBacklightDuration;
+    int ackDuration;
+    double ackTone;
+    bool serialOut;
+    bool displayStartup;
 };
 
 struct Time

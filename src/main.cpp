@@ -59,7 +59,7 @@ void setup(void)
     displayPageBoot();
     loadConfiguration(config);
 
-    display2boot(F("[Sens] Starting..."), true);
+    display2boot(F("[Sens] Starting..."), config);
 
     // start ds18b20 sensors
     initializeDS18B20(config.sensors, tempSensors);
@@ -103,8 +103,6 @@ void loop(void)
         lcdBacklightTimer = millis();
     }
 
-    // handleWebThings(config);
-
     // lcdLEDButtonState = digitalRead(lcdLEDButtonPin);
     // // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
     // // ToDo: add debounce
@@ -144,8 +142,12 @@ void loop(void)
             {
                 phPumpOn = setPhState(config, filterPumpOn);
             }
+            displayPump(config);
         }
-        displayPump(config);
+        // else
+        // {
+        //     displayStartup();
+        // }
         sendMetricsMqtt(config);
         sendStatesMqtt(config);
         count_time_30s++; // Count 15 cycles for sending XPL every 30s

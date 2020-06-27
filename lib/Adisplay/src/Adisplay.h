@@ -39,10 +39,11 @@ void displayPageMain(Config &config);
 void pageOTA();
 void pageOTAdot(int8_t dot, int percent);
 void displayPageBoot();
-void display2boot(String text, boolean serialOut);
+void display2boot(String text, Config &config);
 void displayPump(Config &config);
 void displayTemp(Config &config);
 void displayDate(Config &config);
 void displayServices(Config &config);
 void displayPressed(Config &config);
+void displayStartup();
 #endif
