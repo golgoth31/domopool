@@ -171,6 +171,9 @@ void startServer(Config &config)
     server.on("/healthz", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(200);
     });
+    server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request) {
+        request->send(200);
+    });
     AsyncCallbackJsonWebHandler *filterHandler = new AsyncCallbackJsonWebHandler("/api/v1/filter", [](AsyncWebServerRequest *request, JsonVariant &json) {
         JsonObject jsonObj = json.as<JsonObject>();
         if (jsonObj["state"] == "force")
@@ -227,7 +230,8 @@ void startServer(Config &config)
     //     request->send(200, "application/json", "{}");
     // });
     // server.addHandler(testHandler);
-
+    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
+    // DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "content-type");
     server.begin();
 }
 bool startNetwork(const char *ssid, const char *password, Config &config)
