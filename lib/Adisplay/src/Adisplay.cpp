@@ -3,8 +3,6 @@
 TFT_eSPI tft = TFT_eSPI();
 TFT_eSPI_Button button[2];
 
-#define ACK_TONE 4000
-#define ACK_DURATION 100
 #define BUTTON_BOX_X 0
 #define BUTTON_BOX_Y 170
 #define BUTTON_BOX_W 240
@@ -35,10 +33,10 @@ int CH_H;
 int CH_TEXT_X;
 int CH_TEXT_Y;
 
-void Button_ACK_Tone()
+void Button_ACK_Tone(Config &config)
 {
-    ledcWriteTone(0, ACK_TONE);
-    delay(ACK_DURATION);
+    ledcWriteTone(0, config.global.ackTone);
+    delay(config.global.ackDuration);
     ledcWriteTone(0, 0);
 }
 
@@ -372,7 +370,7 @@ void displayPressed(Config &config)
     if (pressed && !config.states.startup)
     {
         Serial.println("touched");
-        Button_ACK_Tone();
+        Button_ACK_Tone(config);
         if ((x > FILTER_X) && (x < FILTER_X + FILTER_W))
         {
             if ((y > FILTER_Y) && (y <= FILTER_Y + FILTER_H))

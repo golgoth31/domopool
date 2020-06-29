@@ -92,6 +92,7 @@ void setup(void)
     config.tests.twater = 25;
     config.tests.pressure = 0.8;
 
+    // config2pref(config);
     displayPageMain(config);
 }
 

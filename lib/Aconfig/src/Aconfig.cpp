@@ -6,21 +6,29 @@ Preferences prefs;
 
 void pref2config(Config &config)
 {
+    String defaultNtpServer = "europe.pool.ntp.org";
+    String defaultMQTTServer = "192.168.10.194";
+    double defaultAckTone = 4000;
+    float defaultPhThreshold = 7.4;
+
+    //default not working
+    config.global.ackTone = prefs.getDouble("ack_tone", defaultAckTone);
+    config.time.ntpServer = prefs.getString("ntp_server", defaultNtpServer);
+    config.network.mqtt.server = prefs.getString("mqtt_server", defaultMQTTServer);
+    config.sensors.ph.threshold = prefs.getFloat("ph_threshold", defaultPhThreshold);
+
+    //no bug
     config.global.lcdBacklightDuration = prefs.getShort("BacklightTime", 30000);
-    config.global.ackTone = prefs.getDouble("ackTone", 4000);
     config.global.ackDuration = prefs.getInt("ackDuration", 100);
     config.global.serialOut = prefs.getBool("serialOut", true);
     config.global.displayStartup = prefs.getBool("displayStartup", false);
     config.time.initialized = prefs.getBool("time_init", false);
     config.time.dayLight = prefs.getShort("dayLight", 3600);
-    config.time.ntpServer = prefs.getString("ntpServer", "europe.pool.ntp.org");
     config.time.timeZone = prefs.getShort("timeZone", 3600);
     config.network.dhcp = prefs.getBool("dhcp", true);
     config.network.allowPost = prefs.getBool("allowPost", true);
     config.network.mqtt.enabled = prefs.getBool("mqtt_enabled", false);
-    config.network.mqtt.server = prefs.getString("mqtt_server", "192.168.10.194");
     config.sensors.ph.enabled = prefs.getBool("ph_enabled", false);
-    config.sensors.ph.threshold = prefs.getFloat("ph_threshold", 7.4);
     config.sensors.waitForConversion = prefs.getBool("waitConvertion", false);
     config.sensors.tempResolution = prefs.getShort("tempResolution", 12);
     config.sensors.twin.enabled = prefs.getBool("twin_enabled", false);
@@ -32,20 +40,31 @@ void pref2config(Config &config)
     config.pump.forceFilter = prefs.getBool("forceFilter", false);
     config.pump.forcePH = prefs.getBool("forcePH", false);
     config.pump.forceCH = prefs.getBool("forceCH", false);
-    config.pump.automatic = prefs.getBool("auto", false);
+    config.pump.automatic = prefs.getBool("auto", true);
     config.pump.forceCheck = prefs.getBool("forceCheck", false);
 }
 
 void loadConfiguration(Config &config)
 {
     Serial.println(F("[Conf] Loading configuration..."));
-    prefs.begin("domopool");
+    if (!prefs.begin("domopool"))
+    {
+        Serial.println(F("[Conf] Unable to start preferences"));
+    }
+
     boolean init = prefs.getBool("init", false);
     if (!init)
     {
         Serial.println(F("[Conf] Preferences not set; using default."));
         prefs.clear();
+        Serial.print("[Conf] free entries: ");
+        Serial.println(prefs.freeEntries());
         prefs.putBool("init", true);
+
+        prefs.putDouble("ack_tone", 4000);
+        prefs.putString("ntp_server", "europe.pool.ntp.org");
+        prefs.putString("mqtt_server", "192.168.10.194");
+        prefs.putFloat("ph_threshold", 7.4);
     }
     pref2config(config);
     config.states.startup = true;
@@ -65,14 +84,14 @@ void config2pref(Config &config)
     prefs.putBool("ph_enabled", config.sensors.ph.enabled);
     prefs.putFloat("ph_threshold", config.sensors.ph.threshold);
     prefs.putShort("BacklightTime", config.global.lcdBacklightDuration);
-    prefs.putDouble("ackTone", config.global.ackTone);
+    prefs.putDouble("ack_tone", config.global.ackTone);
     prefs.putInt("ackDuration", config.global.ackDuration);
     prefs.putBool("serialOut", config.global.serialOut);
     prefs.putBool("displayStartup", config.global.displayStartup);
     prefs.putBool("time_init", config.time.initialized);
     prefs.putShort("dayLight", config.time.dayLight);
     prefs.putShort("timeZone", config.time.timeZone);
-    prefs.putString("ntpServer", config.time.ntpServer);
+    prefs.putString("ntp_server", config.time.ntpServer);
     prefs.putBool("forceFilter", config.pump.forceFilter);
     prefs.putBool("forcePH", config.pump.forcePH);
     prefs.putBool("forceCH", config.pump.forceCH);

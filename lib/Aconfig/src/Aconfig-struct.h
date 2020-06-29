@@ -4,18 +4,18 @@
 #define __ACONFIG_STRUCT_H__
 struct MQTT
 {
-    bool enabled;
-    String server;
+    bool enabled = false;
+    String server = "192.168.10.194";
 };
 
 struct Network
 {
-    bool dhcp;
+    bool dhcp = true;
     String ip;
     const char *netmask;
     const char *gateway;
     const char *dns;
-    bool allowPost;
+    bool allowPost = true;
     MQTT mqtt;
 };
 
