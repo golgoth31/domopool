@@ -130,6 +130,12 @@ void startOTA()
 
 void startServer(Config &config)
 {
+    // For CORS
+    server.on("/*", HTTP_OPTIONS, [](AsyncWebServerRequest *request) {
+        request->send(200);
+    });
+
+    // Serving pages
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
         StaticJsonDocument<ConfigDocSize> httpResponse;
         httpResponse["version"] = "test";
@@ -169,6 +175,13 @@ void startServer(Config &config)
         request->send(200, "application/json", output);
     });
     server.on("/healthz", HTTP_GET, [](AsyncWebServerRequest *request) {
+        request->send(200);
+    });
+    server.on("/readyz", HTTP_GET, [&config](AsyncWebServerRequest *request) {
+        if (config.states.startup)
+        {
+            request->send(404);
+        }
         request->send(200);
     });
     server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -231,7 +244,8 @@ void startServer(Config &config)
     // });
     // server.addHandler(testHandler);
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
-    // DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "content-type");
+    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "GET,OPTIONS,POST");
+    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "access-control-allow-origin,content-type");
     server.begin();
 }
 bool startNetwork(const char *ssid, const char *password, Config &config)

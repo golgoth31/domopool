@@ -240,8 +240,6 @@ bool setFilterState(Config &config, int hour)
         }
         config.metrics.hour = hour;
     }
-    // sendMetricsMqtt(config);
-    // sendStatesMqtt(config);
     return config.states.filterOn;
 }
 
