@@ -8,8 +8,8 @@ void pref2config(Config &config)
 {
     String defaultNtpServer = "europe.pool.ntp.org";
     String defaultMQTTServer = "192.168.10.194";
-    double defaultAckTone = 4000;
-    float defaultPhThreshold = 7.4;
+    double_t defaultAckTone = 4000;
+    float_t defaultPhThreshold = 7.4;
 
     //default not working
     config.global.ackTone = prefs.getDouble("ack_tone", defaultAckTone);
@@ -61,10 +61,10 @@ void loadConfiguration(Config &config)
         Serial.println(prefs.freeEntries());
         prefs.putBool("init", true);
 
-        prefs.putDouble("ack_tone", 4000);
+        // prefs.putDouble("ack_tone", 4000);
         prefs.putString("ntp_server", "europe.pool.ntp.org");
         prefs.putString("mqtt_server", "192.168.10.194");
-        prefs.putFloat("ph_threshold", 7.4);
+        // prefs.putFloat("ph_threshold", 7.4);
     }
     pref2config(config);
     config.states.startup = true;

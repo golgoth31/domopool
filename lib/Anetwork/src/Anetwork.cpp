@@ -138,11 +138,18 @@ void startServer(Config &config)
     // Serving pages
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
         StaticJsonDocument<ConfigDocSize> httpResponse;
-        httpResponse["version"] = "test";
         String compile = __DATE__;
         compile += " ";
         compile += __TIME__;
         httpResponse["compile"] = compile;
+        httpResponse["board_name"] = ARDUINO_BOARD;
+        httpResponse["versions"]["domopool"] = "test";
+        httpResponse["versions"]["platformio"] = PLATFORMIO;
+        httpResponse["versions"]["esp_idf"] = esp_get_idf_version();
+        httpResponse["versions"]["sdk"] = system_get_sdk_version();
+        httpResponse["versions"]["xtensa"] = __VERSION__;
+        httpResponse["versions"]["arduinojson"] = ARDUINOJSON_VERSION;
+        httpResponse["versions"]["tft_espi"] = TFT_ESPI_VERSION;
         String output;
         serializeJsonPretty(httpResponse, output);
         request->send(200, "application/json", output);
