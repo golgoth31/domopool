@@ -36,8 +36,8 @@
 #define __ADISPLAY_H__
 void initDisplay();
 void displayPageMain(Config &config);
-void pageOTA();
-void pageOTAdot(int8_t dot, int percent);
+void pageOTA(String type);
+void pageOTAProgressBar(int percent);
 void displayPageBoot();
 void display2boot(String text, Config &config);
 void displayPump(Config &config);

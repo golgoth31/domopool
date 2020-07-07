@@ -8,6 +8,8 @@ TFT_eSPI_Button button[2];
 #define BUTTON_BOX_W 240
 #define BUTTON_BOX_H 150
 
+int pBarw = 220;
+
 int FILTER_X;
 int FILTER_Y;
 int FILTER_W;
@@ -85,41 +87,23 @@ void initDisplay()
     CH_TEXT_Y = CH_Y + (CH_H / 2);
 }
 
-void pageOTA()
+void pageOTA(String type)
 {
+    type += " update";
     tft.fillScreen(TFT_BLACK);
     tft.setTextColor(TFT_RED, TFT_BLACK);
     tft.setTextSize(2);
-    tft.drawCentreString("Firmware update", 120, 150, 1);
+    tft.drawCentreString(type, 120, 150, 1);
+    tft.drawRect(10, 170, pBarw, 15, TFT_RED);
 }
-
-void pageOTAdot(int8_t dot, int percent)
+void pageOTAProgressBar(int percent)
 {
-    switch (dot)
+    int width = 0;
+    if (percent > 0)
     {
-    case 1:
-        tft.drawCentreString("    .    ", 120, 170, 1);
-        break;
-    case 2:
-        tft.drawCentreString("   ...   ", 120, 170, 1);
-        break;
-    case 3:
-        tft.drawCentreString("  .....  ", 120, 170, 1);
-        break;
-    case 4:
-        tft.drawCentreString(" ....... ", 120, 170, 1);
-        break;
-    case 5:
-        tft.drawCentreString(".........", 120, 170, 1);
-        break;
-    default:
-        break;
+        width = (pBarw * percent) / 100;
     }
-    String perc = "";
-    perc += "- ";
-    perc += percent;
-    perc += " % -";
-    tft.drawCentreString(perc, 120, 190, 1);
+    tft.fillRect(10, 170, width, 15, TFT_RED);
 }
 
 void displayPageBoot()

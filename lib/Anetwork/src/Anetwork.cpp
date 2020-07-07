@@ -22,29 +22,27 @@ void callback(char *topic, byte *payload, unsigned int length)
     Serial.println();
 }
 
-// void handleUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
-// {
-//     SPIFFS.begin(true);
-//     if (!index)
-//     {
-//         logOutput((String) "UploadStart: " + filename);
-//         // open the file on first call and store the file handle in the request object
-//         request->_tempFile = SPIFFS.open("/" + filename, "w");
-//     }
-//     if (len)
-//     {
-//         // stream the incoming chunk to the opened file
-//         request->_tempFile.write(data, len);
-//     }
-//     if (final)
-//     {
-//         logOutput((String) "UploadEnd: " + filename + ",size: " + index + len);
-//         // close the file handle as the upload is now done
-//         request->_tempFile.close();
-//         SPIFFS.end();
-//         request->redirect("/files");
-//     }
-// }
+void handleUploadUi(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
+{
+    if (!index)
+    {
+        Serial.println("UploadStart: " + filename);
+        // open the file on first call and store the file handle in the request object
+        request->_tempFile = SPIFFS.open("/" + filename, "w");
+    }
+    if (len)
+    {
+        // stream the incoming chunk to the opened file
+        request->_tempFile.write(data, len);
+    }
+    if (final)
+    {
+        Serial.println("UploadEnd: " + filename + ",size: " + index + len);
+        // close the file handle as the upload is now done
+        request->_tempFile.close();
+        request->redirect("/ui");
+    }
+}
 
 void reconnect()
 {
@@ -111,12 +109,12 @@ void startOTA()
         .onStart([]() {
             String type;
             if (ArduinoOTA.getCommand() == U_FLASH)
-                type = "sketch";
+                type = "Firmware";
             else // U_SPIFFS
-                type = "filesystem";
+                type = "SPIFFS";
 
             // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-            pageOTA();
+            pageOTA(type);
             server.end();
             Serial.println("Start updating " + type);
         })
@@ -128,7 +126,7 @@ void startOTA()
         .onProgress([](unsigned int progress, unsigned int total) {
             int percent = progress / (total / 100);
             Serial.printf("Progress: %u%%\r", percent);
-            pageOTAdot(OTAdot, percent);
+            pageOTAProgressBar(percent);
             OTAdot++;
             if (OTAdot > 5)
             {
@@ -170,7 +168,6 @@ void startServer(Config &config)
         httpResponse["versions"]["domopool"] = "test";
         httpResponse["versions"]["platformio"] = PLATFORMIO;
         httpResponse["versions"]["esp_idf"] = esp_get_idf_version();
-        httpResponse["versions"]["sdk"] = system_get_sdk_version();
         httpResponse["versions"]["xtensa"] = __VERSION__;
         httpResponse["versions"]["arduinojson"] = ARDUINOJSON_VERSION;
         httpResponse["versions"]["tft_espi"] = TFT_ESPI_VERSION;
@@ -216,8 +213,12 @@ void startServer(Config &config)
         request->send(200);
     });
     server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(200);
+        request->send(SPIFFS, "/favicon.png", "image/png");
     });
+    server.on("/bundle.js", HTTP_GET, [](AsyncWebServerRequest *request) {
+        request->redirect("/ui/bundle.js");
+    });
+    server.serveStatic("/ui/", SPIFFS, "/").setDefaultFile("index.html");
     AsyncCallbackJsonWebHandler *filterHandler = new AsyncCallbackJsonWebHandler("/api/v1/filter", [](AsyncWebServerRequest *request, JsonVariant &json) {
         JsonObject jsonObj = json.as<JsonObject>();
         if (jsonObj["state"] == "force")
@@ -257,13 +258,18 @@ void startServer(Config &config)
     });
     server.addHandler(mqttHandler);
 
-    // server.on(
-    //     "/ui/upload", HTTP_POST, [](AsyncWebServerRequest *request) {
-    //         AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "OK");
-    //         response->addHeader("Connection", "close");
-    //         request->send(response);
-    //     },
-    //     handleUpload);
+    server.on(
+        "/ui/upload", HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+            AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "OK");
+            response->addHeader("Connection", "close");
+            request->send(response);
+        },
+        [](AsyncWebServerRequest *request,
+           const String &filename,
+           size_t index,
+           uint8_t *data,
+           size_t len, bool final) { handleUploadUi(request, filename, index, data, len, final); });
     // AsyncCallbackJsonWebHandler *testHandler = new AsyncCallbackJsonWebHandler("/api/v1/test", [&config](AsyncWebServerRequest *request, JsonVariant &json) {
     //     JsonObject jsonObj = json.as<JsonObject>();
     //     if (jsonObj["twater"])
@@ -284,10 +290,17 @@ void startServer(Config &config)
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "GET,OPTIONS,POST");
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "access-control-allow-origin,content-type");
+    server.onNotFound([](AsyncWebServerRequest *request) {
+        request->send(404);
+    });
     server.begin();
 }
 bool startNetwork(const char *ssid, const char *password, Config &config)
 {
+    if (!SPIFFS.begin(true))
+    {
+        Serial.println("[FS] error on opening SPIFFS");
+    };
     Serial.println(F("[WiFi] Connecting"));
     Serial.print(F("[WiFi] "));
     bool wifiUp = false;
