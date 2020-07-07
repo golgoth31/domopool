@@ -912,4 +912,35 @@ Wire Wire Line
 	10150 3800 10850 3800
 Wire Wire Line
 	10150 3900 10850 3900
+Text GLabel 1350 950  0    50   Input ~ 0
+12V
+Text GLabel 1350 1100 0    50   Input ~ 0
+GND
+Text GLabel 1350 1250 0    50   Input ~ 0
+Relay1
+Text GLabel 1350 1400 0    50   Input ~ 0
+Relay2
+Text GLabel 1350 1550 0    50   Input ~ 0
+Relay3
+Text GLabel 1350 1700 0    50   Input ~ 0
+Relay3
+Text GLabel 1350 1850 0    50   Input ~ 0
+DS18B20
+Text GLabel 1350 800  0    50   Input ~ 0
+3.3V
+Text GLabel 1350 2000 0    50   Input ~ 0
+SCA
+Text GLabel 1350 2150 0    50   Input ~ 0
+SCL
+$Comp
+L arduitouch:devkitC U?
+U 1 1 5F01B682
+P 2650 1150
+F 0 "U?" H 3269 826 50  0000 L CNN
+F 1 "devkitC" H 3269 735 50  0000 L CNN
+F 2 "" H 2650 1150 50  0001 C CNN
+F 3 "" H 2650 1150 50  0001 C CNN
+	1    2650 1150
+	1    0    0    -1  
+$EndComp
 $EndSCHEMATC

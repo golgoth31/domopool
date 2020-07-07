@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name arduitouch)(type Legacy)(uri ${KIPRJMOD}/arduitouch.lib)(options "")(descr ""))
+)

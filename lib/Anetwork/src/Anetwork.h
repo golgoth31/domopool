@@ -9,6 +9,9 @@
 #include <ESPAsyncWebServer.h>
 #include <AsyncJson.h>
 #include <PubSubClient.h>
+// #include <SPIFFSEditor.h>
+#include <FS.h>
+#include <SPIFFS.h>
 
 #include <Aconfig.h>
 #include <Asensors.h>
@@ -18,6 +21,7 @@
 #define __ANETWORK_H_UNDEFINED__
 bool checkIP(const char *ip);
 bool startNetwork(const char *ssid, const char *password, Config &config);
+void restartNetwork(const char *ssid, const char *password, Config &config);
 void sendData(Config &config);
 void sendMetricsMqtt(Config &config);
 void sendStatesMqtt(Config &config);

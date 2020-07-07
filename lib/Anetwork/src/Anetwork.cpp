@@ -22,6 +22,30 @@ void callback(char *topic, byte *payload, unsigned int length)
     Serial.println();
 }
 
+// void handleUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
+// {
+//     SPIFFS.begin(true);
+//     if (!index)
+//     {
+//         logOutput((String) "UploadStart: " + filename);
+//         // open the file on first call and store the file handle in the request object
+//         request->_tempFile = SPIFFS.open("/" + filename, "w");
+//     }
+//     if (len)
+//     {
+//         // stream the incoming chunk to the opened file
+//         request->_tempFile.write(data, len);
+//     }
+//     if (final)
+//     {
+//         logOutput((String) "UploadEnd: " + filename + ",size: " + index + len);
+//         // close the file handle as the upload is now done
+//         request->_tempFile.close();
+//         SPIFFS.end();
+//         request->redirect("/files");
+//     }
+// }
+
 void reconnect()
 {
     // Loop until we're reconnected
@@ -233,6 +257,13 @@ void startServer(Config &config)
     });
     server.addHandler(mqttHandler);
 
+    // server.on(
+    //     "/ui/upload", HTTP_POST, [](AsyncWebServerRequest *request) {
+    //         AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "OK");
+    //         response->addHeader("Connection", "close");
+    //         request->send(response);
+    //     },
+    //     handleUpload);
     // AsyncCallbackJsonWebHandler *testHandler = new AsyncCallbackJsonWebHandler("/api/v1/test", [&config](AsyncWebServerRequest *request, JsonVariant &json) {
     //     JsonObject jsonObj = json.as<JsonObject>();
     //     if (jsonObj["twater"])
@@ -291,6 +322,20 @@ bool startNetwork(const char *ssid, const char *password, Config &config)
     return wifiUp;
 }
 
+void stopNetwork()
+{
+    ArduinoOTA.end();
+    server.end();
+    client.disconnect();
+}
+void restartNetwork(const char *ssid, const char *password, Config &config)
+{
+    if (WiFi.status() == WL_CONNECTION_LOST)
+    {
+        stopNetwork();
+        startNetwork(ssid, password, config);
+    }
+}
 void sendMetricsMqtt(Config &config)
 {
     DynamicJsonDocument doc(ConfigDocSize);

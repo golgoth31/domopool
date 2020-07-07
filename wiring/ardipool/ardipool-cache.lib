@@ -342,6 +342,21 @@ X VCC 8 -100 400 100 D 50 50 1 1 W
 ENDDRAW
 ENDDEF
 #
+# arduitouch_devkitC
+#
+DEF arduitouch_devkitC U 0 40 Y Y 1 F N
+F0 "U" 0 0 50 H V C CNN
+F1 "arduitouch_devkitC" 0 0 50 H V C CNN
+F2 "" 0 0 50 H I C CNN
+F3 "" 0 0 50 H I C CNN
+DRAW
+S 150 -50 -150 -700 0 1 0 N
+X GND ~ 150 -100 100 R 50 50 1 1 I
+X GPIO22 ~ 150 -300 100 R 50 50 1 1 I
+X GPIO23 ~ 150 -200 100 R 50 50 1 1 I
+ENDDRAW
+ENDDEF
+#
 # power_+3V3
 #
 DEF power_+3V3 #PWR 0 0 Y Y 1 F P

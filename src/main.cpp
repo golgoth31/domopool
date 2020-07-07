@@ -103,6 +103,7 @@ void loop(void)
         lastReadingTime = millis();
         lcdBacklightTimer = millis();
     }
+    restartNetwork(ssid, password, config);
 
     // lcdLEDButtonState = digitalRead(lcdLEDButtonPin);
     // // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
