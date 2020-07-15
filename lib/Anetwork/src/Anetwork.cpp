@@ -114,7 +114,7 @@ void startOTA()
                 type = "SPIFFS";
 
             // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-            pageOTA(type);
+            displayProgressBarText(type + " update", TFT_RED);
             server.end();
             Serial.println("Start updating " + type);
         })
@@ -126,7 +126,7 @@ void startOTA()
         .onProgress([](unsigned int progress, unsigned int total) {
             int percent = progress / (total / 100);
             Serial.printf("Progress: %u%%\r", percent);
-            pageOTAProgressBar(percent);
+            displayProgressBar(percent, TFT_RED);
             OTAdot++;
             if (OTAdot > 5)
             {
@@ -158,6 +158,7 @@ void startServer(Config &config)
     });
 
     // Serving pages
+    // root
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
         StaticJsonDocument<ConfigDocSize> httpResponse;
         String compile = __DATE__;
@@ -175,6 +176,8 @@ void startServer(Config &config)
         serializeJsonPretty(httpResponse, output);
         request->send(200, "application/json", output);
     });
+
+    // config
     server.on("/config", HTTP_GET, [&config](AsyncWebServerRequest *request) {
         DynamicJsonDocument httpResponse(ConfigDocSize);
         config2doc(config, httpResponse);
@@ -188,6 +191,8 @@ void startServer(Config &config)
     //     request->send(200);
     // });
     // server.addHandler(configHandler);
+
+    // metrics
     server.on("/metrics", HTTP_GET, [&config](AsyncWebServerRequest *request) {
         DynamicJsonDocument httpResponse(ConfigDocSize);
         metrics2doc(config, httpResponse);
@@ -195,6 +200,8 @@ void startServer(Config &config)
         serializeJsonPretty(httpResponse, output);
         request->send(200, "application/json", output);
     });
+
+    // states
     server.on("/states", HTTP_GET, [&config](AsyncWebServerRequest *request) {
         DynamicJsonDocument httpResponse(ConfigDocSize);
         states2doc(config, httpResponse);
@@ -202,9 +209,13 @@ void startServer(Config &config)
         serializeJsonPretty(httpResponse, output);
         request->send(200, "application/json", output);
     });
+
+    // healthz
     server.on("/healthz", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(200);
     });
+
+    // metrics
     server.on("/readyz", HTTP_GET, [&config](AsyncWebServerRequest *request) {
         if (config.states.startup)
         {
@@ -212,34 +223,83 @@ void startServer(Config &config)
         }
         request->send(200);
     });
+
+    // favicon
     server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(SPIFFS, "/favicon.png", "image/png");
     });
+
+    // ui
     server.on("/bundle.js", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->redirect("/ui/bundle.js");
     });
     server.serveStatic("/ui/", SPIFFS, "/").setDefaultFile("index.html");
-    AsyncCallbackJsonWebHandler *filterHandler = new AsyncCallbackJsonWebHandler("/api/v1/filter", [](AsyncWebServerRequest *request, JsonVariant &json) {
-        JsonObject jsonObj = json.as<JsonObject>();
-        if (jsonObj["state"] == "force")
+    server.on(
+        "/ui/upload", HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+            AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "OK");
+            response->addHeader("Connection", "close");
+            request->send(response);
+        },
+        [](AsyncWebServerRequest *request,
+           const String &filename,
+           size_t index,
+           uint8_t *data,
+           size_t len, bool final) { handleUploadUi(request, filename, index, data, len, final); });
+
+    // api
+    // filter
+    server.on("/api/v1/filter", HTTP_GET, [&config](AsyncWebServerRequest *request) {
+        StaticJsonDocument<ConfigDocSize> httpResponse;
+        String state;
+        if (config.states.automatic)
         {
-            startPump(1);
+            state = "auto";
         }
-        else if (jsonObj["state"] == "stop")
+        else if (config.pump.forceFilter)
         {
-            stopPump(1);
-        }
-        else if (jsonObj["state"] == "auto")
-        {
-            setPumpAuto();
+            state = "start";
         }
         else
         {
-            request->send(500);
+            state = "stop";
         }
-        request->send(200, "application/json", "{}");
+        httpResponse["state"] = state;
+        httpResponse["duration"] = config.pump.forceDuration;
+        String output;
+        serializeJsonPretty(httpResponse, output);
+        request->send(200, "application/json", output);
     });
+    AsyncCallbackJsonWebHandler *filterHandler = new AsyncCallbackJsonWebHandler(
+        "/api/v1/filter",
+        [&config](AsyncWebServerRequest *request, JsonVariant &json) {
+            JsonObject jsonObj = json.as<JsonObject>();
+            if (jsonObj["state"] == "force")
+            {
+                startPump(1);
+            }
+            else if (jsonObj["state"] == "stop")
+            {
+                stopPump(1);
+            }
+            else if (jsonObj["state"] == "auto")
+            {
+                setPumpAuto();
+            }
+            else
+            {
+                request->send(500);
+            }
+            int duration = jsonObj["duration"];
+            if (duration)
+            {
+                config.pump.forceDuration = duration;
+            }
+            request->send(200, "application/json", "{}");
+        });
     server.addHandler(filterHandler);
+
+    // mqtt
     AsyncCallbackJsonWebHandler *mqttHandler = new AsyncCallbackJsonWebHandler("/api/v1/mqtt", [](AsyncWebServerRequest *request, JsonVariant &json) {
         JsonObject jsonObj = json.as<JsonObject>();
         if (jsonObj["state"] == "start")
@@ -258,35 +318,6 @@ void startServer(Config &config)
     });
     server.addHandler(mqttHandler);
 
-    server.on(
-        "/ui/upload", HTTP_POST,
-        [](AsyncWebServerRequest *request) {
-            AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "OK");
-            response->addHeader("Connection", "close");
-            request->send(response);
-        },
-        [](AsyncWebServerRequest *request,
-           const String &filename,
-           size_t index,
-           uint8_t *data,
-           size_t len, bool final) { handleUploadUi(request, filename, index, data, len, final); });
-    // AsyncCallbackJsonWebHandler *testHandler = new AsyncCallbackJsonWebHandler("/api/v1/test", [&config](AsyncWebServerRequest *request, JsonVariant &json) {
-    //     JsonObject jsonObj = json.as<JsonObject>();
-    //     if (jsonObj["twater"])
-    //     {
-    //         config.tests.twater = jsonObj["twater"];
-    //     }
-    //     if (jsonObj["tamb"])
-    //     {
-    //         config.tests.tamb = jsonObj["tamb"];
-    //     }
-    //     if (jsonObj["enabled"])
-    //     {
-    //         config.tests.enabled = jsonObj["enabled"];
-    //     }
-    //     request->send(200, "application/json", "{}");
-    // });
-    // server.addHandler(testHandler);
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "GET,OPTIONS,POST");
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "access-control-allow-origin,content-type");
@@ -384,133 +415,4 @@ void sendData(Config &config)
             client.disconnect();
         }
     }
-    // WiFiClient client = server.available();
-    // bool postRequest = false;
-    // if (client)
-    // {
-
-    //     Serial.println(F("[Ethernet] New client request"));
-
-    //     boolean currentLineIsBlank = true;
-    //     while (client.connected())
-    //     {
-    //         if (client.available())
-    //         {
-    //             String reqType = client.readStringUntil(' ');
-    //             String reqURI = client.readStringUntil(' ');
-    //             String reqProtocol = client.readStringUntil('\n');
-
-    //             // String reqHeaders = client.readStringUntil('\n');
-    //             String reqHeaders;
-    //             while (currentLineIsBlank)
-    //             {
-    //                 reqHeaders = client.readStringUntil('\n');
-    //                 if (reqHeaders.startsWith("\r"))
-    //                 {
-    //                     currentLineIsBlank = false;
-    //                 }
-    //             }
-
-    //             String reqBody = client.readStringUntil('\n');
-
-    //             // Serial.println(reqType);
-    //             // Serial.println(reqURI);
-    //             // Serial.println(reqProtocol);
-    //             // Serial.println(reqBody);
-    //             StaticJsonDocument<ConfigDocSize> httpResponse;
-    //             if (reqType.equals("GET"))
-    //             {
-    //                 if (reqURI.equals("/"))
-    //                 {
-    //                     httpResponse["version"] = "test";
-    //                     String compile = __DATE__;
-    //                     compile += " ";
-    //                     compile += __TIME__;
-    //                     httpResponse["compile"] = compile;
-
-    //                     Serial.println(compile);
-
-    //                     client.print(F("Content-Length: "));
-    //                     client.println(measureJsonPretty(httpResponse));
-    //                     client.println();
-
-    //                     serializeJsonPretty(httpResponse, client);
-    //                 }
-    //                 else if (reqURI.equals("/config"))
-    //                 {
-    //                     config2doc(config, httpResponse);
-    //                     response200(client);
-    //                     client.print(F("Content-Length: "));
-    //                     client.println(measureJsonPretty(httpResponse));
-    //                     client.println();
-
-    //                     serializeJsonPretty(httpResponse, client);
-    //                 }
-    //                 else if (reqURI.equals("/metrics"))
-    //                 {
-    //                     metrics2doc(config, httpResponse);
-    //                     response200(client);
-    //                     client.print(F("Content-Length: "));
-    //                     client.println(measureJsonPretty(httpResponse));
-    //                     client.println();
-
-    //                     serializeJsonPretty(httpResponse, client);
-    //                 }
-    //                 else
-    //                 {
-    //                     response404(client);
-    //                 }
-    //             }
-    //             else if (reqType.equals("POST") && config.network.allowPost)
-    //             {
-    //                 if (reqURI.equals("/reboot"))
-    //                 {
-    //                     response200(client);
-    //                     postRequest = true;
-    //                 }
-    //                 else if (reqURI.equals("/reset"))
-    //                 {
-    //                     resetEepromSensorsTemp();
-    //                     response200(client);
-    //                     postRequest = true;
-    //                 }
-    //                 else if (reqURI.equals("/config"))
-    //                 {
-
-    //                     Serial.print(F("[Eth] Post body: "));
-    //                     Serial.println(reqBody);
-
-    //                     bool saved = saveJson(reqBody, config, "config.jsn");
-    //                     if (saved)
-    //                     {
-    //                         response200(client);
-    //                     }
-    //                     else
-    //                     {
-    //                         response500(client);
-    //                     }
-    //                 }
-    //                 else
-    //                 {
-    //                     response404(client);
-    //                 }
-    //             }
-    //             client.println();
-    //         }
-    //         // give the web browser time to receive the data
-    //         delay(1);
-    //         // close the connection:
-    //         client.stop();
-
-    //         Serial.println(F("[Eth] Response sent"));
-
-    //         if (postRequest)
-    //         {
-
-    //             Serial.println(F("[Eth] Rebooting"));
-
-    //             software_Reboot();
-    //         }
-    //     }
-    // }
 }

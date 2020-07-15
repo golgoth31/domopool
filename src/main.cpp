@@ -1,6 +1,6 @@
 // include the dependencies
 #include <Arduino.h>
-#include <Wire.h>
+// #include <Wire.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <TimeLib.h>
@@ -22,6 +22,9 @@
 #define clkPin 18
 // #define dtPin 19
 
+#define SDA 26
+#define SCL 27
+
 // configure timed actions
 unsigned long lastReadingTime = 0;
 int count_time_30s = 0;   // used to trigger action every 30s (15*2s)
@@ -41,7 +44,8 @@ Config config;
 bool storageOk = true;
 bool filterPumpOn = false;
 bool phPumpOn = false;
-bool rtcOk = false;
+
+bool booted = false;
 
 void setup(void)
 {
@@ -56,7 +60,7 @@ void setup(void)
 
     initAlarms();
     initDisplay();
-    displayPageBoot();
+
     loadConfiguration(config);
 
     display2boot(F("[Sens] Starting..."), config);
@@ -74,16 +78,12 @@ void setup(void)
         Serial.println(F("[Eth] Network not started"));
     }
 
-    // initWebThings();
-
     Serial.println(F("[Time] Setting time..."));
 
-    rtcOk = initSystemTime(config.time);
+    initSystemTime(config, SDA, SCL);
 
     Serial.print(F("[Time] Current time: "));
     Serial.println(printTime(true));
-
-    // saveConfiguration(config);
 
     initConfigData(config);
 
@@ -91,9 +91,6 @@ void setup(void)
     config.tests.tamb = 25.38;
     config.tests.twater = 25;
     config.tests.pressure = 0.8;
-
-    // config2pref(config);
-    displayPageMain(config);
 }
 
 void loop(void)
@@ -105,25 +102,6 @@ void loop(void)
     }
     restartNetwork(ssid, password, config);
 
-    // lcdLEDButtonState = digitalRead(lcdLEDButtonPin);
-    // // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
-    // // ToDo: add debounce
-    // if (lcdLEDButtonState == LOW)
-    // {
-    //     Serial.println(F("[LCD] Ligth ON"));
-    //     digitalWrite(lcdLEDPin, HIGH);
-    //     lcdBacklightTimer = millis();
-    //     lcdLEDBacklightState = true;
-    // }
-    // else
-    // {
-    //     if ((millis() - lcdBacklightTimer) >= config.global.lcdBacklightDuration && lcdLEDBacklightState)
-    //     {
-    //         Serial.println(F("[LCD] Ligth OFF"));
-    //         digitalWrite(lcdLEDPin, LOW);
-    //         lcdLEDBacklightState = false;
-    //     }
-    // }
     displayPressed(config);
     sendData(config);
 
@@ -131,14 +109,12 @@ void loop(void)
     if ((millis() - lastReadingTime) >= 2000)
     {
         pref2config(config);
-        displayDate(config);
-        displayServices(config);
         getDS18B20(config, tempSensors);
-
-        displayTemp(config);
-
         if (!config.states.startup)
         {
+            displayDate(config);
+            displayServices(config);
+            displayTemp(config);
             filterPumpOn = setFilterState(config, hour());
             if (config.sensors.ph.enabled)
             {
@@ -146,10 +122,11 @@ void loop(void)
             }
             displayPump(config);
         }
-        // else
-        // {
-        //     displayStartup();
-        // }
+        else
+        {
+            int percent = (count_time_30s * 100) / 15;
+            displayProgressBar(percent, TFT_DARKCYAN);
+        }
         sendMetricsMqtt(config);
         sendStatesMqtt(config);
         count_time_30s++; // Count 15 cycles for sending XPL every 30s
@@ -174,16 +151,15 @@ void loop(void)
             Serial.println(F("End of startup blanking time"));
             config.states.startup = false;
             config.metrics.savedTempWater = config.metrics.curTempWater;
+            displayPageMain(config);
         }
-        // sendMetricsMqtt(config);
-        // sendStatesMqtt(config);
         count_time_30min++; // Count 60 cycles for 30 min
         count_time_30s = 0;
     }
 
     if (count_time_30min == 60)
     {
-        setSytemTime(rtcOk);
+        setSytemTime(config.states.rtc, config);
 
         Serial.println(F("*** 30m ***"));
         Serial.print(F("Time: "));

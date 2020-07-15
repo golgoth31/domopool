@@ -6,14 +6,17 @@ Preferences prefs;
 
 void pref2config(Config &config)
 {
-    String defaultNtpServer = "europe.pool.ntp.org";
+    // String defaultNtpServer = "europe.pool.ntp.org";
+    String defaultNtpServer = "";
     String defaultMQTTServer = "192.168.10.194";
     double_t defaultAckTone = 4000;
     float_t defaultPhThreshold = 7.4;
 
     //default not working
     config.global.ackTone = prefs.getDouble("ack_tone", defaultAckTone);
-    config.time.ntpServer = prefs.getString("ntp_server", defaultNtpServer);
+    // strcpy(config.time.ntpServer, prefs.getString("ntp_server", defaultNtpServer).c_str());
+    config.network.ntp.ntpServer = prefs.getString("ntp_server", defaultNtpServer);
+    // strcpy(config.network.mqtt.server, prefs.getString("mqtt_server", defaultMQTTServer).c_str());
     config.network.mqtt.server = prefs.getString("mqtt_server", defaultMQTTServer);
     config.sensors.ph.threshold = prefs.getFloat("ph_threshold", defaultPhThreshold);
 
@@ -22,9 +25,8 @@ void pref2config(Config &config)
     config.global.ackDuration = prefs.getInt("ackDuration", 100);
     config.global.serialOut = prefs.getBool("serialOut", true);
     config.global.displayStartup = prefs.getBool("displayStartup", false);
-    config.time.initialized = prefs.getBool("time_init", false);
-    config.time.dayLight = prefs.getShort("dayLight", 3600);
-    config.time.timeZone = prefs.getShort("timeZone", 3600);
+    config.network.ntp.dayLight = prefs.getShort("dayLight", 3600);
+    config.network.ntp.timeZone = prefs.getShort("timeZone", 3600);
     config.network.dhcp = prefs.getBool("dhcp", true);
     config.network.allowPost = prefs.getBool("allowPost", true);
     config.network.mqtt.enabled = prefs.getBool("mqtt_enabled", false);
@@ -52,6 +54,7 @@ void loadConfiguration(Config &config)
         Serial.println(F("[Conf] Unable to start preferences"));
     }
 
+    // domopool_Config_init_zero();
     boolean init = prefs.getBool("init", false);
     if (!init)
     {
@@ -62,7 +65,8 @@ void loadConfiguration(Config &config)
         prefs.putBool("init", true);
 
         // prefs.putDouble("ack_tone", 4000);
-        prefs.putString("ntp_server", "europe.pool.ntp.org");
+        // prefs.putString("ntp_server", "europe.pool.ntp.org");
+        prefs.putString("ntp_server", "");
         prefs.putString("mqtt_server", "192.168.10.194");
         // prefs.putFloat("ph_threshold", 7.4);
     }
@@ -88,10 +92,9 @@ void config2pref(Config &config)
     prefs.putInt("ackDuration", config.global.ackDuration);
     prefs.putBool("serialOut", config.global.serialOut);
     prefs.putBool("displayStartup", config.global.displayStartup);
-    prefs.putBool("time_init", config.time.initialized);
-    prefs.putShort("dayLight", config.time.dayLight);
-    prefs.putShort("timeZone", config.time.timeZone);
-    prefs.putString("ntp_server", config.time.ntpServer);
+    prefs.putShort("dayLight", config.network.ntp.dayLight);
+    prefs.putShort("timeZone", config.network.ntp.timeZone);
+    prefs.putString("ntp_server", config.network.ntp.ntpServer);
     prefs.putBool("forceFilter", config.pump.forceFilter);
     prefs.putBool("forcePH", config.pump.forcePH);
     prefs.putBool("forceCH", config.pump.forceCH);
@@ -115,10 +118,9 @@ void config2doc(Config &config, JsonDocument &doc)
     jsonObj["global"]["ackDuration"] = config.global.ackDuration;
     jsonObj["global"]["serialOut"] = config.global.serialOut;
     jsonObj["global"]["displayStartup"] = config.global.displayStartup;
-    jsonObj["time"]["initialized"] = config.time.initialized;
-    jsonObj["time"]["dayLight"] = config.time.dayLight;
-    jsonObj["time"]["ntpServer"] = config.time.ntpServer;
-    jsonObj["time"]["timeZone"] = config.time.timeZone;
+    jsonObj["network"]["ntp"]["dayLight"] = config.network.ntp.dayLight;
+    jsonObj["network"]["ntp"]["ntpServer"] = config.network.ntp.ntpServer;
+    jsonObj["network"]["ntp"]["timeZone"] = config.network.ntp.timeZone;
     jsonObj["network"]["dhcp"] = config.network.dhcp;
     jsonObj["network"]["ip"] = config.network.ip;
     jsonObj["network"]["gateway"] = config.network.gateway;
@@ -178,6 +180,8 @@ void states2doc(Config &config, JsonDocument &doc)
     doc["states"]["chOn"] = config.states.chOn;
     doc["states"]["automatic"] = config.states.automatic;
     doc["states"]["startup"] = config.states.startup;
+    doc["states"]["ntp"] = config.states.ntp;
+    doc["states"]["rtc"] = config.states.rtc;
 }
 
 void initConfigData(Config &config)

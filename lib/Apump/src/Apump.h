@@ -2,7 +2,6 @@
 #include <time.h>
 #include <Preferences.h>
 
-#include <Aconfig-struct.h>
 #include <Anetwork.h>
 
 #ifndef __APUMP_H_UNDEFINED__

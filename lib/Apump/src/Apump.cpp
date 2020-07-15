@@ -15,13 +15,48 @@ time_t timestamp;
 int pumpFilterRelayPin;
 int pumpPhRelayPin;
 int pumpChRelayPin;
+int countForceDuration = 0;
 
-void pumpFullTime(bool pump[24], bool state)
+uint8_t tab[29][24] = {
+    // {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, //0
+    {0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, //1
+    {0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, //2
+    {0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, //3
+    {0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, //4
+    {0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, //5
+    {0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, //6
+    {0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, //7
+    {0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, //8
+    {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, //9
+    {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, //10
+    {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, //11
+    {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0}, //12
+    {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0}, //13
+    {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0}, //14
+    {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0}, //15
+    {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0}, //16
+    {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0}, //17
+    {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0}, //18
+    {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0}, //19
+    {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0}, //20
+    {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0}, //21
+    {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0}, //22
+    {0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0}, //23
+    {0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0}, //24
+    {0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0}, //25
+    {0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0}, //26
+    {0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0}, //27
+    {0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0}, //28
+    {0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0}, //29
+    // {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, //30
+};
+
+void setPrefs(uint8_t t, uint8_t h, uint8_t state)
 {
-    for (int i = 0; i < 24; i++)
+    if (pumpPrefs.getBool("p" + t + h, tab[t][h]) != state)
     {
-        pump[i] = state;
-    };
+        pumpPrefs.putBool("p" + t + h, state);
+    }
 }
 
 void pumpInit(Config &config, int filterPin, int chPin, int phPin)
@@ -60,131 +95,24 @@ void pumpInit(Config &config, int filterPin, int chPin, int phPin)
 
 bool setFilterState(Config &config, int hour)
 {
-    // first disable all
-    pumpFullTime(pump, false);
-
-    // keep using water temperature if last chown is below 2 degreC
+    // keep using water temperature if last shown is below 2 degreC
     if (config.states.filterOn || config.metrics.curTempWater <= 2)
     {
         config.metrics.savedTempWater = config.metrics.curTempWater;
     }
-
-    // enable all if temp too low or to high
-    if (config.metrics.savedTempWater <= 1 || config.metrics.savedTempWater > 30)
+    uint8_t tempAbs = floor(config.metrics.savedTempWater);
+    String p = "p";
+    p += tempAbs;
+    p += hour;
+    // Serial.println(pumpPrefs.getBool(p.c_str(), tab[tempAbs][hour]));
+    bool state;
+    if (tempAbs < 1 || tempAbs >= 30)
     {
-        pumpFullTime(pump, true);
+        state = true;
     }
-
-    // put pump on based on temp/hour
-    else if (config.metrics.savedTempWater > 1 && config.metrics.savedTempWater <= 6)
+    else
     {
-        for (int i = 3; i <= 4; i++)
-        {
-            pump[i] = true;
-        };
-    }
-    else if (config.metrics.savedTempWater > 6 && config.metrics.savedTempWater <= 9)
-    {
-        for (int i = 3; i <= 5; i++)
-        {
-            pump[i] = true;
-        };
-    }
-    else if (config.metrics.savedTempWater > 9 && config.metrics.savedTempWater <= 12)
-    {
-        for (int i = 8; i <= 11; i++)
-        {
-            pump[i] = true;
-        };
-    }
-    else if (config.metrics.savedTempWater > 12 && config.metrics.savedTempWater <= 15)
-    {
-        for (int i = 8; i <= 10; i++)
-        {
-            pump[i] = true;
-        };
-        for (int i = 14; i <= 15; i++)
-        {
-            pump[i] = true;
-        };
-    }
-    else if (config.metrics.savedTempWater > 15 && config.metrics.savedTempWater <= 18)
-    {
-        for (int i = 8; i <= 10; i++)
-        {
-            pump[i] = true;
-        };
-        for (int i = 14; i <= 16; i++)
-        {
-            pump[i] = true;
-        };
-    }
-    else if (config.metrics.savedTempWater > 18 && config.metrics.savedTempWater <= 21)
-    {
-        for (int i = 8; i <= 11; i++)
-        {
-            pump[i] = true;
-        };
-        for (int i = 14; i <= 16; i++)
-        {
-            pump[i] = true;
-        };
-    }
-    else if (config.metrics.savedTempWater > 21 && config.metrics.savedTempWater <= 23)
-    {
-        for (int i = 8; i <= 11; i++)
-        {
-            pump[i] = true;
-        };
-        for (int i = 14; i <= 17; i++)
-        {
-            pump[i] = true;
-        };
-    }
-    else if (config.metrics.savedTempWater > 23 && config.metrics.savedTempWater <= 26)
-    {
-        for (int i = 3; i <= 4; i++)
-        {
-            pump[i] = true;
-        };
-        for (int i = 8; i <= 11; i++)
-        {
-            pump[i] = true;
-        };
-        for (int i = 14; i <= 18; i++)
-        {
-            pump[i] = true;
-        };
-    }
-    else if (config.metrics.savedTempWater > 26 && config.metrics.savedTempWater <= 28)
-    {
-        for (int i = 3; i <= 5; i++)
-        {
-            pump[i] = true;
-        };
-        for (int i = 8; i <= 11; i++)
-        {
-            pump[i] = true;
-        };
-        for (int i = 14; i <= 19; i++)
-        {
-            pump[i] = true;
-        };
-    }
-    else if (config.metrics.savedTempWater > 28 && config.metrics.savedTempWater <= 30)
-    {
-        for (int i = 3; i <= 6; i++)
-        {
-            pump[i] = true;
-        };
-        for (int i = 8; i <= 11; i++)
-        {
-            pump[i] = true;
-        };
-        for (int i = 14; i <= 20; i++)
-        {
-            pump[i] = true;
-        };
+        state = pumpPrefs.getBool(p.c_str(), tab[tempAbs][hour]);
     }
 
     // Start the filter pump if needed
@@ -204,7 +132,7 @@ bool setFilterState(Config &config, int hour)
         config.states.automatic = config.pump.automatic;
 
         // set the pump state based on table calculation or forced
-        if ((pump[hour] && config.pump.automatic) || config.pump.forceFilter)
+        if ((state && config.pump.automatic) || config.pump.forceFilter)
         {
             Serial.println(F("[Filter] On"));
             config.states.filterOn = true;
@@ -236,6 +164,18 @@ bool setFilterState(Config &config, int hour)
             {
                 config.metrics.chDuration = 0;
                 pumpPrefs.putShort("chDuration", 0);
+            }
+            if (config.pump.forceFilter)
+            {
+                if (countForceDuration > 0 && config.pump.forceDuration == countForceDuration)
+                {
+                    config.pump.forceFilter = false;
+                    countForceDuration = 0;
+                }
+                else if (config.pump.forceDuration != 0)
+                {
+                    countForceDuration++;
+                }
             }
         }
         config.metrics.hour = hour;

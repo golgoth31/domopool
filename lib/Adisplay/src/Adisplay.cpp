@@ -50,11 +50,14 @@ void initDisplay()
     uint16_t calData[5] = {251, 3545, 202, 3420, 2};
     tft.setTouch(calData);
 
-    tft.fillScreen(TFT_BLACK);
-    tft.setTextColor(TFT_DARKCYAN);
-    tft.setTextSize(2);
-    tft.drawCentreString("Domopool startup !", 120, 160, 1);
-    delay(1000);
+    // tft.fillScreen(TFT_BLACK);
+    // tft.setTextColor(TFT_DARKCYAN);
+    // tft.setTextSize(2);
+    // tft.drawCentreString("Domopool startup !", 120, 160, 1);
+    // delay(1000);
+    String startup = "Domopool startup";
+    displayProgressBarText(startup, TFT_DARKCYAN);
+
     ledcSetup(0, 1E5, 12);
     ledcAttachPin(21, 0);
 
@@ -87,23 +90,40 @@ void initDisplay()
     CH_TEXT_Y = CH_Y + (CH_H / 2);
 }
 
-void pageOTA(String type)
+// void pageOTA(String type)
+// {
+//     type += " update";
+//     tft.fillScreen(TFT_BLACK);
+//     tft.setTextColor(TFT_RED, TFT_BLACK);
+//     tft.setTextSize(2);
+//     tft.drawCentreString(type, 120, 150, 1);
+//     tft.drawRect(10, 170, pBarw, 15, TFT_RED);
+// }
+// void pageOTAProgressBar(int percent)
+// {
+//     int width = 0;
+//     if (percent > 0)
+//     {
+//         width = (pBarw * percent) / 100;
+//     }
+//     tft.fillRect(10, 170, width, 15, TFT_RED);
+// }
+void displayProgressBarText(String text, uint32_t color)
 {
-    type += " update";
     tft.fillScreen(TFT_BLACK);
-    tft.setTextColor(TFT_RED, TFT_BLACK);
+    tft.setTextColor(color, TFT_BLACK);
     tft.setTextSize(2);
-    tft.drawCentreString(type, 120, 150, 1);
-    tft.drawRect(10, 170, pBarw, 15, TFT_RED);
+    tft.drawCentreString(text, 120, 150, 1);
+    tft.drawRect(10, 170, pBarw, 15, color);
 }
-void pageOTAProgressBar(int percent)
+void displayProgressBar(int percent, uint32_t color)
 {
     int width = 0;
     if (percent > 0)
     {
         width = (pBarw * percent) / 100;
     }
-    tft.fillRect(10, 170, width, 15, TFT_RED);
+    tft.fillRect(10, 170, width, 15, color);
 }
 
 void displayPageBoot()
@@ -125,15 +145,6 @@ void display2boot(String text, Config &config)
         Serial.println(text);
     }
 }
-
-// void displayStartup()
-// {
-//     tft.fillRoundRect(BUTTON_BOX_X, BUTTON_BOX_Y, BUTTON_BOX_W, BUTTON_BOX_H, 10, TFT_SKYBLUE);
-//     tft.setTextColor(TFT_BLACK);
-//     tft.setTextSize(2);
-//     tft.setTextDatum(MC_DATUM);
-//     tft.drawString("Startup", BUTTON_BOX_X + (BUTTON_BOX_W / 2), BUTTON_BOX_Y + (BUTTON_BOX_H / 2));
-// }
 
 void displayTemp(Config &config)
 {
@@ -318,9 +329,13 @@ void displayServices(Config &config)
     }
     tft.drawRightString("MQTT", 240, 129, 1);
 
-    if (config.time.initialized)
+    if (config.states.rtc)
     {
         tft.setTextColor(TFT_GREEN, TFT_BLACK);
+    }
+    else if (config.states.ntp)
+    {
+        tft.setTextColor(TFT_GOLD, TFT_BLACK);
     }
     else
     {
@@ -336,13 +351,8 @@ void displayPageMain(Config &config)
     tft.drawLine(0, 50, 240, 50, TFT_LIGHTGREY);
     tft.drawLine(0, 100, 240, 100, TFT_LIGHTGREY);
 
-    // tft.drawLine(120, 170, 120, 320, TFT_LIGHTGREY);
-    // tft.drawLine(0, 170, 240, 170, TFT_LIGHTGREY);
-    // tft.drawLine(0, 245, 240, 245, TFT_LIGHTGREY);
-
     displayTemp(config);
     displayDate(config);
-    // displayPump(config);
 }
 void displayPressed(Config &config)
 {

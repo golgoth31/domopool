@@ -1,7 +1,10 @@
 #include "Atime.h"
 
 tm timedata;
+RtcDateTime rdt;
 
+RtcDS3231<TwoWire>
+    RTC(Wire);
 String printTime(bool seconds)
 {
     String time = "";
@@ -39,7 +42,7 @@ String printDate()
     return date;
 }
 
-void setSytemTime(bool rtcOk)
+void setSytemTime(bool rtcOk, Config &config)
 {
     Serial.println(F("[Time] Get ntp time"));
 
@@ -59,11 +62,20 @@ void setSytemTime(bool rtcOk)
         {
             Serial.println(F("[Time] Set RTC time"));
             // RTC.set(now);
+            RTC.SetDateTime(RtcDateTime(
+                timedata.tm_year + 1900,
+                tmElem.Month,
+                tmElem.Day,
+                tmElem.Hour,
+                tmElem.Minute,
+                tmElem.Second));
         }
+        config.states.ntp = true;
     }
     else
     {
         Serial.println(F("[Time] Unable to set NTP Time"));
+        config.states.ntp = false;
     }
 }
 
@@ -80,25 +92,48 @@ time_t getNTPTime()
     tmElem.Year = (timedata.tm_year + 1900) - 1970;
     return makeTime(tmElem);
 }
-
-bool initSystemTime(Time &config)
+time_t getRTCTime()
 {
-    bool rtcOk;
-    configTime(config.timeZone, config.dayLight, config.ntpServer.c_str());
-    // if (RTC.chipPresent())
-    // {
-    //     Serial.println(F("[Time] RTC found, setting..."));
-    //     rtcOk = true;
-    //     setSyncProvider(RTC.get);
-    // }
-    // else
-    // {
-    Serial.println(F("[Time] no rtc module"));
-    rtcOk = false;
-    setSyncProvider(getNTPTime);
-    // }
-    setSyncInterval(3600);
-    setSytemTime(rtcOk);
+    tmElements_t tmElem;
+    rdt = RTC.GetDateTime();
+    tmElem.Day = rdt.Day();
+    tmElem.Hour = rdt.Hour();
+    tmElem.Minute = rdt.Minute();
+    tmElem.Month = rdt.Month();
+    tmElem.Second = rdt.Second();
+    tmElem.Wday = rdt.DayOfWeek();
+    tmElem.Year = rdt.Year() - 1970;
+    return makeTime(tmElem);
+}
 
-    return rtcOk;
+void initSystemTime(Config &config, int sda, int scl)
+{
+    configTime(
+        config.network.ntp.timeZone,
+        config.network.ntp.dayLight,
+        config.network.ntp.ntpServer.c_str());
+    // Wire.begin(35, 34, 400000);
+    RTC.Begin(sda, scl);
+    if (!RTC.GetIsRunning() || RTC.LastError() == 0)
+    {
+        RTC.SetIsRunning(true);
+    }
+    if (RTC.LastError() != 0)
+    {
+        Serial.println(F("[Time] no rtc module"));
+        Serial.print(F("[Time] RTC error: "));
+        Serial.println(RTC.LastError());
+        config.states.rtc = false;
+        setSyncProvider(getNTPTime);
+    }
+    else
+    {
+        Serial.println(F("[Time] RTC found"));
+        RTC.Enable32kHzPin(false);
+        RTC.SetSquareWavePin(DS3231SquareWavePin_ModeNone);
+        config.states.rtc = true;
+        setSyncProvider(getRTCTime);
+    }
+    // setSyncInterval(3600);
+    setSytemTime(config.states.rtc, config);
 }

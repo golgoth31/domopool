@@ -8,6 +8,13 @@ struct MQTT
     String server = "192.168.10.194";
 };
 
+struct NTP
+{
+    int dayLight; // 3600 if daylight is observed or 0 if not
+    String ntpServer;
+    int timeZone; // UTC offset in s: UTC+1=3600
+};
+
 struct Network
 {
     bool dhcp = true;
@@ -17,6 +24,7 @@ struct Network
     const char *dns;
     bool allowPost = true;
     MQTT mqtt;
+    NTP ntp;
 };
 
 struct Temp
@@ -51,13 +59,6 @@ struct Global
     bool displayStartup;
 };
 
-struct Time
-{
-    bool initialized;
-    int dayLight; // 3600 if daylight is observed or 0 if not
-    String ntpServer;
-    int timeZone; // UTC offset in s: UTC+1=3600
-};
 struct Pump
 {
     bool forceFilter;
@@ -65,6 +66,7 @@ struct Pump
     bool forceCH;
     bool automatic;
     bool forceCheck;
+    int forceDuration;
 };
 
 struct Alarms
@@ -101,6 +103,8 @@ struct Metrics
 struct States
 {
     bool startup;
+    bool ntp;
+    bool rtc;
     bool filterOn;
     bool phOn;
     bool chOn;
@@ -113,7 +117,6 @@ struct Config
     Network network;
     Sensors sensors;
     Global global;
-    Time time;
     Pump pump;
     Metrics metrics;
     States states;
