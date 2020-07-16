@@ -15,15 +15,23 @@
 #include <Adisplay.h>
 #include "config.h"
 
-#define ONE_WIRE_BUS 17
-#define filterPin 48
-#define phPin 49
-#define chPin 47
-#define clkPin 18
-// #define dtPin 19
-
+#define ONE_WIRE_BUS 39
+#define filterPin 13
+#define phPin 9
+#define chPin 10
+#define lightPin 11
 #define SDA 26
 #define SCL 27
+
+// ArduiTouch touch screen pins for TFT_espi
+// #define DTFT_MISO 19
+// #define DTFT_MOSI 23
+// #define DTFT_SCLK 18
+// #define DTFT_CS 5
+// #define DTFT_DC 4
+// #define DTFT_RST 22
+// #define DTOUCH_CS 14
+// #define DTOUCH_IRQ 2
 
 // configure timed actions
 unsigned long lastReadingTime = 0;
@@ -31,19 +39,11 @@ int count_time_30s = 0;   // used to trigger action every 30s (15*2s)
 int count_time_30min = 0; // used to trigger action every 30min (60*30s)
 int count_time_24h = 0;   // used to trigger action every 24h (2880*30)
 
-int lcdLEDButtonState = 0;
-bool lcdLEDBacklightState = true;
-unsigned long lcdBacklightTimer = 0;
-
 // Setup a oneWire instance to communicate with any OneWire devices
 OneWire ow(ONE_WIRE_BUS);
 DallasTemperature tempSensors(&ow);
 
 Config config;
-
-bool storageOk = true;
-bool filterPumpOn = false;
-bool phPumpOn = false;
 
 bool booted = false;
 
@@ -98,7 +98,6 @@ void loop(void)
     if (millis() - lastReadingTime < 0)
     {
         lastReadingTime = millis();
-        lcdBacklightTimer = millis();
     }
     restartNetwork(ssid, password, config);
 
@@ -115,10 +114,10 @@ void loop(void)
             displayDate(config);
             displayServices(config);
             displayTemp(config);
-            filterPumpOn = setFilterState(config, hour());
+            setFilterState(config, hour());
             if (config.sensors.ph.enabled)
             {
-                phPumpOn = setPhState(config, filterPumpOn);
+                setPhState(config);
             }
             displayPump(config);
         }

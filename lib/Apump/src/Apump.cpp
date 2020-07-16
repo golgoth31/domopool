@@ -93,7 +93,7 @@ void pumpInit(Config &config, int filterPin, int chPin, int phPin)
     }
 }
 
-bool setFilterState(Config &config, int hour)
+void setFilterState(Config &config, int hour)
 {
     // keep using water temperature if last shown is below 2 degreC
     if (config.states.filterOn || config.metrics.curTempWater <= 2)
@@ -180,10 +180,9 @@ bool setFilterState(Config &config, int hour)
         }
         config.metrics.hour = hour;
     }
-    return config.states.filterOn;
 }
 
-bool setPhState(Config &config, bool filterOn)
+void setPhState(Config &config)
 {
     // Ph pump have 10m cycles (600s)
     // activate pump for 20% of 10m if ph val is under threshold+0.15
@@ -239,7 +238,7 @@ bool setPhState(Config &config, bool filterOn)
     }
 
     // Pilotage Relais Pompe Injection Ph
-    if ((phOn || config.pump.forcePH) && filterOn)
+    if ((phOn || config.pump.forcePH) && config.states.filterOn)
     {
         // digitalWrite(pumpPhRelayPin, HIGH);
         digitalWrite(pumpPhRelayPin, LOW);
@@ -254,6 +253,4 @@ bool setPhState(Config &config, bool filterOn)
 
     Serial.print(F("[PH] Pump state: "));
     Serial.println(config.states.phOn);
-
-    return config.states.phOn;
 }
