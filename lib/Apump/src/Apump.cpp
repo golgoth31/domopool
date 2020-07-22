@@ -56,7 +56,7 @@ void setPrefs(uint8_t t, uint8_t h, uint8_t state)
     }
 }
 
-void pumpInit(Config &config, int filterPin, int chPin, int phPin)
+void pumpInit(domopool_Config &config, int filterPin, int chPin, int phPin)
 {
 
     Serial.print(F("[Filter] Filter pin: "));
@@ -90,7 +90,7 @@ void pumpInit(Config &config, int filterPin, int chPin, int phPin)
     }
 }
 
-void setFilterState(Config &config, int hour)
+void setFilterState(domopool_Config &config, int hour)
 {
     // keep using water temperature if last shown is below 2 degreC
     if (config.states.filterOn || config.metrics.tempWater <= 2)
@@ -179,7 +179,7 @@ void setFilterState(Config &config, int hour)
     }
 }
 
-void setPhState(Config &config)
+void setPhState(domopool_Config &config)
 {
     // Ph pump have 10m cycles (600s)
     // activate pump for 20% of 10m if ph val is under threshold+0.15

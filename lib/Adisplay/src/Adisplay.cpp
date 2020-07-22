@@ -35,7 +35,7 @@ int CH_H;
 int CH_TEXT_X;
 int CH_TEXT_Y;
 
-void Button_ACK_Tone(Config &config)
+void Button_ACK_Tone(domopool_Config &config)
 {
     ledcWriteTone(0, config.global.ackTone);
     delay(config.global.ackDuration);
@@ -134,7 +134,7 @@ void displayPageBoot()
     tft.setCursor(0, 0);
 }
 
-void display2boot(String text, Config &config)
+void display2boot(String text, domopool_Config &config)
 {
     if (config.global.displayStartup)
     {
@@ -146,7 +146,7 @@ void display2boot(String text, Config &config)
     }
 }
 
-void displayTemp(Config &config)
+void displayTemp(domopool_Config &config)
 {
 
     tft.setTextDatum(MC_DATUM);
@@ -220,7 +220,7 @@ void displayTemp(Config &config)
     text += " Bar";
     tft.drawString(text, 180, 87, 1);
 }
-void displayPump(Config &config)
+void displayPump(domopool_Config &config)
 {
     // printText(0, 50, "Pump:", 1, 1);
     int color;
@@ -295,7 +295,7 @@ void displayPump(Config &config)
     tft.setTextDatum(MC_DATUM);
     tft.drawString("Ch", CH_TEXT_X, CH_TEXT_Y);
 }
-void displayDate(Config &config)
+void displayDate(domopool_Config &config)
 {
     tft.setTextColor(TFT_LIGHTGREY, TFT_BLACK);
     tft.setTextSize(2);
@@ -304,7 +304,7 @@ void displayDate(Config &config)
     tft.drawString(printTime(false), 0, 137, 1);
     tft.drawString(config.network.ip, 0, 159, 1);
 }
-void displayServices(Config &config)
+void displayServices(domopool_Config &config)
 {
     tft.setTextSize(2);
     tft.setTextDatum(MC_DATUM);
@@ -347,7 +347,7 @@ void displayServices(Config &config)
     }
     tft.drawRightString("TIME", 240, 150, 1);
 }
-void displayPageMain(Config &config)
+void displayPageMain(domopool_Config &config)
 {
     tft.fillScreen(TFT_BLACK);
 
@@ -358,7 +358,7 @@ void displayPageMain(Config &config)
     displayTemp(config);
     displayDate(config);
 }
-void displayPressed(Config &config)
+void displayPressed(domopool_Config &config)
 {
     uint16_t x, y;
 
