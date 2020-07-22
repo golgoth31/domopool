@@ -1,9 +1,6 @@
 #include "Apump.h"
 
 Preferences pumpPrefs;
-// store in eeprom time from temp starts to be upper then 15
-// if more then 3 days, activate ch
-// int16_t chDuration = 0; // means water temp is over 15°C
 const int8_t chWaitThreshold = 72;
 bool pump[24];
 int ton;
