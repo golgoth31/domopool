@@ -85,10 +85,10 @@ void pumpInit(Config &config, int filterPin, int chPin, int phPin)
     pumpChRelayPin = chPin;
 
     pumpPrefs.begin("pump");
-    config.metrics.chDuration = pumpPrefs.getShort("chDuration", 0);
-    if (config.metrics.chDuration >= 10000) // more then 1 year, seems the data have never been initialized correctly
+    config.metrics.over15Duration = pumpPrefs.getShort("chDuration", 0);
+    if (config.metrics.over15Duration >= 10000) // more then 1 year, seems the data have never been initialized correctly
     {
-        config.metrics.chDuration = 0;
+        config.metrics.over15Duration = 0;
         pumpPrefs.putShort("chDuration", 0);
     }
 }
@@ -96,9 +96,9 @@ void pumpInit(Config &config, int filterPin, int chPin, int phPin)
 void setFilterState(Config &config, int hour)
 {
     // keep using water temperature if last shown is below 2 degreC
-    if (config.states.filterOn || config.metrics.curTempWater <= 2)
+    if (config.states.filterOn || config.metrics.tempWater <= 2)
     {
-        config.metrics.savedTempWater = config.metrics.curTempWater;
+        config.metrics.savedTempWater = config.metrics.tempWater;
     }
     uint8_t tempAbs = floor(config.metrics.savedTempWater);
     String p = "p";
@@ -137,7 +137,7 @@ void setFilterState(Config &config, int hour)
             Serial.println(F("[Filter] On"));
             config.states.filterOn = true;
             digitalWrite(pumpFilterRelayPin, LOW);
-            if ((config.metrics.savedTempWater > 15 && config.metrics.chDuration > chWaitThreshold) || config.metrics.savedTempWater > 18 || config.pump.forceCH)
+            if ((config.metrics.savedTempWater > 15 && config.metrics.over15Duration > chWaitThreshold) || config.metrics.savedTempWater > 18 || config.pump.forceCH)
             {
                 config.states.chOn = true;
                 digitalWrite(pumpChRelayPin, LOW);
@@ -155,14 +155,14 @@ void setFilterState(Config &config, int hour)
         // update chduration only once per hour
         if (config.metrics.hour != hour)
         {
-            if (config.metrics.savedTempWater > 15 && config.metrics.chDuration <= chWaitThreshold)
+            if (config.metrics.savedTempWater > 15 && config.metrics.over15Duration <= chWaitThreshold)
             {
-                config.metrics.chDuration++;
-                pumpPrefs.putShort("chDuration", config.metrics.chDuration);
+                config.metrics.over15Duration++;
+                pumpPrefs.putShort("chDuration", config.metrics.over15Duration);
             }
-            else if (config.metrics.savedTempWater < 14 && config.metrics.chDuration > 72)
+            else if (config.metrics.savedTempWater < 14 && config.metrics.over15Duration > 72)
             {
-                config.metrics.chDuration = 0;
+                config.metrics.over15Duration = 0;
                 pumpPrefs.putShort("chDuration", 0);
             }
             if (config.pump.forceFilter)
@@ -186,32 +186,32 @@ void setPhState(Config &config)
 {
     // Ph pump have 10m cycles (600s)
     // activate pump for 20% of 10m if ph val is under threshold+0.15
-    if ((config.metrics.curPh <= config.sensors.ph.threshold) && !(phInject))
+    if ((config.metrics.ph <= config.sensors.ph.threshold) && !(phInject))
     {
         ton = 0;
     }
-    else if ((config.metrics.curPh <= (config.sensors.ph.threshold + 0.15)) && !(phInject))
+    else if ((config.metrics.ph <= (config.sensors.ph.threshold + 0.15)) && !(phInject))
     {
         ton = 120;
         phInject = true;
         time(&timestamp);
     }
     // activate pump for 50% of 10m if ph val is under threshold+0.30
-    else if ((config.metrics.curPh <= (config.sensors.ph.threshold + 0.30)) && !(phInject))
+    else if ((config.metrics.ph <= (config.sensors.ph.threshold + 0.30)) && !(phInject))
     {
         ton = 300;
         phInject = true;
         time(&timestamp);
     }
     // activate pump for 75% of 10m if ph val is under threshold+0.45
-    else if ((config.metrics.curPh <= (config.sensors.ph.threshold + 0.45)) && !(phInject))
+    else if ((config.metrics.ph <= (config.sensors.ph.threshold + 0.45)) && !(phInject))
     {
         ton = 450;
         phInject = true;
         time(&timestamp);
     }
     // activate pump for 100% of 10m if ph val is over threshold+0.45
-    else if ((config.metrics.curPh > (config.sensors.ph.threshold + 0.45)) && !(phInject))
+    else if ((config.metrics.ph > (config.sensors.ph.threshold + 0.45)) && !(phInject))
     {
         ton = 600;
         phInject = true;

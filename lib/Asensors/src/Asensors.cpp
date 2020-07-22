@@ -218,12 +218,12 @@ void getDS18B20(Config &config, DallasTemperature &tempSensors)
             // Serial.println(config.sensors.twin.val);
             tempMoy = (twout + twin) / 2;
         }
-        config.metrics.curTempWater = roundTemp(tempMoy);
-        config.metrics.curTempAmbiant = tempSensors.getTempC(config.sensors.tamb.addr);
+        config.metrics.tempWater = roundTemp(tempMoy);
+        config.metrics.tempAmbiant = tempSensors.getTempC(config.sensors.tamb.addr);
     }
     else
     {
-        config.metrics.curTempWater = config.tests.twater;
-        config.metrics.curTempAmbiant = config.tests.tamb;
+        config.metrics.tempWater = config.tests.twater;
+        config.metrics.tempAmbiant = config.tests.tamb;
     }
 }

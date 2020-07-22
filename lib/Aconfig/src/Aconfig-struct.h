@@ -90,14 +90,14 @@ struct Tests
 
 struct Metrics
 {
-    float curTempAmbiant;
-    float curTempWater;
+    float tempAmbiant;
+    float tempWater;
     float savedTempWater;
-    float curPh;
-    float curCh;
-    float curWaterPressure;
-    int16_t chDuration;
-    int hour;
+    float ph;
+    float ch;
+    float waterPressure;
+    int16_t over15Duration;
+    int8_t hour;
 };
 
 struct States

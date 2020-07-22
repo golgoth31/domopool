@@ -6,8 +6,8 @@ Preferences prefs;
 
 void pref2config(Config &config)
 {
-    // String defaultNtpServer = "europe.pool.ntp.org";
-    String defaultNtpServer = "";
+    String defaultNtpServer = "europe.pool.ntp.org";
+    // String defaultNtpServer = "";
     String defaultMQTTServer = "192.168.10.194";
     double_t defaultAckTone = 4000;
     float_t defaultPhThreshold = 7.4;
@@ -164,12 +164,12 @@ void config2doc(Config &config, JsonDocument &doc)
 
 void metrics2doc(Config &config, JsonDocument &doc)
 {
-    doc["metrics"]["chDuration"] = config.metrics.chDuration;
-    doc["metrics"]["curCh"] = config.metrics.curCh;
-    doc["metrics"]["curPh"] = config.metrics.curPh;
-    doc["metrics"]["curTempAmbiant"] = config.metrics.curTempAmbiant;
-    doc["metrics"]["curTempWater"] = config.metrics.curTempWater;
-    doc["metrics"]["curWaterPressure"] = config.metrics.curWaterPressure;
+    doc["metrics"]["over15Duration"] = config.metrics.over15Duration;
+    doc["metrics"]["ch"] = config.metrics.ch;
+    doc["metrics"]["ph"] = config.metrics.ph;
+    doc["metrics"]["tempAmbiant"] = config.metrics.tempAmbiant;
+    doc["metrics"]["tempWater"] = config.metrics.tempWater;
+    doc["metrics"]["waterPressure"] = config.metrics.waterPressure;
     doc["metrics"]["hour"] = config.metrics.hour;
     doc["metrics"]["savedTempWater"] = config.metrics.savedTempWater;
 }

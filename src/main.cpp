@@ -141,15 +141,15 @@ void loop(void)
         Serial.print(F("Date: "));
         Serial.println(printDate());
         Serial.print(F("Sensor 'water' value: "));
-        Serial.println(config.metrics.curTempWater);
+        Serial.println(config.metrics.tempWater);
         Serial.print(F("Sensor 'tamb' value: "));
-        Serial.println(config.metrics.curTempAmbiant);
+        Serial.println(config.metrics.tempAmbiant);
 
         if (config.states.startup)
         {
             Serial.println(F("End of startup blanking time"));
             config.states.startup = false;
-            config.metrics.savedTempWater = config.metrics.curTempWater;
+            config.metrics.savedTempWater = config.metrics.tempWater;
             displayPageMain(config);
         }
         count_time_30min++; // Count 60 cycles for 30 min
@@ -164,9 +164,9 @@ void loop(void)
         Serial.print(F("Time: "));
         Serial.println(printTime(true));
         Serial.print(F("Sensor 'water' value: "));
-        Serial.println(config.metrics.curTempWater);
+        Serial.println(config.metrics.tempWater);
         Serial.print(F("Sensor 'tamb' value: "));
-        Serial.println(config.metrics.curTempAmbiant);
+        Serial.println(config.metrics.tempAmbiant);
 
         count_time_30min = 0;
     }

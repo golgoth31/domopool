@@ -89,3 +89,4 @@ dkms.conf
 
 config.h
 *.sch-bak
+*.pcb-bak

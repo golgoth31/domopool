@@ -154,11 +154,11 @@ void displayTemp(Config &config)
 
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.drawString("Water", 60, 15, 1);
-    if (config.metrics.curTempWater < 2)
+    if (config.metrics.tempWater < 2)
     {
         tft.setTextColor(TFT_RED, TFT_BLACK);
     }
-    else if (config.metrics.curTempWater <= 15)
+    else if (config.metrics.tempWater <= 15)
     {
         tft.setTextColor(TFT_ORANGE, TFT_BLACK);
     }
@@ -167,13 +167,13 @@ void displayTemp(Config &config)
         tft.setTextColor(TFT_GREEN, TFT_BLACK);
     }
     String text = "";
-    text += config.metrics.curTempWater;
+    text += config.metrics.tempWater;
     text += (char)247;
     text += "C";
     tft.drawString(text, 60, 37, 1);
 
     text = "";
-    text += config.metrics.curTempAmbiant;
+    text += config.metrics.tempAmbiant;
     text += (char)247;
     text += "C";
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
@@ -182,31 +182,31 @@ void displayTemp(Config &config)
 
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.drawString("Ph", 60, 65, 1);
-    if (config.metrics.curPh < 7 || config.metrics.curPh > 7.8)
+    if (config.metrics.ph < 7 || config.metrics.ph > 7.8)
     {
         tft.setTextColor(TFT_RED, TFT_BLACK);
     }
-    else if (config.metrics.curPh <= 7.3 || config.metrics.curPh >= 7.5)
+    else if (config.metrics.ph <= 7.3 || config.metrics.ph >= 7.5)
     {
         tft.setTextColor(TFT_ORANGE, TFT_BLACK);
     }
-    else if (config.metrics.curPh > 7.3 || config.metrics.curPh < 7.5)
+    else if (config.metrics.ph > 7.3 || config.metrics.ph < 7.5)
     {
         tft.setTextColor(TFT_GREEN, TFT_BLACK);
     }
     text = "";
-    text += config.metrics.curPh;
+    text += config.metrics.ph;
     tft.drawString(text, 60, 87, 1);
 
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.drawString("Pressure", 180, 65, 1);
     if (config.states.filterOn)
     {
-        if (config.metrics.curWaterPressure <= 0.8 || config.metrics.curWaterPressure > 1.1)
+        if (config.metrics.waterPressure <= 0.8 || config.metrics.waterPressure > 1.1)
         {
             tft.setTextColor(TFT_RED, TFT_BLACK);
         }
-        else if (config.metrics.curWaterPressure > 0.8 || config.metrics.curWaterPressure <= 1.1)
+        else if (config.metrics.waterPressure > 0.8 || config.metrics.waterPressure <= 1.1)
         {
             tft.setTextColor(TFT_GREEN, TFT_BLACK);
         }
@@ -216,7 +216,7 @@ void displayTemp(Config &config)
         tft.setTextColor(TFT_WHITE, TFT_BLACK);
     }
     text = "";
-    text += config.metrics.curWaterPressure;
+    text += config.metrics.waterPressure;
     text += " Bar";
     tft.drawString(text, 180, 87, 1);
 }
@@ -329,13 +329,17 @@ void displayServices(Config &config)
     }
     tft.drawRightString("MQTT", 240, 129, 1);
 
-    if (config.states.rtc)
+    if (config.states.rtc && config.states.ntp)
     {
         tft.setTextColor(TFT_GREEN, TFT_BLACK);
     }
     else if (config.states.ntp)
     {
         tft.setTextColor(TFT_GOLD, TFT_BLACK);
+    }
+    else if (config.states.rtc)
+    {
+        tft.setTextColor(TFT_DARKCYAN, TFT_BLACK);
     }
     else
     {
