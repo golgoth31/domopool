@@ -50,7 +50,7 @@ void printAddressFromPref(const char *temp)
     }
 }
 
-void registerDevices(Sensors &config, DallasTemperature &tempSensors)
+void registerDevices(domopool_Config &config, DallasTemperature &tempSensors)
 {
     DeviceAddress deviceAddress;
     int num = tempSensors.getDeviceCount();
@@ -76,7 +76,7 @@ void registerDevices(Sensors &config, DallasTemperature &tempSensors)
             {
                 continue;
             }
-            else if (!config.twout.init && !tamb && !twin)
+            else if (!config.sensors.twout.init && !tamb && !twin)
             {
 
                 Serial.print(F("[Sens] twout read address: "));
@@ -84,8 +84,8 @@ void registerDevices(Sensors &config, DallasTemperature &tempSensors)
                 for (uint8_t i = 0; i < 8; i++)
                 {
                     sensPrefs.putUChar("twout" + i, deviceAddress[i]);
-                    config.twout.addr[i] = deviceAddress[i];
-                    config.twout.init = true;
+                    config.sensors.twout.addr[i] = deviceAddress[i];
+                    config.sensors.twout.init = true;
                 }
                 printAddress(deviceAddress);
 
@@ -101,7 +101,7 @@ void registerDevices(Sensors &config, DallasTemperature &tempSensors)
             {
                 continue;
             }
-            else if (!config.tamb.init && !twout && !twin)
+            else if (!config.sensors.tamb.init && !twout && !twin)
             {
 
                 Serial.print(F("[Sens] tamb read address: "));
@@ -109,8 +109,8 @@ void registerDevices(Sensors &config, DallasTemperature &tempSensors)
                 for (uint8_t i = 0; i < 8; i++)
                 {
                     sensPrefs.putUChar("tamb" + i, deviceAddress[i]);
-                    config.tamb.addr[i] = deviceAddress[i];
-                    config.tamb.init = true;
+                    config.sensors.tamb.addr[i] = deviceAddress[i];
+                    config.sensors.tamb.init = true;
                 }
                 printAddress(deviceAddress);
 
@@ -120,14 +120,14 @@ void registerDevices(Sensors &config, DallasTemperature &tempSensors)
                 // Serial.println();
             }
 
-            if (config.twin.enabled)
+            if (config.sensors.twin.enabled)
             {
 
                 if (twin)
                 {
                     continue;
                 }
-                else if (!config.twin.init && !twout && !tamb)
+                else if (!config.sensors.twin.init && !twout && !tamb)
                 {
 
                     Serial.print(F("[Sens] twin read address: "));
@@ -135,8 +135,8 @@ void registerDevices(Sensors &config, DallasTemperature &tempSensors)
                     for (uint8_t i = 0; i < 8; i++)
                     {
                         sensPrefs.putUChar("twin" + i, deviceAddress[i]);
-                        config.twin.addr[i] = deviceAddress[i];
-                        config.twin.init = true;
+                        config.sensors.twin.addr[i] = deviceAddress[i];
+                        config.sensors.twin.init = true;
                     }
                     printAddress(deviceAddress);
 
@@ -185,7 +185,7 @@ void resetSensorsTempAddr()
     sensPrefs.clear();
 }
 
-void initializeDS18B20(Sensors &config, DallasTemperature &tempSensors)
+void initializeDS18B20(domopool_Config &config, DallasTemperature &tempSensors)
 {
     tempSensors.begin();
     sensPrefs.begin("sensors");
@@ -197,29 +197,44 @@ void initializeDS18B20(Sensors &config, DallasTemperature &tempSensors)
 
     Serial.println(F("[Sens] Setting sensors options..."));
 
-    tempSensors.setWaitForConversion(config.waitForConversion);
-    tempSensors.setResolution(config.tempResolution);
+    tempSensors.setWaitForConversion(config.sensors.waitForConversion);
+    tempSensors.setResolution(config.sensors.tempResolution);
 }
 
-void getDS18B20(Config &config, DallasTemperature &tempSensors)
+void getDS18B20(domopool_Config &config, DallasTemperature &tempSensors)
 {
     if (!config.tests.enabled)
     {
         tempSensors.requestTemperatures();
 
+        uint8_t tempAddr[8];
+        for (uint8_t i = 0; i < 8; i++)
+        {
+            tempAddr[i] = sensPrefs.getUChar("tamb" + i, 0);
+        }
+
         // Serial.print(F("Sensor 'twout' value: "));
-        float twout = tempSensors.getTempC(config.sensors.twout.addr);
+        float twout = tempSensors.getTempC(tempAddr);
         // Serial.println(config.sensors.twout.val);
         float tempMoy = twout;
         if (config.sensors.twin.enabled)
         {
             // Serial.print(F("Sensor 'twin' value: "));
-            float twin = tempSensors.getTempC(config.sensors.twin.addr);
+            for (uint8_t i = 0; i < 8; i++)
+            {
+                tempAddr[i] = sensPrefs.getUChar("tamb" + i, 0);
+            }
+            float twin = tempSensors.getTempC(tempAddr);
             // Serial.println(config.sensors.twin.val);
             tempMoy = (twout + twin) / 2;
         }
         config.metrics.tempWater = roundTemp(tempMoy);
-        config.metrics.tempAmbiant = tempSensors.getTempC(config.sensors.tamb.addr);
+
+        for (uint8_t i = 0; i < 8; i++)
+        {
+            tempAddr[i] = sensPrefs.getUChar("tamb" + i, 0);
+        }
+        config.metrics.tempAmbiant = tempSensors.getTempC(tempAddr);
     }
     else
     {

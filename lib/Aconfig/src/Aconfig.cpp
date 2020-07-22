@@ -4,21 +4,18 @@ const int ConfigDocSize = 1024;
 const char *networkFile = "/network.jsn";
 Preferences prefs;
 
-void pref2config(Config &config)
+void pref2config(domopool_Config &config)
 {
     String defaultNtpServer = "europe.pool.ntp.org";
-    // String defaultNtpServer = "";
     String defaultMQTTServer = "192.168.10.194";
-    double_t defaultAckTone = 4000;
-    float_t defaultPhThreshold = 7.4;
+    // double_t defaultAckTone = 4000;
+    // float_t defaultPhThreshold = 7.4;
 
     //default not working
-    config.global.ackTone = prefs.getDouble("ack_tone", defaultAckTone);
-    // strcpy(config.time.ntpServer, prefs.getString("ntp_server", defaultNtpServer).c_str());
-    config.network.ntp.ntpServer = prefs.getString("ntp_server", defaultNtpServer);
-    // strcpy(config.network.mqtt.server, prefs.getString("mqtt_server", defaultMQTTServer).c_str());
-    config.network.mqtt.server = prefs.getString("mqtt_server", defaultMQTTServer);
-    config.sensors.ph.threshold = prefs.getFloat("ph_threshold", defaultPhThreshold);
+    config.global.ackTone = prefs.getDouble("ack_tone", 4000);
+    strcpy(config.network.ntp.server, prefs.getString("ntp_server", defaultNtpServer).c_str());
+    strcpy(config.network.mqtt.server, prefs.getString("mqtt_server", defaultMQTTServer).c_str());
+    config.sensors.ph.threshold = prefs.getFloat("ph_threshold", 7.4);
 
     //no bug
     config.global.lcdBacklightDuration = prefs.getShort("BacklightTime", 30000);
@@ -46,7 +43,7 @@ void pref2config(Config &config)
     config.pump.forceCheck = prefs.getBool("forceCheck", false);
 }
 
-void loadConfiguration(Config &config)
+void loadConfiguration(domopool_Config &config)
 {
     Serial.println(F("[Conf] Loading configuration..."));
     if (!prefs.begin("domopool"))
@@ -64,18 +61,17 @@ void loadConfiguration(Config &config)
         Serial.println(prefs.freeEntries());
         prefs.putBool("init", true);
 
-        // prefs.putDouble("ack_tone", 4000);
-        // prefs.putString("ntp_server", "europe.pool.ntp.org");
-        prefs.putString("ntp_server", "");
+        prefs.putDouble("ack_tone", 4000);
+        prefs.putString("ntp_server", "europe.pool.ntp.org");
         prefs.putString("mqtt_server", "192.168.10.194");
-        // prefs.putFloat("ph_threshold", 7.4);
+        prefs.putFloat("ph_threshold", 7.4);
     }
     pref2config(config);
     config.states.startup = true;
     Serial.println(F("[Conf] Done"));
 }
 
-void config2pref(Config &config)
+void config2pref(domopool_Config &config)
 {
     prefs.putBool("dhcp", config.network.dhcp);
     prefs.putBool("allowPost", config.network.allowPost);
@@ -94,7 +90,7 @@ void config2pref(Config &config)
     prefs.putBool("displayStartup", config.global.displayStartup);
     prefs.putShort("dayLight", config.network.ntp.dayLight);
     prefs.putShort("timeZone", config.network.ntp.timeZone);
-    prefs.putString("ntp_server", config.network.ntp.ntpServer);
+    prefs.putString("ntp_server", config.network.ntp.server);
     prefs.putBool("forceFilter", config.pump.forceFilter);
     prefs.putBool("forcePH", config.pump.forcePH);
     prefs.putBool("forceCH", config.pump.forceCH);
@@ -103,14 +99,14 @@ void config2pref(Config &config)
     prefs.putBool("mqtt_enabled", config.network.mqtt.enabled);
 }
 
-void saveConfiguration(Config &config)
+void saveConfiguration(domopool_Config &config)
 {
     Serial.println(F("[Conf] Saving config to preferences"));
     config2pref(config);
     Serial.println(F("[Conf] Done"));
 }
 
-void config2doc(Config &config, JsonDocument &doc)
+void config2doc(domopool_Config &config, JsonDocument &doc)
 {
     JsonObject jsonObj = doc.to<JsonObject>();
     jsonObj["global"]["lcdBacklightDuration"] = config.global.lcdBacklightDuration;
@@ -119,7 +115,7 @@ void config2doc(Config &config, JsonDocument &doc)
     jsonObj["global"]["serialOut"] = config.global.serialOut;
     jsonObj["global"]["displayStartup"] = config.global.displayStartup;
     jsonObj["network"]["ntp"]["dayLight"] = config.network.ntp.dayLight;
-    jsonObj["network"]["ntp"]["ntpServer"] = config.network.ntp.ntpServer;
+    jsonObj["network"]["ntp"]["server"] = config.network.ntp.server;
     jsonObj["network"]["ntp"]["timeZone"] = config.network.ntp.timeZone;
     jsonObj["network"]["dhcp"] = config.network.dhcp;
     jsonObj["network"]["ip"] = config.network.ip;
@@ -162,7 +158,7 @@ void config2doc(Config &config, JsonDocument &doc)
     jsonObj["tests"]["pressure"] = config.tests.pressure;
 }
 
-void metrics2doc(Config &config, JsonDocument &doc)
+void metrics2doc(domopool_Config &config, JsonDocument &doc)
 {
     doc["metrics"]["over15Duration"] = config.metrics.over15Duration;
     doc["metrics"]["ch"] = config.metrics.ch;
@@ -173,7 +169,7 @@ void metrics2doc(Config &config, JsonDocument &doc)
     doc["metrics"]["hour"] = config.metrics.hour;
     doc["metrics"]["savedTempWater"] = config.metrics.savedTempWater;
 }
-void states2doc(Config &config, JsonDocument &doc)
+void states2doc(domopool_Config &config, JsonDocument &doc)
 {
     doc["states"]["filterOn"] = config.states.filterOn;
     doc["states"]["phOn"] = config.states.phOn;
@@ -184,7 +180,7 @@ void states2doc(Config &config, JsonDocument &doc)
     doc["states"]["rtc"] = config.states.rtc;
 }
 
-void initConfigData(Config &config)
+void initConfigData(domopool_Config &config)
 {
     config.states.startup = true;
     config.states.filterOn = false;
@@ -256,4 +252,18 @@ void startMqtt()
 void stopMqtt()
 {
     prefs.putBool("mqtt_enabled", false);
+}
+
+void resetConfig()
+{
+    prefs.putBool("init", false);
+}
+
+void reboot()
+{
+    if (!prefs.getBool("init", true))
+    {
+        Serial.println(F("[WiFi] Rebooting system"));
+        esp_restart();
+    }
 }

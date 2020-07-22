@@ -43,7 +43,7 @@ int count_time_24h = 0;   // used to trigger action every 24h (2880*30)
 OneWire ow(ONE_WIRE_BUS);
 DallasTemperature tempSensors(&ow);
 
-Config config;
+domopool_Config config;
 
 bool booted = false;
 
@@ -66,7 +66,7 @@ void setup(void)
     display2boot(F("[Sens] Starting..."), config);
 
     // start ds18b20 sensors
-    initializeDS18B20(config.sensors, tempSensors);
+    initializeDS18B20(config, tempSensors);
 
     config.states.net_active = startNetwork(ssid, password, config);
     if (config.states.net_active)
@@ -99,6 +99,7 @@ void loop(void)
     {
         lastReadingTime = millis();
     }
+    reboot();
     restartNetwork(ssid, password, config);
 
     displayPressed(config);

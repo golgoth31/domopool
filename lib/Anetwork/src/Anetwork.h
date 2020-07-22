@@ -20,9 +20,9 @@
 #ifndef __ANETWORK_H_UNDEFINED__
 #define __ANETWORK_H_UNDEFINED__
 bool checkIP(const char *ip);
-bool startNetwork(const char *ssid, const char *password, Config &config);
-void restartNetwork(const char *ssid, const char *password, Config &config);
-void sendData(Config &config);
-void sendMetricsMqtt(Config &config);
-void sendStatesMqtt(Config &config);
+bool startNetwork(const char *ssid, const char *password, domopool_Config &config);
+void restartNetwork(const char *ssid, const char *password, domopool_Config &config);
+void sendData(domopool_Config &config);
+void sendMetricsMqtt(domopool_Config &config);
+void sendStatesMqtt(domopool_Config &config);
 #endif

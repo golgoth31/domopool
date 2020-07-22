@@ -1,0 +1,7 @@
+domopool.Mqtt.server max_size:128
+domopool.NTP.server max_size:128
+domopool.Temp.addr max_count:8
+domopool.Network.ip max_size:15
+domopool.Network.netmask max_size:15
+domopool.Network.gateway max_size:15
+domopool.Network.dns max_size:15

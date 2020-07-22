@@ -1,0 +1,138 @@
+syntax = "proto3";
+
+package domopool;
+
+// import "google/protobuf/empty.proto";
+
+option go_package = "github.com/golgoth31/domopool/proto/domopool;domopool";
+
+message NTP {
+  uint32 dayLight = 1; // 3600 if daylight is observed or 0 if not
+  string server = 2;
+  uint32 timeZone = 3; // UTC offset in s: UTC+1=3600
+}
+
+message Mqtt {
+  bool enabled = 1;
+  string server = 2;
+}
+
+message Network {
+  bool dhcp = 1;
+  string ip = 2;
+  string netmask = 3;
+  string gateway = 4;
+  string dns = 5;
+  bool allowPost = 6;
+  Mqtt mqtt = 7;
+  NTP ntp = 8;
+}
+
+message Temp {
+  bool enabled = 1;
+  bool init = 2;
+  repeated uint32 addr = 3;
+}
+
+message AnalogSensor {
+  bool enabled = 1;
+  float threshold = 2;
+}
+
+message Sensors {
+  Temp twin = 1;
+  Temp twout = 2;
+  Temp tamb = 3;
+  bool waitForConversion = 4;
+  uint32 tempResolution = 5;
+  AnalogSensor ph = 6;
+  AnalogSensor ch = 7;
+  AnalogSensor waterPressure = 8;
+}
+
+message Global {
+  uint32 lcdBacklightDuration = 1;
+  uint32 ackDuration = 2;
+  double ackTone = 3;
+  bool serialOut = 4;
+  bool displayStartup = 5;
+}
+
+message Time {
+  bool initialized = 1;
+  uint32 dayLight = 2; // 3600 if daylight is observed or 0 if not
+  string ntpServer = 3;
+  uint32 timeZone = 4; // UTC offset in s: UTC+1=3600
+}
+
+message Pump {
+  bool forceFilter = 1;
+  bool forcePH = 2;
+  bool forceCH = 3;
+  bool automatic = 4;
+  bool forceCheck = 5;
+  uint32 forceDuration = 6;
+}
+
+message Alarms {
+  bool filter = 1;
+  bool ph = 2;
+  bool ch = 3;
+  float phVal = 4;
+  bool rtc = 5;
+  bool storage = 6;
+}
+
+message Tests {
+  bool enabled = 1;
+  float twater = 2;
+  float tamb = 3;
+  float ph = 4;
+  float pressure = 5;
+}
+
+message Metrics {
+  float tempAmbiant = 1;
+  float tempWater = 2;
+  float savedTempWater = 3;
+  float ph = 4;
+  float ch = 5;
+  float waterPressure = 6;
+  uint32 over15Duration = 7;
+  uint32 hour = 8;
+}
+
+message States {
+  bool startup = 1;
+  bool filterOn = 2;
+  bool phOn = 3;
+  bool chOn = 4;
+  bool automatic = 5;
+  bool net_active = 6;
+  bool ntp = 7;
+  bool rtc = 8;
+}
+
+message Config {
+  Network network = 1;
+  Sensors sensors = 2;
+  Global global = 3;
+  Time time = 4;
+  Pump pump = 5;
+  Metrics metrics = 6;
+  States states = 7;
+  Alarms alarms = 8;
+  Tests tests = 9;
+}
+
+// // Users
+// service UserService {
+//   rpc Create(User) returns (User) {}
+//   rpc Read(User) returns (User) {}
+//   rpc Delete(User) returns (UserDelete) {}
+//   rpc FindAll(google.protobuf.Empty) returns (Users) {}
+//   rpc CheckJWT(UserCheckJWT) returns (UserCheckState) {}
+//   rpc Login(LoginRequest) returns (LoginResponse) {}
+//   // rpc Login (LoginRequest) returns (LoginResponse){}
+//   // rpc Logout (LogoutRequest) returns (google.protobuf.Empty){}
+// }

@@ -150,7 +150,7 @@ void startOTA()
     ArduinoOTA.begin();
 }
 
-void startServer(Config &config)
+void startServer(domopool_Config &config)
 {
     // For CORS
     server.on("/*", HTTP_OPTIONS, [](AsyncWebServerRequest *request) {
@@ -176,21 +176,6 @@ void startServer(Config &config)
         serializeJsonPretty(httpResponse, output);
         request->send(200, "application/json", output);
     });
-
-    // config
-    server.on("/config", HTTP_GET, [&config](AsyncWebServerRequest *request) {
-        DynamicJsonDocument httpResponse(ConfigDocSize);
-        config2doc(config, httpResponse);
-        String output = "";
-        serializeJsonPretty(httpResponse, output);
-        request->send(200, "application/json", output);
-    });
-    // AsyncCallbackJsonWebHandler *configHandler = new AsyncCallbackJsonWebHandler("/config", [&config](AsyncWebServerRequest *request, JsonVariant &json) {
-    //     JsonObject jsonObj = json.as<JsonObject>();
-    //     saveJson(jsonObj, config, "/config.jsn");
-    //     request->send(200);
-    // });
-    // server.addHandler(configHandler);
 
     // metrics
     server.on("/metrics", HTTP_GET, [&config](AsyncWebServerRequest *request) {
@@ -318,6 +303,34 @@ void startServer(Config &config)
     });
     server.addHandler(mqttHandler);
 
+    // config
+    // config
+    server.on(
+        "/api/v1/config",
+        HTTP_GET,
+        [&config](AsyncWebServerRequest *request) {
+            DynamicJsonDocument httpResponse(ConfigDocSize);
+            config2doc(config, httpResponse);
+            String output = "";
+            serializeJsonPretty(httpResponse, output);
+            request->send(200, "application/json", output);
+        });
+    AsyncCallbackJsonWebHandler *configHandler = new AsyncCallbackJsonWebHandler(
+        "/api/v1/config",
+        [&config](AsyncWebServerRequest *request, JsonVariant &json) {
+            JsonObject jsonObj = json.as<JsonObject>();
+            if (jsonObj["reset"] == "true")
+            {
+                resetConfig();
+            }
+            else
+            {
+                request->send(500);
+            }
+            request->send(200, "application/json", "{}");
+        });
+    server.addHandler(configHandler);
+
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "GET,OPTIONS,POST");
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "access-control-allow-origin,content-type");
@@ -326,7 +339,7 @@ void startServer(Config &config)
     });
     server.begin();
 }
-bool startNetwork(const char *ssid, const char *password, Config &config)
+bool startNetwork(const char *ssid, const char *password, domopool_Config &config)
 {
     if (!SPIFFS.begin(true))
     {
@@ -350,7 +363,8 @@ bool startNetwork(const char *ssid, const char *password, Config &config)
     Serial.print(F("[WiFi] IP address: "));
     Serial.println(WiFi.localIP());
 
-    config.network.ip = WiFi.localIP().toString();
+    // config.network.ip = WiFi.localIP().toString();
+    strcpy(config.network.ip, WiFi.localIP().toString().c_str());
 
     startServer(config);
 
@@ -360,7 +374,7 @@ bool startNetwork(const char *ssid, const char *password, Config &config)
     // Serial.print("IP address: ");
     // Serial.println(WiFi.localIP());
 
-    client.setServer(config.network.mqtt.server.c_str(), 1883);
+    client.setServer(config.network.mqtt.server, 1883);
     client.setCallback(callback);
 
     return wifiUp;
@@ -372,7 +386,7 @@ void stopNetwork()
     server.end();
     client.disconnect();
 }
-void restartNetwork(const char *ssid, const char *password, Config &config)
+void restartNetwork(const char *ssid, const char *password, domopool_Config &config)
 {
     if (WiFi.status() == WL_CONNECTION_LOST)
     {
@@ -380,7 +394,7 @@ void restartNetwork(const char *ssid, const char *password, Config &config)
         startNetwork(ssid, password, config);
     }
 }
-void sendMetricsMqtt(Config &config)
+void sendMetricsMqtt(domopool_Config &config)
 {
     DynamicJsonDocument doc(ConfigDocSize);
     metrics2doc(config, doc);
@@ -388,7 +402,7 @@ void sendMetricsMqtt(Config &config)
     serializeJson(doc, output);
     client.publish("domopool/metrics", output.c_str());
 }
-void sendStatesMqtt(Config &config)
+void sendStatesMqtt(domopool_Config &config)
 {
     DynamicJsonDocument doc(ConfigDocSize);
     states2doc(config, doc);
@@ -397,7 +411,7 @@ void sendStatesMqtt(Config &config)
     client.publish("domopool/states", output.c_str());
 }
 
-void sendData(Config &config)
+void sendData(domopool_Config &config)
 {
     ArduinoOTA.handle();
     if (config.network.mqtt.enabled)

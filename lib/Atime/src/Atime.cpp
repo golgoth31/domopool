@@ -42,7 +42,7 @@ String printDate()
     return date;
 }
 
-void setSytemTime(bool rtcOk, Config &config)
+void setSytemTime(bool rtcOk, domopool_Config &config)
 {
     Serial.println(F("[Time] Get ntp time"));
 
@@ -106,12 +106,12 @@ time_t getRTCTime()
     return makeTime(tmElem);
 }
 
-void initSystemTime(Config &config, int sda, int scl)
+void initSystemTime(domopool_Config &config, int sda, int scl)
 {
     configTime(
         config.network.ntp.timeZone,
         config.network.ntp.dayLight,
-        config.network.ntp.ntpServer.c_str());
+        config.network.ntp.server);
     // Wire.begin(35, 34, 400000);
     RTC.Begin(sda, scl);
     if (!RTC.GetIsRunning() || RTC.LastError() == 0)
