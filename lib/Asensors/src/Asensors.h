@@ -1,9 +1,9 @@
 #include <Arduino.h>
 #include <DallasTemperature.h>
 #include <Preferences.h>
+#include <domopool.pb.h>
 
 // #include <Aconfig-struct.h>
-#include <domopool.pb.h>
 
 #ifndef __ASENSORS_H_UNDEFINED__
 #define __ASENSORS_H_UNDEFINED__

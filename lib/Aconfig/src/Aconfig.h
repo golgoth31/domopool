@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <Preferences.h>
+#include <domopool.pb.h>
 
 // #include <pb_common.h>
 // #include <pb_encode.h>
@@ -9,7 +10,6 @@
 // #include <Adisplay.h>
 #include <Alarms.h>
 // #include "Aconfig-struct.h"
-#include <domopool.pb.h>
 
 #ifndef __ACONFIG_H__
 #define __ACONFIG_H__

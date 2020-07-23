@@ -43,7 +43,7 @@ int count_time_24h = 0;   // used to trigger action every 24h (2880*30)
 OneWire ow(ONE_WIRE_BUS);
 DallasTemperature tempSensors(&ow);
 
-domopool_Config config;
+domopool_Config config = domopool_Config_init_default;
 
 bool booted = false;
 

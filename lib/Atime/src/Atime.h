@@ -5,9 +5,9 @@
 // #include <DS1307RTC.h>
 #include <Wire.h>
 #include <RtcDS3231.h>
+#include <domopool.pb.h>
 
 // #include <Aconfig-struct.h>
-#include <domopool.pb.h>
 
 #ifndef __ATIME_H_UNDEFINED__
 #define __ATIME_H_UNDEFINED__
