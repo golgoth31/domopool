@@ -287,11 +287,11 @@ void startServer(domopool_Config &config)
     // mqtt
     AsyncCallbackJsonWebHandler *mqttHandler = new AsyncCallbackJsonWebHandler("/api/v1/mqtt", [](AsyncWebServerRequest *request, JsonVariant &json) {
         JsonObject jsonObj = json.as<JsonObject>();
-        if (jsonObj["state"] == "start")
+        if (jsonObj["state"] == "up")
         {
             startMqtt();
         }
-        else if (jsonObj["state"] == "stop")
+        else if (jsonObj["state"] == "down")
         {
             stopMqtt();
         }
