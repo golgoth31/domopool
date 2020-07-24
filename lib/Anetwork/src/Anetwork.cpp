@@ -312,8 +312,29 @@ void startServer(domopool_Config &config)
             DynamicJsonDocument httpResponse(ConfigDocSize);
             config2doc(config, httpResponse);
             String output = "";
-            serializeJsonPretty(httpResponse, output);
+            serializeJson(httpResponse, output);
             request->send(200, "application/json", output);
+            // uint8_t buffer[2048];
+            // size_t message_length;
+            // bool status;
+            // pb_ostream_t pb_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
+            // domopool_Config test_conf = domopool_Config_init_default;
+            // /* Now we are ready to encode the message! */
+            // status = pb_encode_ex(&pb_stream, domopool_Config_fields, &test_conf, PB_ENCODE_DELIMITED);
+            // message_length = pb_stream.bytes_written;
+
+            // /* Then just check for any errors.. */
+            // if (status)
+            // {
+            //     AsyncResponseStream *response = request->beginResponseStream("application/octet-stream");
+            //     response->write(buffer, sizeof(buffer));
+            //     request->send(response);
+            // }
+            // else
+            // {
+            //     printf("Encoding failed: %s\n", PB_GET_ERROR(&pb_stream));
+            //     request->send(500);
+            // }
         });
     AsyncCallbackJsonWebHandler *configHandler = new AsyncCallbackJsonWebHandler(
         "/api/v1/config",
