@@ -1,4 +1,4 @@
-# ardipool
+# Domopool
 
 ## Goal
 
@@ -6,21 +6,21 @@ The goal of this project is to automatise some parts of my pool, mainly the flte
 
 ## Hardware
 
-The base hardware is an arduino mega rev3.
+The base hardware is an esp32 devkitC.
 Other hardware:
 
-- LCD: lcd 16x2
-- Water temperatur: 1 or 2 DS18B20
-- Ambient temperature: 1 DHT11
-- Ethernet: 1 W5100 shield
-- SDcard: included into the ethernet shield
-- RTC: 1 DS1307
-- Relay: 1 relay board (4 in my case)
+- arduitouch box: https://www.hwhardsoft.de/english/projects/arduitouch-esp/
+- LCD: Ili9341 240x320 RGB
+- Temperatures (water and ambiant): 2 DS18B20
+- Water pressure: GS07381-06 (200PSI) [amazon](https://www.amazon.fr/gp/product/B07YZL36FN/ref=ppx_yo_dt_b_asin_title_o06_s00?ie=UTF8&psc=1)
+- RTC: DS3231 [amazon](https://www.amazon.fr/gp/product/B07RDHPYJD/ref=ppx_yo_dt_b_asin_title_o08_s00?ie=UTF8&psc=1)
+- ADC: ADS1115 [az-delivery](https://www.az-delivery.de/en/products/analog-digitalwandler-ads1115-mit-i2c-interface?_pos=1&_sid=04886a84e&_ss=r)
+- LevelShifter: TXS0108E [az-delivery](https://www.az-delivery.de/en/products/logiklevel-wandler-3-3v-5v?_pos=1&_sid=a0a8086aa&_ss=r)
+- Relay: 4-relay module 5V with optocoupler low-level trigger [az-delivery](https://www.az-delivery.de/en/products/4-relais-modul?_pos=2&_sid=34a975ef0&_ss=r)
 
 ## Funtionalities
 
-- Read/write a config json config file on the SD card
-- Use default values if no SD card or ethernet shield
+- Read/write configuration from preferences (nvs storage)
 - Auto-detect DS18B20
 - Mesure temperature and evaluate filter time based on day hour.
 - Get/Set values as json through http request
@@ -28,7 +28,6 @@ Other hardware:
 
 ### Configuration
 
-The json configuration file is automaticaly genarated on the sdcard with safe default values. If the file as been put on the card before the first boot, it will be used.
 To ease configuration update 2 front-end are under developement:
 
 - CLI: [https://github.com/golgoth31/domopool-cli](https://github.com/golgoth31/domopool-cli)
@@ -72,6 +71,6 @@ Other table exemples:
 ## ToDo
 
 - force filter pump for limited time
-- set hour if no ethernet shield present
+- set hour ntp and rtc are not ok
 - add Hbridge driver for peristaltic pump (ph)
 - add ability to redefine filter pump steps or
