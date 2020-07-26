@@ -1,7 +1,8 @@
 #include "Anetwork.h"
 
 WiFiClient espClient;
-PubSubClient client(espClient);
+WiFiServer espServer(1234);
+PubSubClient mqttClient(espClient);
 AsyncWebServer server(80);
 IPAddress MQTTServer;
 const char *localIP;
@@ -47,25 +48,25 @@ void handleUploadUi(AsyncWebServerRequest *request, String filename, size_t inde
 void reconnect()
 {
     // Loop until we're reconnected
-    while (!client.connected())
+    while (!mqttClient.connected())
     {
         Serial.println("[MQTT] Attempting MQTT connection...");
         // Create a random client ID
         String clientId = "domopool-";
         clientId += String(random(0xffff), HEX);
         // Attempt to connect
-        if (client.connect(clientId.c_str()))
+        if (mqttClient.connect(clientId.c_str()))
         {
             Serial.println("[MQTT] connected");
             // // Once connected, publish an announcement...
-            // client.publish("metrics", "hello world");
+            // mqttClient.publish("metrics", "hello world");
             // // ... and resubscribe
-            // client.subscribe("inTopic");
+            // mqttClient.subscribe("inTopic");
         }
         else
         {
             Serial.print("[MQTT] failed, rc=");
-            Serial.print(client.state());
+            Serial.print(mqttClient.state());
             Serial.println("[MQTT] try again in 5 seconds");
             // Wait 5 seconds before retrying
             delay(5000);
@@ -179,20 +180,56 @@ void startServer(domopool_Config &config)
 
     // metrics
     server.on("/metrics", HTTP_GET, [&config](AsyncWebServerRequest *request) {
-        DynamicJsonDocument httpResponse(ConfigDocSize);
-        metrics2doc(config, httpResponse);
-        String output = "";
-        serializeJsonPretty(httpResponse, output);
-        request->send(200, "application/json", output);
+        // DynamicJsonDocument httpResponse(ConfigDocSize);
+        // metrics2doc(config, httpResponse);
+        // String output = "";
+        // serializeJsonPretty(httpResponse, output);
+        // request->send(200, "application/json", output);
+        uint8_t buffer[ConfigDocSize];
+        size_t message_length;
+        bool status;
+        pb_ostream_t pb_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
+        status = pb_encode(&pb_stream, domopool_Metrics_fields, &config.metrics);
+        message_length = pb_stream.bytes_written;
+        // Serial.println(message_length);
+        if (status)
+        {
+            AsyncResponseStream *response = request->beginResponseStream("text/plain");
+            response->write(buffer, message_length);
+            request->send(response);
+        }
+        else
+        {
+            printf("Encoding failed: %s\n", PB_GET_ERROR(&pb_stream));
+            request->send(500);
+        }
     });
 
     // states
-    server.on("/states", HTTP_GET, [&config](AsyncWebServerRequest *request) {
-        DynamicJsonDocument httpResponse(ConfigDocSize);
-        states2doc(config, httpResponse);
-        String output = "";
-        serializeJsonPretty(httpResponse, output);
-        request->send(200, "application/json", output);
+    server.on("/api/v1/states", HTTP_GET, [&config](AsyncWebServerRequest *request) {
+        // DynamicJsonDocument httpResponse(ConfigDocSize);
+        // states2doc(config, httpResponse);
+        // String output = "";
+        // serializeJsonPretty(httpResponse, output);
+        // request->send(200, "application/json", output);
+        uint8_t buffer[ConfigDocSize];
+        size_t message_length;
+        bool status;
+        pb_ostream_t pb_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
+        status = pb_encode(&pb_stream, domopool_States_fields, &config.states);
+        message_length = pb_stream.bytes_written;
+        // Serial.println(message_length);
+        if (status)
+        {
+            AsyncResponseStream *response = request->beginResponseStream("text/plain");
+            response->write(buffer, message_length);
+            request->send(response);
+        }
+        else
+        {
+            printf("Encoding failed: %s\n", PB_GET_ERROR(&pb_stream));
+            request->send(500);
+        }
     });
 
     // healthz
@@ -309,32 +346,30 @@ void startServer(domopool_Config &config)
         "/api/v1/config",
         HTTP_GET,
         [&config](AsyncWebServerRequest *request) {
-            DynamicJsonDocument httpResponse(ConfigDocSize);
-            config2doc(config, httpResponse);
-            String output = "";
-            serializeJson(httpResponse, output);
-            request->send(200, "application/json", output);
-            // uint8_t buffer[2048];
-            // size_t message_length;
-            // bool status;
-            // pb_ostream_t pb_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
-            // domopool_Config test_conf = domopool_Config_init_default;
-            // /* Now we are ready to encode the message! */
-            // status = pb_encode_ex(&pb_stream, domopool_Config_fields, &test_conf, PB_ENCODE_DELIMITED);
-            // message_length = pb_stream.bytes_written;
+            uint8_t buffer[ConfigDocSize];
+            size_t message_length;
+            bool status;
+            pb_ostream_t pb_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
+            status = pb_encode(&pb_stream, domopool_Config_fields, &config);
+            message_length = pb_stream.bytes_written;
+            // Serial.println(message_length);
+            if (status)
+            {
+                AsyncResponseStream *response = request->beginResponseStream("text/plain");
+                response->write(buffer, message_length);
+                request->send(response);
+            }
+            else
+            {
+                printf("Encoding failed: %s\n", PB_GET_ERROR(&pb_stream));
+                request->send(500);
+            }
 
-            // /* Then just check for any errors.. */
-            // if (status)
-            // {
-            //     AsyncResponseStream *response = request->beginResponseStream("application/octet-stream");
-            //     response->write(buffer, sizeof(buffer));
-            //     request->send(response);
-            // }
-            // else
-            // {
-            //     printf("Encoding failed: %s\n", PB_GET_ERROR(&pb_stream));
-            //     request->send(500);
-            // }
+            // DynamicJsonDocument httpResponse(ConfigDocSize);
+            // config2doc(test_conf, httpResponse);
+            // String output = "";
+            // serializeJson(httpResponse, output);
+            // request->send(200, "application/json", output);
         });
     AsyncCallbackJsonWebHandler *configHandler = new AsyncCallbackJsonWebHandler(
         "/api/v1/config",
@@ -390,13 +425,16 @@ bool startNetwork(const char *ssid, const char *password, domopool_Config &confi
     startServer(config);
 
     startOTA();
+    espServer.begin();
+
+    WiFiClient client = espServer.available();
 
     Serial.println("[WiFi] Ready");
     // Serial.print("IP address: ");
     // Serial.println(WiFi.localIP());
 
-    client.setServer(config.network.mqtt.server, 1883);
-    client.setCallback(callback);
+    mqttClient.setServer(config.network.mqtt.server, 1883);
+    mqttClient.setCallback(callback);
 
     return wifiUp;
 }
@@ -405,7 +443,7 @@ void stopNetwork()
 {
     ArduinoOTA.end();
     server.end();
-    client.disconnect();
+    mqttClient.disconnect();
 }
 void restartNetwork(const char *ssid, const char *password, domopool_Config &config)
 {
@@ -421,7 +459,7 @@ void sendMetricsMqtt(domopool_Config &config)
     metrics2doc(config, doc);
     String output = "";
     serializeJson(doc, output);
-    client.publish("domopool/metrics", output.c_str());
+    mqttClient.publish("domopool/metrics", output.c_str());
 }
 void sendStatesMqtt(domopool_Config &config)
 {
@@ -429,7 +467,7 @@ void sendStatesMqtt(domopool_Config &config)
     states2doc(config, doc);
     String output = "";
     serializeJson(doc, output);
-    client.publish("domopool/states", output.c_str());
+    mqttClient.publish("domopool/states", output.c_str());
 }
 
 void sendData(domopool_Config &config)
@@ -437,17 +475,17 @@ void sendData(domopool_Config &config)
     ArduinoOTA.handle();
     if (config.network.mqtt.enabled)
     {
-        if (!client.connected())
+        if (!mqttClient.connected())
         {
             reconnect();
         }
-        client.loop();
+        mqttClient.loop();
     }
     else
     {
-        if (client.connected())
+        if (mqttClient.connected())
         {
-            client.disconnect();
+            mqttClient.disconnect();
         }
     }
 }

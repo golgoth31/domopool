@@ -52,6 +52,23 @@ void loadConfiguration(domopool_Config &config)
     }
 
     // domopool_Config_init_zero();
+    config.has_alarms = true;
+    config.has_global = true;
+    config.has_metrics = true;
+    config.has_network = true;
+    config.network.has_mqtt = true;
+    config.network.has_ntp = true;
+    config.has_pump = true;
+    config.has_sensors = true;
+    config.sensors.has_ch = true;
+    config.sensors.has_ph = true;
+    config.sensors.has_tamb = true;
+    config.sensors.has_twin = true;
+    config.sensors.has_twout = true;
+    config.sensors.has_waterPressure = true;
+    config.has_states = true;
+    config.has_tests = true;
+    config.has_time = true;
     boolean init = prefs.getBool("init", false);
     if (!init)
     {
@@ -106,57 +123,57 @@ void saveConfiguration(domopool_Config &config)
     Serial.println(F("[Conf] Done"));
 }
 
-void config2doc(domopool_Config &config, JsonDocument &doc)
-{
-    JsonObject jsonObj = doc.to<JsonObject>();
-    jsonObj["global"]["lcdBacklightDuration"] = config.global.lcdBacklightDuration;
-    jsonObj["global"]["ackTone"] = config.global.ackTone;
-    jsonObj["global"]["ackDuration"] = config.global.ackDuration;
-    jsonObj["global"]["serialOut"] = config.global.serialOut;
-    jsonObj["global"]["displayStartup"] = config.global.displayStartup;
-    jsonObj["network"]["ntp"]["dayLight"] = config.network.ntp.dayLight;
-    jsonObj["network"]["ntp"]["server"] = config.network.ntp.server;
-    jsonObj["network"]["ntp"]["timeZone"] = config.network.ntp.timeZone;
-    jsonObj["network"]["dhcp"] = config.network.dhcp;
-    jsonObj["network"]["ip"] = config.network.ip;
-    jsonObj["network"]["gateway"] = config.network.gateway;
-    jsonObj["network"]["netmask"] = config.network.netmask;
-    jsonObj["network"]["dns"] = config.network.dns;
-    jsonObj["network"]["mqtt"]["enabled"] = config.network.mqtt.enabled;
-    jsonObj["network"]["mqtt"]["server"] = config.network.mqtt.server;
-    jsonObj["sensors"]["waitForConvertion"] = config.sensors.waitForConversion;
-    jsonObj["sensors"]["tempResolution"] = config.sensors.tempResolution;
-    jsonObj["sensors"]["twin"]["enabled"] = config.sensors.twin.enabled;
-    jsonObj["sensors"]["twin"]["init"] = config.sensors.twin.init;
-    for (int i = 0; i < 8; i++)
-    {
-        jsonObj["sensors"]["twin"]["addr"][i] = config.sensors.twin.addr[i];
-    }
+// void config2doc(domopool_Config &config, JsonDocument &doc)
+// {
+//     JsonObject jsonObj = doc.to<JsonObject>();
+//     jsonObj["global"]["lcdBacklightDuration"] = config.global.lcdBacklightDuration;
+//     jsonObj["global"]["ackTone"] = config.global.ackTone;
+//     jsonObj["global"]["ackDuration"] = config.global.ackDuration;
+//     jsonObj["global"]["serialOut"] = config.global.serialOut;
+//     jsonObj["global"]["displayStartup"] = config.global.displayStartup;
+//     jsonObj["network"]["ntp"]["dayLight"] = config.network.ntp.dayLight;
+//     jsonObj["network"]["ntp"]["server"] = config.network.ntp.server;
+//     jsonObj["network"]["ntp"]["timeZone"] = config.network.ntp.timeZone;
+//     jsonObj["network"]["dhcp"] = config.network.dhcp;
+//     jsonObj["network"]["ip"] = config.network.ip;
+//     jsonObj["network"]["gateway"] = config.network.gateway;
+//     jsonObj["network"]["netmask"] = config.network.netmask;
+//     jsonObj["network"]["dns"] = config.network.dns;
+//     jsonObj["network"]["mqtt"]["enabled"] = config.network.mqtt.enabled;
+//     jsonObj["network"]["mqtt"]["server"] = config.network.mqtt.server;
+//     jsonObj["sensors"]["waitForConvertion"] = config.sensors.waitForConversion;
+//     jsonObj["sensors"]["tempResolution"] = config.sensors.tempResolution;
+//     jsonObj["sensors"]["twin"]["enabled"] = config.sensors.twin.enabled;
+//     jsonObj["sensors"]["twin"]["init"] = config.sensors.twin.init;
+//     for (int i = 0; i < 8; i++)
+//     {
+//         jsonObj["sensors"]["twin"]["addr"][i] = config.sensors.twin.addr[i];
+//     }
 
-    jsonObj["sensors"]["twout"]["enabled"] = true;
-    jsonObj["sensors"]["twout"]["init"] = config.sensors.twout.init;
-    for (int i = 0; i < 8; i++)
-    {
-        jsonObj["sensors"]["twout"]["addr"][i] = config.sensors.twout.addr[i];
-    }
-    jsonObj["sensors"]["tamb"]["enabled"] = true;
-    jsonObj["sensors"]["tamb"]["init"] = config.sensors.tamb.init;
-    for (int i = 0; i < 8; i++)
-    {
-        jsonObj["sensors"]["tamb"]["addr"][i] = config.sensors.tamb.addr[i];
-    }
-    jsonObj["sensors"]["ph"]["enabled"] = config.sensors.ph.enabled;
-    jsonObj["sensors"]["ph"]["threshold"] = config.sensors.ph.threshold;
-    jsonObj["pump"]["forceFilter"] = config.pump.forceFilter;
-    jsonObj["pump"]["forcePH"] = config.pump.forcePH;
-    jsonObj["pump"]["forceCH"] = config.pump.forceCH;
-    jsonObj["pump"]["forceCheck"] = config.pump.forceCheck;
-    jsonObj["pump"]["auto"] = config.pump.automatic;
-    jsonObj["tests"]["enabled"] = config.tests.enabled;
-    jsonObj["tests"]["tamb"] = config.tests.tamb;
-    jsonObj["tests"]["twater"] = config.tests.twater;
-    jsonObj["tests"]["pressure"] = config.tests.pressure;
-}
+//     jsonObj["sensors"]["twout"]["enabled"] = true;
+//     jsonObj["sensors"]["twout"]["init"] = config.sensors.twout.init;
+//     for (int i = 0; i < 8; i++)
+//     {
+//         jsonObj["sensors"]["twout"]["addr"][i] = config.sensors.twout.addr[i];
+//     }
+//     jsonObj["sensors"]["tamb"]["enabled"] = true;
+//     jsonObj["sensors"]["tamb"]["init"] = config.sensors.tamb.init;
+//     for (int i = 0; i < 8; i++)
+//     {
+//         jsonObj["sensors"]["tamb"]["addr"][i] = config.sensors.tamb.addr[i];
+//     }
+//     jsonObj["sensors"]["ph"]["enabled"] = config.sensors.ph.enabled;
+//     jsonObj["sensors"]["ph"]["threshold"] = config.sensors.ph.threshold;
+//     jsonObj["pump"]["forceFilter"] = config.pump.forceFilter;
+//     jsonObj["pump"]["forcePH"] = config.pump.forcePH;
+//     jsonObj["pump"]["forceCH"] = config.pump.forceCH;
+//     jsonObj["pump"]["forceCheck"] = config.pump.forceCheck;
+//     jsonObj["pump"]["auto"] = config.pump.automatic;
+//     jsonObj["tests"]["enabled"] = config.tests.enabled;
+//     jsonObj["tests"]["tamb"] = config.tests.tamb;
+//     jsonObj["tests"]["twater"] = config.tests.twater;
+//     jsonObj["tests"]["pressure"] = config.tests.pressure;
+// }
 
 void metrics2doc(domopool_Config &config, JsonDocument &doc)
 {

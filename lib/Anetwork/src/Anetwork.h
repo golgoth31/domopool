@@ -5,6 +5,7 @@
 #include <WiFi.h>
 #include <time.h>
 #include <WiFiUdp.h>
+#include <WiFiServer.h>
 #include <ArduinoOTA.h>
 #include <ESPAsyncWebServer.h>
 #include <AsyncJson.h>

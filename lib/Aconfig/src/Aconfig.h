@@ -9,7 +9,7 @@
 #define __ACONFIG_H__
 void loadConfiguration(domopool_Config &config);
 void saveConfiguration(domopool_Config &config);
-void config2doc(domopool_Config &config, JsonDocument &doc);
+// void config2doc(domopool_Config &config, JsonDocument &doc);
 void metrics2doc(domopool_Config &config, JsonDocument &doc);
 void states2doc(domopool_Config &config, JsonDocument &doc);
 void initConfigData(domopool_Config &config);
