@@ -161,21 +161,40 @@ void startServer(domopool_Config &config)
     // Serving pages
     // root
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        StaticJsonDocument<ConfigDocSize> httpResponse;
-        String compile = __DATE__;
-        compile += " ";
-        compile += __TIME__;
-        httpResponse["compile"] = compile;
-        httpResponse["board_name"] = ARDUINO_BOARD;
-        httpResponse["versions"]["domopool"] = "test";
-        httpResponse["versions"]["platformio"] = PLATFORMIO;
-        httpResponse["versions"]["esp_idf"] = esp_get_idf_version();
-        httpResponse["versions"]["xtensa"] = __VERSION__;
-        httpResponse["versions"]["arduinojson"] = ARDUINOJSON_VERSION;
-        httpResponse["versions"]["tft_espi"] = TFT_ESPI_VERSION;
-        String output;
-        serializeJsonPretty(httpResponse, output);
-        request->send(200, "application/json", output);
+        // StaticJsonDocument<ConfigDocSize> httpResponse;
+        // String compile = __DATE__;
+        // compile += " ";
+        // compile += __TIME__;
+        // httpResponse["compile"] = compile;
+        // httpResponse["board_name"] = ARDUINO_BOARD;
+        // httpResponse["versions"]["domopool"] = "test";
+        // httpResponse["versions"]["platformio"] = PLATFORMIO;
+        // httpResponse["versions"]["esp_idf"] = esp_get_idf_version();
+        // httpResponse["versions"]["xtensa"] = __VERSION__;
+        // httpResponse["versions"]["arduinojson"] = ARDUINOJSON_VERSION;
+        // httpResponse["versions"]["tft_espi"] = TFT_ESPI_VERSION;
+        // String output;
+        // serializeJsonPretty(httpResponse, output);
+        // request->send(200, "application/json", output);
+        domopool_Config config = domopool_Config_init_default;
+        uint8_t buffer[ConfigDocSize];
+        size_t message_length;
+        bool status;
+        pb_ostream_t pb_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
+        status = pb_encode(&pb_stream, domopool_States_fields, &config.states);
+        message_length = pb_stream.bytes_written;
+        // Serial.println(message_length);
+        if (status)
+        {
+            AsyncResponseStream *response = request->beginResponseStream("text/plain");
+            response->write(buffer, message_length);
+            request->send(response);
+        }
+        else
+        {
+            printf("Encoding failed: %s\n", PB_GET_ERROR(&pb_stream));
+            request->send(500);
+        }
     });
 
     // metrics
@@ -247,7 +266,7 @@ void startServer(domopool_Config &config)
     });
 
     // favicon
-    server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request) {
+    server.on("/favicon.*", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(SPIFFS, "/favicon.png", "image/png");
     });
 
@@ -292,53 +311,53 @@ void startServer(domopool_Config &config)
         serializeJsonPretty(httpResponse, output);
         request->send(200, "application/json", output);
     });
-    AsyncCallbackJsonWebHandler *filterHandler = new AsyncCallbackJsonWebHandler(
-        "/api/v1/filter",
-        [&config](AsyncWebServerRequest *request, JsonVariant &json) {
-            JsonObject jsonObj = json.as<JsonObject>();
-            if (jsonObj["state"] == "force")
-            {
-                startPump(1);
-            }
-            else if (jsonObj["state"] == "stop")
-            {
-                stopPump(1);
-            }
-            else if (jsonObj["state"] == "auto")
-            {
-                setPumpAuto();
-            }
-            else
-            {
-                request->send(500);
-            }
-            int duration = jsonObj["duration"];
-            if (duration)
-            {
-                config.pump.forceDuration = duration;
-            }
-            request->send(200, "application/json", "{}");
-        });
-    server.addHandler(filterHandler);
+    // AsyncCallbackJsonWebHandler *filterHandler = new AsyncCallbackJsonWebHandler(
+    //     "/api/v1/filter",
+    //     [&config](AsyncWebServerRequest *request, JsonVariant &json) {
+    //         JsonObject jsonObj = json.as<JsonObject>();
+    //         if (jsonObj["state"] == "force")
+    //         {
+    //             startPump(1);
+    //         }
+    //         else if (jsonObj["state"] == "stop")
+    //         {
+    //             stopPump(1);
+    //         }
+    //         else if (jsonObj["state"] == "auto")
+    //         {
+    //             setPumpAuto();
+    //         }
+    //         else
+    //         {
+    //             request->send(500);
+    //         }
+    //         int duration = jsonObj["duration"];
+    //         if (duration)
+    //         {
+    //             config.pump.forceDuration = duration;
+    //         }
+    //         request->send(200, "application/json", "{}");
+    //     });
+    // server.addHandler(filterHandler);
 
     // mqtt
-    AsyncCallbackJsonWebHandler *mqttHandler = new AsyncCallbackJsonWebHandler("/api/v1/mqtt", [](AsyncWebServerRequest *request, JsonVariant &json) {
-        JsonObject jsonObj = json.as<JsonObject>();
-        if (jsonObj["state"] == "up")
-        {
-            startMqtt();
-        }
-        else if (jsonObj["state"] == "down")
-        {
-            stopMqtt();
-        }
-        else
-        {
-            request->send(500);
-        }
-        request->send(200, "application/json", "{}");
-    });
-    server.addHandler(mqttHandler);
+    // AsyncCallbackJsonWebHandler *mqttHandler = new AsyncCallbackJsonWebHandler("/api/v1/mqtt", [](AsyncWebServerRequest *request, JsonVariant &json) {
+    //     JsonObject jsonObj = json.as<JsonObject>();
+    //     if (jsonObj["state"] == "up")
+    //     {
+    //         startMqtt();
+    //     }
+    //     else if (jsonObj["state"] == "down")
+    //     {
+    //         stopMqtt();
+    //     }
+    //     else
+    //     {
+    //         request->send(500);
+    //     }
+    //     request->send(200, "application/json", "{}");
+    // });
+    // server.addHandler(mqttHandler);
 
     // config
     // config
@@ -371,21 +390,21 @@ void startServer(domopool_Config &config)
             // serializeJson(httpResponse, output);
             // request->send(200, "application/json", output);
         });
-    AsyncCallbackJsonWebHandler *configHandler = new AsyncCallbackJsonWebHandler(
-        "/api/v1/config",
-        [&config](AsyncWebServerRequest *request, JsonVariant &json) {
-            JsonObject jsonObj = json.as<JsonObject>();
-            if (jsonObj["reset"] == "true")
-            {
-                resetConfig();
-            }
-            else
-            {
-                request->send(500);
-            }
-            request->send(200, "application/json", "{}");
-        });
-    server.addHandler(configHandler);
+    // AsyncCallbackJsonWebHandler *configHandler = new AsyncCallbackJsonWebHandler(
+    //     "/api/v1/config",
+    //     [&config](AsyncWebServerRequest *request, JsonVariant &json) {
+    //         JsonObject jsonObj = json.as<JsonObject>();
+    //         if (jsonObj["reset"] == "true")
+    //         {
+    //             resetConfig();
+    //         }
+    //         else
+    //         {
+    //             request->send(500);
+    //         }
+    //         request->send(200, "application/json", "{}");
+    //     });
+    // server.addHandler(configHandler);
 
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "GET,OPTIONS,POST");
@@ -419,8 +438,10 @@ bool startNetwork(const char *ssid, const char *password, domopool_Config &confi
     Serial.print(F("[WiFi] IP address: "));
     Serial.println(WiFi.localIP());
 
-    // config.network.ip = WiFi.localIP().toString();
     strcpy(config.network.ip, WiFi.localIP().toString().c_str());
+    strcpy(config.network.gateway, WiFi.gatewayIP().toString().c_str());
+    strcpy(config.network.dns, WiFi.dnsIP().toString().c_str());
+    strcpy(config.network.netmask, WiFi.subnetMask().toString().c_str());
 
     startServer(config);
 
