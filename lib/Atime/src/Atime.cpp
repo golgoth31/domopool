@@ -109,8 +109,8 @@ time_t getRTCTime()
 void initSystemTime(domopool_Config &config, int sda, int scl)
 {
     configTime(
-        config.network.ntp.timeZone,
-        config.network.ntp.dayLight,
+        config.network.ntp.timezone,
+        config.network.ntp.day_light,
         config.network.ntp.server);
     // Wire.begin(35, 34, 400000);
     RTC.Begin(sda, scl);

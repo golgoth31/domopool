@@ -37,8 +37,8 @@ int CH_TEXT_Y;
 
 void Button_ACK_Tone(domopool_Config &config)
 {
-    ledcWriteTone(0, config.global.ackTone);
-    delay(config.global.ackDuration);
+    ledcWriteTone(0, config.global.ack_tone);
+    delay(config.global.ack_duration);
     ledcWriteTone(0, 0);
 }
 
@@ -136,11 +136,11 @@ void displayPageBoot()
 
 void display2boot(String text, domopool_Config &config)
 {
-    if (config.global.displayStartup)
+    if (config.global.display_startup)
     {
         tft.println(text);
     }
-    if (config.global.serialOut)
+    if (config.global.serial_out)
     {
         Serial.println(text);
     }
@@ -154,11 +154,11 @@ void displayTemp(domopool_Config &config)
 
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.drawString("Water", 60, 15, 1);
-    if (config.metrics.tempWater < 2)
+    if (config.metrics.twater < 2)
     {
         tft.setTextColor(TFT_RED, TFT_BLACK);
     }
-    else if (config.metrics.tempWater <= 15)
+    else if (config.metrics.twater <= 15)
     {
         tft.setTextColor(TFT_ORANGE, TFT_BLACK);
     }
@@ -167,13 +167,13 @@ void displayTemp(domopool_Config &config)
         tft.setTextColor(TFT_GREEN, TFT_BLACK);
     }
     String text = "";
-    text += config.metrics.tempWater;
+    text += config.metrics.twater;
     text += (char)247;
     text += "C";
     tft.drawString(text, 60, 37, 1);
 
     text = "";
-    text += config.metrics.tempAmbiant;
+    text += config.metrics.tamb;
     text += (char)247;
     text += "C";
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
@@ -200,13 +200,13 @@ void displayTemp(domopool_Config &config)
 
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.drawString("Pressure", 180, 65, 1);
-    if (config.states.filterOn)
+    if (config.states.filter_on)
     {
-        if (config.metrics.waterPressure <= 0.8 || config.metrics.waterPressure > 1.1)
+        if (config.metrics.water_pressure <= 0.8 || config.metrics.water_pressure > 1.1)
         {
             tft.setTextColor(TFT_RED, TFT_BLACK);
         }
-        else if (config.metrics.waterPressure > 0.8 || config.metrics.waterPressure <= 1.1)
+        else if (config.metrics.water_pressure > 0.8 || config.metrics.water_pressure <= 1.1)
         {
             tft.setTextColor(TFT_GREEN, TFT_BLACK);
         }
@@ -216,7 +216,7 @@ void displayTemp(domopool_Config &config)
         tft.setTextColor(TFT_WHITE, TFT_BLACK);
     }
     text = "";
-    text += config.metrics.waterPressure;
+    text += config.metrics.water_pressure;
     text += " Bar";
     tft.drawString(text, 180, 87, 1);
 }
@@ -241,7 +241,7 @@ void displayPump(domopool_Config &config)
     tft.drawString("Auto", AUTO_TEXT_X, AUTO_TEXT_Y);
 
     // filter button
-    if (config.states.filterOn)
+    if (config.states.filter_on)
     {
         color = TFT_GREEN;
     }
@@ -259,7 +259,7 @@ void displayPump(domopool_Config &config)
     tft.setTextDatum(MC_DATUM);
     tft.drawString("Filter", FILTER_TEXT_X, FILTER_TEXT_Y);
 
-    if (config.states.phOn)
+    if (config.states.ph_on)
     {
         color = TFT_GREEN;
     }
@@ -277,7 +277,7 @@ void displayPump(domopool_Config &config)
     tft.setTextDatum(MC_DATUM);
     tft.drawString("Ph", PH_TEXT_X, PH_TEXT_Y);
 
-    if (config.states.chOn)
+    if (config.states.ch_on)
     {
         color = TFT_GREEN;
     }
@@ -374,7 +374,7 @@ void displayPressed(domopool_Config &config)
             if ((y > FILTER_Y) && (y <= FILTER_Y + FILTER_H))
             {
                 Serial.println("filter");
-                if (config.states.filterOn)
+                if (config.states.filter_on)
                 {
                     stopPump(1);
                 }

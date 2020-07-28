@@ -82,10 +82,10 @@ void pumpInit(domopool_Config &config, int filterPin, int chPin, int phPin)
     pumpChRelayPin = chPin;
 
     pumpPrefs.begin("pump");
-    config.metrics.over15Duration = pumpPrefs.getShort("chDuration", 0);
-    if (config.metrics.over15Duration >= 10000) // more then 1 year, seems the data have never been initialized correctly
+    config.metrics.over_15_duration = pumpPrefs.getShort("chDuration", 0);
+    if (config.metrics.over_15_duration >= 10000) // more then 1 year, seems the data have never been initialized correctly
     {
-        config.metrics.over15Duration = 0;
+        config.metrics.over_15_duration = 0;
         pumpPrefs.putShort("chDuration", 0);
     }
 }
@@ -93,11 +93,11 @@ void pumpInit(domopool_Config &config, int filterPin, int chPin, int phPin)
 void setFilterState(domopool_Config &config, int hour)
 {
     // keep using water temperature if last shown is below 2 degreC
-    if (config.states.filterOn || config.metrics.tempWater <= 2)
+    if (config.states.filter_on || config.metrics.twater <= 2)
     {
-        config.metrics.savedTempWater = config.metrics.tempWater;
+        config.metrics.saved_twater = config.metrics.twater;
     }
-    uint8_t tempAbs = floor(config.metrics.savedTempWater);
+    uint8_t tempAbs = floor(config.metrics.saved_twater);
     String p = "p";
     p += tempAbs;
     p += hour;
@@ -113,30 +113,30 @@ void setFilterState(domopool_Config &config, int hour)
     }
 
     // Start the filter pump if needed
-    if (config.metrics.hour != hour || !config.pump.automatic || config.pump.forceCheck)
+    if (config.metrics.hour != hour || !config.pump.automatic || config.pump.force_check)
     {
-        // setting forceCheck to false in case of automatic toggle (from false to true)
-        if (config.pump.forceCheck)
+        // setting force_check to false in case of automatic toggle (from false to true)
+        if (config.pump.force_check)
         {
             unsetForceCheck();
         }
 
         // keep filter state when swithcing from automatic mode
-        if (!config.pump.forceFilter && !config.pump.automatic && config.states.automatic)
+        if (!config.pump.force_filter && !config.pump.automatic && config.states.automatic)
         {
-            config.pump.forceFilter = config.states.filterOn;
+            config.pump.force_filter = config.states.filter_on;
         }
         config.states.automatic = config.pump.automatic;
 
         // set the pump state based on table calculation or forced
-        if ((state && config.pump.automatic) || config.pump.forceFilter)
+        if ((state && config.pump.automatic) || config.pump.force_filter)
         {
             Serial.println(F("[Filter] On"));
-            config.states.filterOn = true;
+            config.states.filter_on = true;
             digitalWrite(pumpFilterRelayPin, LOW);
-            if ((config.metrics.savedTempWater > 15 && config.metrics.over15Duration > chWaitThreshold) || config.metrics.savedTempWater > 18 || config.pump.forceCH)
+            if ((config.metrics.saved_twater > 15 && config.metrics.over_15_duration > chWaitThreshold) || config.metrics.saved_twater > 18 || config.pump.force_ch)
             {
-                config.states.chOn = true;
+                config.states.ch_on = true;
                 digitalWrite(pumpChRelayPin, LOW);
             }
         }
@@ -144,32 +144,32 @@ void setFilterState(domopool_Config &config, int hour)
         {
             Serial.println(F("[Filter] Off"));
             digitalWrite(pumpFilterRelayPin, HIGH);
-            config.states.filterOn = false;
-            config.states.chOn = false;
+            config.states.filter_on = false;
+            config.states.ch_on = false;
             digitalWrite(pumpChRelayPin, HIGH);
         }
 
         // update chduration only once per hour
         if (config.metrics.hour != hour)
         {
-            if (config.metrics.savedTempWater > 15 && config.metrics.over15Duration <= chWaitThreshold)
+            if (config.metrics.saved_twater > 15 && config.metrics.over_15_duration <= chWaitThreshold)
             {
-                config.metrics.over15Duration++;
-                pumpPrefs.putShort("chDuration", config.metrics.over15Duration);
+                config.metrics.over_15_duration++;
+                pumpPrefs.putShort("chDuration", config.metrics.over_15_duration);
             }
-            else if (config.metrics.savedTempWater < 14 && config.metrics.over15Duration > 72)
+            else if (config.metrics.saved_twater < 14 && config.metrics.over_15_duration > 72)
             {
-                config.metrics.over15Duration = 0;
+                config.metrics.over_15_duration = 0;
                 pumpPrefs.putShort("chDuration", 0);
             }
-            if (config.pump.forceFilter)
+            if (config.pump.force_filter)
             {
-                if (countForceDuration > 0 && config.pump.forceDuration == countForceDuration)
+                if (countForceDuration > 0 && config.pump.force_duration == countForceDuration)
                 {
-                    config.pump.forceFilter = false;
+                    config.pump.force_filter = false;
                     countForceDuration = 0;
                 }
-                else if (config.pump.forceDuration != 0)
+                else if (config.pump.force_duration != 0)
                 {
                     countForceDuration++;
                 }
@@ -235,19 +235,19 @@ void setPhState(domopool_Config &config)
     }
 
     // Pilotage Relais Pompe Injection Ph
-    if ((phOn || config.pump.forcePH) && config.states.filterOn)
+    if ((phOn || config.pump.force_ph) && config.states.filter_on)
     {
         // digitalWrite(pumpPhRelayPin, HIGH);
         digitalWrite(pumpPhRelayPin, LOW);
-        config.states.phOn = true;
+        config.states.ph_on = true;
     }
     else
     {
         digitalWrite(pumpPhRelayPin, HIGH);
         // digitalWrite(pumpPhRelayPin, LOW);
-        config.states.phOn = false;
+        config.states.ph_on = false;
     }
 
     Serial.print(F("[PH] Pump state: "));
-    Serial.println(config.states.phOn);
+    Serial.println(config.states.ph_on);
 }

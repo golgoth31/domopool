@@ -12,35 +12,35 @@ void pref2config(domopool_Config &config)
     // float_t defaultPhThreshold = 7.4;
 
     //default not working
-    config.global.ackTone = prefs.getDouble("ack_tone", 4000);
+    config.global.ack_tone = prefs.getDouble("ack_tone", 4000);
     strcpy(config.network.ntp.server, prefs.getString("ntp_server", defaultNtpServer).c_str());
     strcpy(config.network.mqtt.server, prefs.getString("mqtt_server", defaultMQTTServer).c_str());
     config.sensors.ph.threshold = prefs.getFloat("ph_threshold", 7.4);
 
     //no bug
-    config.global.lcdBacklightDuration = prefs.getShort("BacklightTime", 30000);
-    config.global.ackDuration = prefs.getInt("ackDuration", 100);
-    config.global.serialOut = prefs.getBool("serialOut", true);
-    config.global.displayStartup = prefs.getBool("displayStartup", false);
-    config.network.ntp.dayLight = prefs.getShort("dayLight", 3600);
-    config.network.ntp.timeZone = prefs.getShort("timeZone", 3600);
+    config.global.lcd_backlight_duration = prefs.getShort("BacklightTime", 30000);
+    config.global.ack_duration = prefs.getInt("ackDuration", 100);
+    config.global.serial_out = prefs.getBool("serialOut", true);
+    config.global.display_startup = prefs.getBool("displayStartup", false);
+    config.network.ntp.day_light = prefs.getShort("dayLight", 3600);
+    config.network.ntp.timezone = prefs.getShort("timeZone", 3600);
     config.network.dhcp = prefs.getBool("dhcp", true);
-    config.network.allowPost = prefs.getBool("allowPost", true);
+    config.network.allow_post = prefs.getBool("allowPost", true);
     config.network.mqtt.enabled = prefs.getBool("mqtt_enabled", false);
     config.sensors.ph.enabled = prefs.getBool("ph_enabled", false);
-    config.sensors.waitForConversion = prefs.getBool("waitConvertion", false);
-    config.sensors.tempResolution = prefs.getShort("tempResolution", 12);
+    config.sensors.wait_for_conversion = prefs.getBool("waitConvertion", false);
+    config.sensors.temp_resolution = prefs.getShort("tempResolution", 12);
     config.sensors.twin.enabled = prefs.getBool("twin_enabled", false);
     config.sensors.twin.init = prefs.getBool("twin_init", false);
     config.sensors.twout.enabled = true;
     config.sensors.twout.init = prefs.getBool("twout_init", false);
     config.sensors.tamb.enabled = true;
     config.sensors.tamb.init = prefs.getBool("tamb_init", false);
-    config.pump.forceFilter = prefs.getBool("forceFilter", false);
-    config.pump.forcePH = prefs.getBool("forcePH", false);
-    config.pump.forceCH = prefs.getBool("forceCH", false);
+    config.pump.force_filter = prefs.getBool("forceFilter", false);
+    config.pump.force_ph = prefs.getBool("forcePH", false);
+    config.pump.force_ch = prefs.getBool("forceCH", false);
     config.pump.automatic = prefs.getBool("auto", true);
-    config.pump.forceCheck = prefs.getBool("forceCheck", false);
+    config.pump.force_check = prefs.getBool("forceCheck", false);
 }
 
 void loadConfiguration(domopool_Config &config)
@@ -65,10 +65,9 @@ void loadConfiguration(domopool_Config &config)
     config.sensors.has_tamb = true;
     config.sensors.has_twin = true;
     config.sensors.has_twout = true;
-    config.sensors.has_waterPressure = true;
+    config.sensors.has_water_pressure = true;
     config.has_states = true;
     config.has_tests = true;
-    config.has_time = true;
     boolean init = prefs.getBool("init", false);
     if (!init)
     {
@@ -91,27 +90,27 @@ void loadConfiguration(domopool_Config &config)
 void config2pref(domopool_Config &config)
 {
     prefs.putBool("dhcp", config.network.dhcp);
-    prefs.putBool("allowPost", config.network.allowPost);
+    prefs.putBool("allowPost", config.network.allow_post);
     prefs.putBool("twin_enabled", config.sensors.twin.enabled);
     prefs.putBool("twin_init", config.sensors.twin.init);
     prefs.putBool("twout_init", config.sensors.twout.init);
     prefs.putBool("tamb_init", config.sensors.tamb.init);
-    prefs.putBool("waitConvertion", config.sensors.waitForConversion);
-    prefs.putInt("tempResolution", config.sensors.tempResolution);
+    prefs.putBool("waitConvertion", config.sensors.wait_for_conversion);
+    prefs.putInt("tempResolution", config.sensors.temp_resolution);
     prefs.putBool("ph_enabled", config.sensors.ph.enabled);
     prefs.putFloat("ph_threshold", config.sensors.ph.threshold);
-    prefs.putShort("BacklightTime", config.global.lcdBacklightDuration);
-    prefs.putDouble("ack_tone", config.global.ackTone);
-    prefs.putInt("ackDuration", config.global.ackDuration);
-    prefs.putBool("serialOut", config.global.serialOut);
-    prefs.putBool("displayStartup", config.global.displayStartup);
-    prefs.putShort("dayLight", config.network.ntp.dayLight);
-    prefs.putShort("timeZone", config.network.ntp.timeZone);
+    prefs.putShort("BacklightTime", config.global.lcd_backlight_duration);
+    prefs.putDouble("ack_tone", config.global.ack_tone);
+    prefs.putInt("ackDuration", config.global.ack_duration);
+    prefs.putBool("serialOut", config.global.serial_out);
+    prefs.putBool("displayStartup", config.global.display_startup);
+    prefs.putShort("dayLight", config.network.ntp.day_light);
+    prefs.putShort("timeZone", config.network.ntp.timezone);
     prefs.putString("ntp_server", config.network.ntp.server);
-    prefs.putBool("forceFilter", config.pump.forceFilter);
-    prefs.putBool("forcePH", config.pump.forcePH);
-    prefs.putBool("forceCH", config.pump.forceCH);
-    prefs.putBool("forceCheck", config.pump.forceCheck);
+    prefs.putBool("forceFilter", config.pump.force_filter);
+    prefs.putBool("forcePH", config.pump.force_ph);
+    prefs.putBool("forceCH", config.pump.force_ch);
+    prefs.putBool("forceCheck", config.pump.force_check);
     prefs.putString("mqtt_server", config.network.mqtt.server);
     prefs.putBool("mqtt_enabled", config.network.mqtt.enabled);
 }
@@ -123,74 +122,22 @@ void saveConfiguration(domopool_Config &config)
     Serial.println(F("[Conf] Done"));
 }
 
-// void config2doc(domopool_Config &config, JsonDocument &doc)
-// {
-//     JsonObject jsonObj = doc.to<JsonObject>();
-//     jsonObj["global"]["lcdBacklightDuration"] = config.global.lcdBacklightDuration;
-//     jsonObj["global"]["ackTone"] = config.global.ackTone;
-//     jsonObj["global"]["ackDuration"] = config.global.ackDuration;
-//     jsonObj["global"]["serialOut"] = config.global.serialOut;
-//     jsonObj["global"]["displayStartup"] = config.global.displayStartup;
-//     jsonObj["network"]["ntp"]["dayLight"] = config.network.ntp.dayLight;
-//     jsonObj["network"]["ntp"]["server"] = config.network.ntp.server;
-//     jsonObj["network"]["ntp"]["timeZone"] = config.network.ntp.timeZone;
-//     jsonObj["network"]["dhcp"] = config.network.dhcp;
-//     jsonObj["network"]["ip"] = config.network.ip;
-//     jsonObj["network"]["gateway"] = config.network.gateway;
-//     jsonObj["network"]["netmask"] = config.network.netmask;
-//     jsonObj["network"]["dns"] = config.network.dns;
-//     jsonObj["network"]["mqtt"]["enabled"] = config.network.mqtt.enabled;
-//     jsonObj["network"]["mqtt"]["server"] = config.network.mqtt.server;
-//     jsonObj["sensors"]["waitForConvertion"] = config.sensors.waitForConversion;
-//     jsonObj["sensors"]["tempResolution"] = config.sensors.tempResolution;
-//     jsonObj["sensors"]["twin"]["enabled"] = config.sensors.twin.enabled;
-//     jsonObj["sensors"]["twin"]["init"] = config.sensors.twin.init;
-//     for (int i = 0; i < 8; i++)
-//     {
-//         jsonObj["sensors"]["twin"]["addr"][i] = config.sensors.twin.addr[i];
-//     }
-
-//     jsonObj["sensors"]["twout"]["enabled"] = true;
-//     jsonObj["sensors"]["twout"]["init"] = config.sensors.twout.init;
-//     for (int i = 0; i < 8; i++)
-//     {
-//         jsonObj["sensors"]["twout"]["addr"][i] = config.sensors.twout.addr[i];
-//     }
-//     jsonObj["sensors"]["tamb"]["enabled"] = true;
-//     jsonObj["sensors"]["tamb"]["init"] = config.sensors.tamb.init;
-//     for (int i = 0; i < 8; i++)
-//     {
-//         jsonObj["sensors"]["tamb"]["addr"][i] = config.sensors.tamb.addr[i];
-//     }
-//     jsonObj["sensors"]["ph"]["enabled"] = config.sensors.ph.enabled;
-//     jsonObj["sensors"]["ph"]["threshold"] = config.sensors.ph.threshold;
-//     jsonObj["pump"]["forceFilter"] = config.pump.forceFilter;
-//     jsonObj["pump"]["forcePH"] = config.pump.forcePH;
-//     jsonObj["pump"]["forceCH"] = config.pump.forceCH;
-//     jsonObj["pump"]["forceCheck"] = config.pump.forceCheck;
-//     jsonObj["pump"]["auto"] = config.pump.automatic;
-//     jsonObj["tests"]["enabled"] = config.tests.enabled;
-//     jsonObj["tests"]["tamb"] = config.tests.tamb;
-//     jsonObj["tests"]["twater"] = config.tests.twater;
-//     jsonObj["tests"]["pressure"] = config.tests.pressure;
-// }
-
 void metrics2doc(domopool_Config &config, JsonDocument &doc)
 {
-    doc["metrics"]["over15Duration"] = config.metrics.over15Duration;
+    doc["metrics"]["over15Duration"] = config.metrics.over_15_duration;
     doc["metrics"]["ch"] = config.metrics.ch;
     doc["metrics"]["ph"] = config.metrics.ph;
-    doc["metrics"]["tempAmbiant"] = config.metrics.tempAmbiant;
-    doc["metrics"]["tempWater"] = config.metrics.tempWater;
-    doc["metrics"]["waterPressure"] = config.metrics.waterPressure;
+    doc["metrics"]["tempAmbiant"] = config.metrics.tamb;
+    doc["metrics"]["tempWater"] = config.metrics.twater;
+    doc["metrics"]["waterPressure"] = config.metrics.water_pressure;
     doc["metrics"]["hour"] = config.metrics.hour;
-    doc["metrics"]["savedTempWater"] = config.metrics.savedTempWater;
+    doc["metrics"]["savedTempWater"] = config.metrics.saved_twater;
 }
 void states2doc(domopool_Config &config, JsonDocument &doc)
 {
-    doc["states"]["filterOn"] = config.states.filterOn;
-    doc["states"]["phOn"] = config.states.phOn;
-    doc["states"]["chOn"] = config.states.chOn;
+    doc["states"]["filterOn"] = config.states.filter_on;
+    doc["states"]["phOn"] = config.states.ph_on;
+    doc["states"]["chOn"] = config.states.ch_on;
     doc["states"]["automatic"] = config.states.automatic;
     doc["states"]["startup"] = config.states.startup;
     doc["states"]["ntp"] = config.states.ntp;
@@ -200,8 +147,8 @@ void states2doc(domopool_Config &config, JsonDocument &doc)
 void initConfigData(domopool_Config &config)
 {
     config.states.startup = true;
-    config.states.filterOn = false;
-    config.states.phOn = false;
+    config.states.filter_on = false;
+    config.states.ph_on = false;
 }
 
 bool stopPump(const int8_t p)

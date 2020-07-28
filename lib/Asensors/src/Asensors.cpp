@@ -197,8 +197,8 @@ void initializeDS18B20(domopool_Config &config, DallasTemperature &tempSensors)
 
     Serial.println(F("[Sens] Setting sensors options..."));
 
-    tempSensors.setWaitForConversion(config.sensors.waitForConversion);
-    tempSensors.setResolution(config.sensors.tempResolution);
+    tempSensors.setWaitForConversion(config.sensors.wait_for_conversion);
+    tempSensors.setResolution(config.sensors.temp_resolution);
 }
 
 void getDS18B20(domopool_Config &config, DallasTemperature &tempSensors)
@@ -228,17 +228,17 @@ void getDS18B20(domopool_Config &config, DallasTemperature &tempSensors)
             // Serial.println(config.sensors.twin.val);
             tempMoy = (twout + twin) / 2;
         }
-        config.metrics.tempWater = roundTemp(tempMoy);
+        config.metrics.twater = roundTemp(tempMoy);
 
         for (uint8_t i = 0; i < 8; i++)
         {
             tempAddr[i] = sensPrefs.getUChar("tamb" + i, 0);
         }
-        config.metrics.tempAmbiant = tempSensors.getTempC(tempAddr);
+        config.metrics.tamb = tempSensors.getTempC(tempAddr);
     }
     else
     {
-        config.metrics.tempWater = config.tests.twater;
-        config.metrics.tempAmbiant = config.tests.tamb;
+        config.metrics.twater = config.tests.twater;
+        config.metrics.tamb = config.tests.tamb;
     }
 }

@@ -161,29 +161,24 @@ void startServer(domopool_Config &config)
     // Serving pages
     // root
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        // StaticJsonDocument<ConfigDocSize> httpResponse;
-        // String compile = __DATE__;
-        // compile += " ";
-        // compile += __TIME__;
-        // httpResponse["compile"] = compile;
-        // httpResponse["board_name"] = ARDUINO_BOARD;
-        // httpResponse["versions"]["domopool"] = "test";
-        // httpResponse["versions"]["platformio"] = PLATFORMIO;
-        // httpResponse["versions"]["esp_idf"] = esp_get_idf_version();
-        // httpResponse["versions"]["xtensa"] = __VERSION__;
-        // httpResponse["versions"]["arduinojson"] = ARDUINOJSON_VERSION;
-        // httpResponse["versions"]["tft_espi"] = TFT_ESPI_VERSION;
-        // String output;
-        // serializeJsonPretty(httpResponse, output);
-        // request->send(200, "application/json", output);
-        domopool_Config config = domopool_Config_init_default;
-        uint8_t buffer[ConfigDocSize];
+        String compile = __DATE__;
+        compile += " ";
+        compile += __TIME__;
+        domopool_Infos infos = domopool_Infos_init_default;
+        strcpy(infos.board_name, ARDUINO_BOARD);
+        strcpy(infos.compile, compile.c_str());
+        infos.has_versions = true;
+        strcpy(infos.versions.domopool, "test");
+        strcpy(infos.versions.esp_idf, esp_get_idf_version());
+        infos.versions.platformio = PLATFORMIO;
+        strcpy(infos.versions.tft_espi, TFT_ESPI_VERSION);
+        strcpy(infos.versions.xtensa, __VERSION__);
+        uint8_t buffer[128];
         size_t message_length;
         bool status;
         pb_ostream_t pb_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
-        status = pb_encode(&pb_stream, domopool_States_fields, &config.states);
+        status = pb_encode(&pb_stream, domopool_Infos_fields, &infos);
         message_length = pb_stream.bytes_written;
-        // Serial.println(message_length);
         if (status)
         {
             AsyncResponseStream *response = request->beginResponseStream("text/plain");
@@ -199,18 +194,12 @@ void startServer(domopool_Config &config)
 
     // metrics
     server.on("/metrics", HTTP_GET, [&config](AsyncWebServerRequest *request) {
-        // DynamicJsonDocument httpResponse(ConfigDocSize);
-        // metrics2doc(config, httpResponse);
-        // String output = "";
-        // serializeJsonPretty(httpResponse, output);
-        // request->send(200, "application/json", output);
-        uint8_t buffer[ConfigDocSize];
+        uint8_t buffer[128];
         size_t message_length;
         bool status;
         pb_ostream_t pb_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
         status = pb_encode(&pb_stream, domopool_Metrics_fields, &config.metrics);
         message_length = pb_stream.bytes_written;
-        // Serial.println(message_length);
         if (status)
         {
             AsyncResponseStream *response = request->beginResponseStream("text/plain");
@@ -226,18 +215,12 @@ void startServer(domopool_Config &config)
 
     // states
     server.on("/api/v1/states", HTTP_GET, [&config](AsyncWebServerRequest *request) {
-        // DynamicJsonDocument httpResponse(ConfigDocSize);
-        // states2doc(config, httpResponse);
-        // String output = "";
-        // serializeJsonPretty(httpResponse, output);
-        // request->send(200, "application/json", output);
-        uint8_t buffer[ConfigDocSize];
+        uint8_t buffer[128];
         size_t message_length;
         bool status;
         pb_ostream_t pb_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
         status = pb_encode(&pb_stream, domopool_States_fields, &config.states);
         message_length = pb_stream.bytes_written;
-        // Serial.println(message_length);
         if (status)
         {
             AsyncResponseStream *response = request->beginResponseStream("text/plain");
@@ -297,7 +280,7 @@ void startServer(domopool_Config &config)
         {
             state = "auto";
         }
-        else if (config.pump.forceFilter)
+        else if (config.pump.force_filter)
         {
             state = "start";
         }
@@ -306,7 +289,7 @@ void startServer(domopool_Config &config)
             state = "stop";
         }
         httpResponse["state"] = state;
-        httpResponse["duration"] = config.pump.forceDuration;
+        httpResponse["duration"] = config.pump.force_duration;
         String output;
         serializeJsonPretty(httpResponse, output);
         request->send(200, "application/json", output);
@@ -365,13 +348,12 @@ void startServer(domopool_Config &config)
         "/api/v1/config",
         HTTP_GET,
         [&config](AsyncWebServerRequest *request) {
-            uint8_t buffer[ConfigDocSize];
+            uint8_t buffer[1024];
             size_t message_length;
             bool status;
             pb_ostream_t pb_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
             status = pb_encode(&pb_stream, domopool_Config_fields, &config);
             message_length = pb_stream.bytes_written;
-            // Serial.println(message_length);
             if (status)
             {
                 AsyncResponseStream *response = request->beginResponseStream("text/plain");
@@ -383,12 +365,6 @@ void startServer(domopool_Config &config)
                 printf("Encoding failed: %s\n", PB_GET_ERROR(&pb_stream));
                 request->send(500);
             }
-
-            // DynamicJsonDocument httpResponse(ConfigDocSize);
-            // config2doc(test_conf, httpResponse);
-            // String output = "";
-            // serializeJson(httpResponse, output);
-            // request->send(200, "application/json", output);
         });
     // AsyncCallbackJsonWebHandler *configHandler = new AsyncCallbackJsonWebHandler(
     //     "/api/v1/config",
