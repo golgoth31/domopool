@@ -164,12 +164,12 @@ void setFilterState(domopool_Config &config, int hour)
             }
             if (config.pump.force_filter && config.pump.force_duration != 0)
             {
-                if (countForceDuration > 0 && config.pump.force_duration == countForceDuration)
+                if (config.pump.force_duration <= countForceDuration)
                 {
-                    config.pump.force_filter = false;
+                    stopPump(1);
                     countForceDuration = 0;
                 }
-                else if (config.pump.force_duration != 0)
+                else
                 {
                     countForceDuration++;
                 }

@@ -368,55 +368,7 @@ void startServer(domopool_Config &config)
            size_t len,
            size_t index,
            size_t total) { handleBodyFilter(request, data, len, index, total); });
-    // AsyncCallbackJsonWebHandler *filterHandler = new AsyncCallbackJsonWebHandler(
-    //     "/api/v1/filter",
-    //     [&config](AsyncWebServerRequest *request, JsonVariant &json) {
-    //         JsonObject jsonObj = json.as<JsonObject>();
-    //         if (jsonObj["state"] == "force")
-    //         {
-    //             startPump(1);
-    //         }
-    //         else if (jsonObj["state"] == "stop")
-    //         {
-    //             stopPump(1);
-    //         }
-    //         else if (jsonObj["state"] == "auto")
-    //         {
-    //             setPumpAuto();
-    //         }
-    //         else
-    //         {
-    //             request->send(500);
-    //         }
-    //         int duration = jsonObj["duration"];
-    //         if (duration)
-    //         {
-    //             config.pump.forceDuration = duration;
-    //         }
-    //         request->send(200, "application/json", "{}");
-    //     });
-    // server.addHandler(filterHandler);
 
-    // mqtt
-    // AsyncCallbackJsonWebHandler *mqttHandler = new AsyncCallbackJsonWebHandler("/api/v1/mqtt", [](AsyncWebServerRequest *request, JsonVariant &json) {
-    //     JsonObject jsonObj = json.as<JsonObject>();
-    //     if (jsonObj["state"] == "up")
-    //     {
-    //         startMqtt();
-    //     }
-    //     else if (jsonObj["state"] == "down")
-    //     {
-    //         stopMqtt();
-    //     }
-    //     else
-    //     {
-    //         request->send(500);
-    //     }
-    //     request->send(200, "application/json", "{}");
-    // });
-    // server.addHandler(mqttHandler);
-
-    // config
     // config
     server.on(
         "/api/v1/config",

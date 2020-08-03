@@ -41,7 +41,7 @@ void pref2config(domopool_Config &config)
     config.pump.force_ch = prefs.getBool("forceCH", false);
     config.pump.automatic = prefs.getBool("auto", true);
     config.pump.force_check = prefs.getBool("forceCheck", false);
-    config.pump.force_duration = prefs.getInt("forceDuration", 0);
+    config.pump.force_duration = prefs.getUInt("forceDuration", 0);
 }
 
 void loadConfiguration(domopool_Config &config)
@@ -112,6 +112,7 @@ void config2pref(domopool_Config &config)
     prefs.putBool("forcePH", config.pump.force_ph);
     prefs.putBool("forceCH", config.pump.force_ch);
     prefs.putBool("forceCheck", config.pump.force_check);
+    prefs.putUInt("forceDuration", config.pump.force_duration);
     prefs.putString("mqtt_server", config.network.mqtt.server);
     prefs.putBool("mqtt_enabled", config.network.mqtt.enabled);
 }
@@ -152,6 +153,12 @@ void initConfigData(domopool_Config &config)
     config.states.ph_on = false;
 }
 
+bool setPumpDuration(uint32_t duration)
+{
+    prefs.putUInt("forceDuration", duration);
+    return true;
+}
+
 bool stopPump(const int8_t p)
 {
     prefs.putBool("auto", false);
@@ -171,6 +178,7 @@ bool stopPump(const int8_t p)
         return false;
         break;
     }
+    setPumpDuration(0);
     return true;
 }
 bool startPump(const int8_t p)
@@ -201,11 +209,7 @@ bool setPumpAuto()
     prefs.putBool("forceFilter", false);
     return true;
 }
-bool setPumpDuration(uint32_t duration)
-{
-    prefs.putInt("forceDuration", duration);
-    return true;
-}
+
 bool unsetPumpAuto()
 {
     prefs.putBool("auto", false);
