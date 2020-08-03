@@ -41,6 +41,7 @@ void pref2config(domopool_Config &config)
     config.pump.force_ch = prefs.getBool("forceCH", false);
     config.pump.automatic = prefs.getBool("auto", true);
     config.pump.force_check = prefs.getBool("forceCheck", false);
+    config.pump.force_duration = prefs.getInt("forceDuration", 0);
 }
 
 void loadConfiguration(domopool_Config &config)
@@ -122,27 +123,27 @@ void saveConfiguration(domopool_Config &config)
     Serial.println(F("[Conf] Done"));
 }
 
-void metrics2doc(domopool_Config &config, JsonDocument &doc)
-{
-    doc["metrics"]["over15Duration"] = config.metrics.over_15_duration;
-    doc["metrics"]["ch"] = config.metrics.ch;
-    doc["metrics"]["ph"] = config.metrics.ph;
-    doc["metrics"]["tempAmbiant"] = config.metrics.tamb;
-    doc["metrics"]["tempWater"] = config.metrics.twater;
-    doc["metrics"]["waterPressure"] = config.metrics.water_pressure;
-    doc["metrics"]["hour"] = config.metrics.hour;
-    doc["metrics"]["savedTempWater"] = config.metrics.saved_twater;
-}
-void states2doc(domopool_Config &config, JsonDocument &doc)
-{
-    doc["states"]["filterOn"] = config.states.filter_on;
-    doc["states"]["phOn"] = config.states.ph_on;
-    doc["states"]["chOn"] = config.states.ch_on;
-    doc["states"]["automatic"] = config.states.automatic;
-    doc["states"]["startup"] = config.states.startup;
-    doc["states"]["ntp"] = config.states.ntp;
-    doc["states"]["rtc"] = config.states.rtc;
-}
+// void metrics2doc(domopool_Config &config, JsonDocument &doc)
+// {
+//     doc["metrics"]["over15Duration"] = config.metrics.over_15_duration;
+//     doc["metrics"]["ch"] = config.metrics.ch;
+//     doc["metrics"]["ph"] = config.metrics.ph;
+//     doc["metrics"]["tempAmbiant"] = config.metrics.tamb;
+//     doc["metrics"]["tempWater"] = config.metrics.twater;
+//     doc["metrics"]["waterPressure"] = config.metrics.water_pressure;
+//     doc["metrics"]["hour"] = config.metrics.hour;
+//     doc["metrics"]["savedTempWater"] = config.metrics.saved_twater;
+// }
+// void states2doc(domopool_Config &config, JsonDocument &doc)
+// {
+//     doc["states"]["filterOn"] = config.states.filter_on;
+//     doc["states"]["phOn"] = config.states.ph_on;
+//     doc["states"]["chOn"] = config.states.ch_on;
+//     doc["states"]["automatic"] = config.states.automatic;
+//     doc["states"]["startup"] = config.states.startup;
+//     doc["states"]["ntp"] = config.states.ntp;
+//     doc["states"]["rtc"] = config.states.rtc;
+// }
 
 void initConfigData(domopool_Config &config)
 {
@@ -200,9 +201,15 @@ bool setPumpAuto()
     prefs.putBool("forceFilter", false);
     return true;
 }
+bool setPumpDuration(uint32_t duration)
+{
+    prefs.putInt("forceDuration", duration);
+    return true;
+}
 bool unsetPumpAuto()
 {
     prefs.putBool("auto", false);
+    prefs.putInt("forceDuration", 0);
     return true;
 }
 void unsetForceCheck()

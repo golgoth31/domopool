@@ -380,6 +380,7 @@ void displayPressed(domopool_Config &config)
                 }
                 else
                 {
+                    setPumpDuration(0);
                     startPump(1);
                 }
             }

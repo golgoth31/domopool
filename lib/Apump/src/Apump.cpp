@@ -162,7 +162,7 @@ void setFilterState(domopool_Config &config, int hour)
                 config.metrics.over_15_duration = 0;
                 pumpPrefs.putShort("chDuration", 0);
             }
-            if (config.pump.force_filter)
+            if (config.pump.force_filter && config.pump.force_duration != 0)
             {
                 if (countForceDuration > 0 && config.pump.force_duration == countForceDuration)
                 {
