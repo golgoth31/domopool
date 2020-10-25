@@ -4,6 +4,7 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <TimeLib.h>
+#include <Adafruit_ADS1015.h>
 
 // Local libraries
 #include <Aconfig.h>
@@ -22,6 +23,7 @@
 #define lightPin 11
 #define SDA 26
 #define SCL 27
+#define pressure_adc_pin 0
 
 // ArduiTouch touch screen pins for TFT_espi
 // #define DTFT_MISO 19
@@ -43,6 +45,9 @@ int count_time_24h = 0;   // used to trigger action every 24h (2880*30)
 OneWire ow(ONE_WIRE_BUS);
 DallasTemperature tempSensors(&ow);
 
+// Setup adc
+Adafruit_ADS1115 ads;
+
 domopool_Config config = domopool_Config_init_default;
 
 bool booted = false;
@@ -56,19 +61,20 @@ void setup(void)
         ; // wait for serial port to connect. Needed for native USB port only
     }
 
+    initConfig();
     pumpInit(config, filterPin, chPin, phPin);
 
     initAlarms();
     initDisplay();
 
-    loadConfiguration(config);
+    loadDefaultConfig(config);
 
     display2boot(F("[Sens] Starting..."), config);
 
     // start ds18b20 sensors
     initializeDS18B20(config, tempSensors);
 
-    config.states.net_active = startNetwork(ssid, password, config);
+    config.states.net_active = startNetwork(ssid, password, config, ads);
     if (config.states.net_active)
     {
         Serial.println(F("[Eth] Network is up"));
@@ -100,7 +106,7 @@ void loop(void)
         lastReadingTime = millis();
     }
     reboot();
-    restartNetwork(ssid, password, config);
+    restartNetwork(ssid, password, config, ads);
 
     displayPressed(config);
     sendData(config);
@@ -110,6 +116,7 @@ void loop(void)
     {
         pref2config(config);
         getDS18B20(config, tempSensors);
+        getWP(config, ads);
         if (!config.states.startup)
         {
             displayDate(config);

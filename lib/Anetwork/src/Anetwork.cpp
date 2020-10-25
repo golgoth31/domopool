@@ -41,7 +41,7 @@ void handleUploadUi(AsyncWebServerRequest *request, String filename, size_t inde
         Serial.println("UploadEnd: " + filename + ",size: " + index + len);
         // close the file handle as the upload is now done
         request->_tempFile.close();
-        request->redirect("/ui");
+        request->send(200);
     }
 }
 
@@ -75,8 +75,7 @@ void handleBodyFilter(AsyncWebServerRequest *request, uint8_t *data, size_t len,
     }
     if (filter.state == domopool_Filter_states_start)
     {
-        setPumpDuration(filter.duration);
-        startPump(1);
+        startPump(1, filter.duration);
     }
     else if (filter.state == domopool_Filter_states_stop)
     {
@@ -85,6 +84,90 @@ void handleBodyFilter(AsyncWebServerRequest *request, uint8_t *data, size_t len,
     else if (filter.state == domopool_Filter_states_auto)
     {
         setPumpAuto();
+    }
+    else
+    {
+        request->send(500);
+    }
+}
+
+void handleBodyMqtt(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+{
+    uint8_t buffer[total];
+    if (!index)
+    {
+        Serial.printf("BodyStart: %u B\n", total);
+    }
+    for (size_t i = 0; i < len; i++)
+    {
+        buffer[i] = data[i];
+    }
+    if (index + len == total)
+    {
+        Serial.printf("BodyEnd: %u B\n", total);
+    }
+    /* Allocate space for the decoded message. */
+    domopool_Mqtt mqtt = domopool_Mqtt_init_default;
+
+    /* Create a stream that reads from the buffer. */
+    pb_istream_t stream = pb_istream_from_buffer(buffer, total);
+    /* Now we are ready to decode the message. */
+    bool status = pb_decode(&stream, domopool_Mqtt_fields, &mqtt);
+
+    /* Check for errors... */
+    if (!status)
+    {
+        printf("Decoding failed: %s\n", PB_GET_ERROR(&stream));
+    }
+    if (mqtt.enabled == true)
+    {
+        startMqtt();
+    }
+    else if (mqtt.enabled == false)
+    {
+        stopMqtt();
+    }
+    else
+    {
+        request->send(500);
+    }
+}
+
+void handleBodyWP(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+{
+    uint8_t buffer[total];
+    if (!index)
+    {
+        Serial.printf("BodyStart: %u B\n", total);
+    }
+    for (size_t i = 0; i < len; i++)
+    {
+        buffer[i] = data[i];
+    }
+    if (index + len == total)
+    {
+        Serial.printf("BodyEnd: %u B\n", total);
+    }
+    /* Allocate space for the decoded message. */
+    domopool_AnalogSensor wp = domopool_AnalogSensor_init_default;
+
+    /* Create a stream that reads from the buffer. */
+    pb_istream_t stream = pb_istream_from_buffer(buffer, total);
+    /* Now we are ready to decode the message. */
+    bool status = pb_decode(&stream, domopool_AnalogSensor_fields, &wp);
+
+    /* Check for errors... */
+    if (!status)
+    {
+        printf("Decoding failed: %s\n", PB_GET_ERROR(&stream));
+    }
+    if (wp.enabled == true)
+    {
+        setWP(wp.adc_pin, wp.threshold);
+    }
+    else if (wp.enabled == false)
+    {
+        disableWP();
     }
     else
     {
@@ -198,7 +281,7 @@ void startOTA()
     ArduinoOTA.begin();
 }
 
-void startServer(domopool_Config &config)
+void startServer(domopool_Config &config, Adafruit_ADS1115 &ads)
 {
     // For CORS
     server.on("/*", HTTP_OPTIONS, [](AsyncWebServerRequest *request) {
@@ -335,9 +418,10 @@ void startServer(domopool_Config &config)
         {
             state = domopool_Filter_states_stop;
         }
-        domopool_Filter filter;
+        domopool_Filter filter = domopool_Filter_init_zero;
         filter.state = state;
         filter.duration = config.pump.force_duration;
+        filter.start_time = config.pump.force_start_time;
         uint8_t buffer[128];
         size_t message_length;
         bool status;
@@ -369,6 +453,39 @@ void startServer(domopool_Config &config)
            size_t index,
            size_t total) { handleBodyFilter(request, data, len, index, total); });
 
+    // mqtt
+    server.on("/api/v1/mqtt", HTTP_GET, [&config](AsyncWebServerRequest *request) {
+        uint8_t buffer[128];
+        size_t message_length;
+        bool status;
+        pb_ostream_t pb_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
+        status = pb_encode(&pb_stream, domopool_Mqtt_fields, &config.network.mqtt);
+        message_length = pb_stream.bytes_written;
+        if (status)
+        {
+            AsyncResponseStream *response = request->beginResponseStream("text/plain");
+            response->write(buffer, message_length);
+            request->send(response);
+        }
+        else
+        {
+            printf("Encoding failed: %s\n", PB_GET_ERROR(&pb_stream));
+            request->send(500);
+        }
+    });
+    server.on(
+        "/api/v1/mqtt",
+        HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+            request->send(200);
+        },
+        NULL,
+        [](AsyncWebServerRequest *request,
+           uint8_t *data,
+           size_t len,
+           size_t index,
+           size_t total) { handleBodyMqtt(request, data, len, index, total); });
+
     // config
     server.on(
         "/api/v1/config",
@@ -379,6 +496,42 @@ void startServer(domopool_Config &config)
             bool status;
             pb_ostream_t pb_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
             status = pb_encode(&pb_stream, domopool_Config_fields, &config);
+            message_length = pb_stream.bytes_written;
+            if (status)
+            {
+                AsyncResponseStream *response = request->beginResponseStream("text/plain");
+                response->write(buffer, message_length);
+                request->send(response);
+            }
+            else
+            {
+                printf("Encoding failed: %s\n", PB_GET_ERROR(&pb_stream));
+                request->send(500);
+            }
+        });
+    server.on(
+        "/api/v1/config/wp",
+        HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+            request->send(200);
+        },
+        NULL,
+        [](AsyncWebServerRequest *request,
+           uint8_t *data,
+           size_t len,
+           size_t index,
+           size_t total) { handleBodyWP(request, data, len, index, total); });
+    server.on(
+        "/api/v1/config/wp/cur_threshold",
+        HTTP_GET,
+        [&config, &ads](AsyncWebServerRequest *request) {
+            domopool_AnalogSensor threshold;
+            threshold.threshold = getWPAnalog(config.sensors.water_pressure.adc_pin, ads);
+            uint8_t buffer[1024];
+            size_t message_length;
+            bool status;
+            pb_ostream_t pb_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
+            status = pb_encode(&pb_stream, domopool_AnalogSensor_fields, &threshold);
             message_length = pb_stream.bytes_written;
             if (status)
             {
@@ -416,7 +569,7 @@ void startServer(domopool_Config &config)
     });
     server.begin();
 }
-bool startNetwork(const char *ssid, const char *password, domopool_Config &config)
+bool startNetwork(const char *ssid, const char *password, domopool_Config &config, Adafruit_ADS1115 &ads)
 {
     if (!SPIFFS.begin(true))
     {
@@ -445,7 +598,7 @@ bool startNetwork(const char *ssid, const char *password, domopool_Config &confi
     strcpy(config.network.dns, WiFi.dnsIP().toString().c_str());
     strcpy(config.network.netmask, WiFi.subnetMask().toString().c_str());
 
-    startServer(config);
+    startServer(config, ads);
 
     startOTA();
     espServer.begin();
@@ -468,12 +621,12 @@ void stopNetwork()
     server.end();
     mqttClient.disconnect();
 }
-void restartNetwork(const char *ssid, const char *password, domopool_Config &config)
+void restartNetwork(const char *ssid, const char *password, domopool_Config &config, Adafruit_ADS1115 &ads)
 {
     if (WiFi.status() == WL_CONNECTION_LOST)
     {
         stopNetwork();
-        startNetwork(ssid, password, config);
+        startNetwork(ssid, password, config, ads);
     }
 }
 void sendMetricsMqtt(domopool_Config &config)

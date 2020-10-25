@@ -28,6 +28,11 @@ void pref2config(domopool_Config &config)
     config.network.allow_post = prefs.getBool("allowPost", true);
     config.network.mqtt.enabled = prefs.getBool("mqtt_enabled", false);
     config.sensors.ph.enabled = prefs.getBool("ph_enabled", false);
+    config.sensors.ph.threshold = prefs.getBool("ph_threshold", 0);
+    config.sensors.ph.adc_pin = prefs.getBool("ph_adc_pin", 1);
+    config.sensors.water_pressure.enabled = prefs.getBool("wp_enabled", true);
+    config.sensors.water_pressure.threshold = prefs.getBool("wp_threshold", 0);
+    config.sensors.water_pressure.adc_pin = prefs.getBool("wp_adc_pin", 0);
     config.sensors.wait_for_conversion = prefs.getBool("waitConvertion", false);
     config.sensors.temp_resolution = prefs.getShort("tempResolution", 12);
     config.sensors.twin.enabled = prefs.getBool("twin_enabled", false);
@@ -42,16 +47,22 @@ void pref2config(domopool_Config &config)
     config.pump.automatic = prefs.getBool("auto", true);
     config.pump.force_check = prefs.getBool("forceCheck", false);
     config.pump.force_duration = prefs.getUInt("forceDuration", 0);
+    config.pump.force_start_time = prefs.getUInt("forceStartTime", 0);
 }
 
-void loadConfiguration(domopool_Config &config)
+bool initConfig()
 {
     Serial.println(F("[Conf] Loading configuration..."));
     if (!prefs.begin("domopool"))
     {
         Serial.println(F("[Conf] Unable to start preferences"));
+        return false;
     }
+    return true;
+}
 
+void loadDefaultConfig(domopool_Config &config)
+{
     // domopool_Config_init_zero();
     config.has_alarms = true;
     config.has_global = true;
@@ -100,6 +111,10 @@ void config2pref(domopool_Config &config)
     prefs.putInt("tempResolution", config.sensors.temp_resolution);
     prefs.putBool("ph_enabled", config.sensors.ph.enabled);
     prefs.putFloat("ph_threshold", config.sensors.ph.threshold);
+    prefs.putInt("ph_adc_pin", config.sensors.ph.adc_pin);
+    prefs.putBool("wp_enabled", config.sensors.water_pressure.enabled);
+    prefs.putFloat("wp_threshold", config.sensors.water_pressure.threshold);
+    prefs.putInt("wp_adc_pin", config.sensors.water_pressure.adc_pin);
     prefs.putShort("BacklightTime", config.global.lcd_backlight_duration);
     prefs.putDouble("ack_tone", config.global.ack_tone);
     prefs.putInt("ackDuration", config.global.ack_duration);
@@ -113,6 +128,7 @@ void config2pref(domopool_Config &config)
     prefs.putBool("forceCH", config.pump.force_ch);
     prefs.putBool("forceCheck", config.pump.force_check);
     prefs.putUInt("forceDuration", config.pump.force_duration);
+    prefs.putUInt("forceStartTime", config.pump.force_start_time);
     prefs.putString("mqtt_server", config.network.mqtt.server);
     prefs.putBool("mqtt_enabled", config.network.mqtt.enabled);
 }
@@ -156,6 +172,7 @@ void initConfigData(domopool_Config &config)
 bool setPumpDuration(uint32_t duration)
 {
     prefs.putUInt("forceDuration", duration);
+    prefs.putUInt("forceStartTime", now());
     return true;
 }
 
@@ -181,13 +198,14 @@ bool stopPump(const int8_t p)
     setPumpDuration(0);
     return true;
 }
-bool startPump(const int8_t p)
+bool startPump(const int8_t p, uint32_t duration)
 {
     prefs.putBool("auto", false);
     switch (p)
     {
     case 1:
         prefs.putBool("forceFilter", true);
+        setPumpDuration(duration);
         break;
     case 2:
         prefs.putBool("forceCH", true);
@@ -207,6 +225,7 @@ bool setPumpAuto()
     prefs.putBool("auto", true);
     prefs.putBool("forceCheck", true);
     prefs.putBool("forceFilter", false);
+    setPumpDuration(0);
     return true;
 }
 
@@ -241,4 +260,16 @@ void reboot()
         Serial.println(F("[WiFi] Rebooting system"));
         esp_restart();
     }
+}
+
+void setWP(int adc_pin, float threshold)
+{
+    prefs.putBool("wp_enabled", true);
+    prefs.putFloat("wp_threshold", threshold);
+    prefs.putInt("wp_adc_pin", adc_pin);
+}
+
+void disableWP()
+{
+    prefs.putBool("wp_enabled", false);
 }

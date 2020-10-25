@@ -162,17 +162,18 @@ void setFilterState(domopool_Config &config, int hour)
                 config.metrics.over_15_duration = 0;
                 pumpPrefs.putShort("chDuration", 0);
             }
-            if (config.pump.force_filter && config.pump.force_duration != 0)
+        }
+        if (config.pump.force_filter && config.pump.force_duration != 0)
+        {
+            uint diff_time = now() - config.pump.force_start_time;
+            uint duration_sec = 3600 * config.pump.force_duration;
+            Serial.print("[pump] Force pump for ");
+            Serial.print(duration_sec - diff_time);
+            Serial.println("s");
+            if (diff_time >= duration_sec)
             {
-                if (config.pump.force_duration <= countForceDuration)
-                {
-                    stopPump(1);
-                    countForceDuration = 0;
-                }
-                else
-                {
-                    countForceDuration++;
-                }
+                Serial.println("[pump] Stoping forced with duration");
+                stopPump(1);
             }
         }
         config.metrics.hour = hour;

@@ -200,26 +200,34 @@ void displayTemp(domopool_Config &config)
 
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.drawString("Pressure", 180, 65, 1);
-    if (config.states.filter_on)
+    if (config.sensors.water_pressure.enabled)
     {
-        if (config.metrics.water_pressure <= 0.8 || config.metrics.water_pressure > 1.1)
+        if (config.states.filter_on)
         {
-            tft.setTextColor(TFT_RED, TFT_BLACK);
+            if (config.metrics.water_pressure <= 0.8 || config.metrics.water_pressure > 1.1)
+            {
+                tft.setTextColor(TFT_RED, TFT_BLACK);
+            }
+            else if (config.metrics.water_pressure > 0.8 || config.metrics.water_pressure <= 1.1)
+            {
+                tft.setTextColor(TFT_GREEN, TFT_BLACK);
+            }
         }
-        else if (config.metrics.water_pressure > 0.8 || config.metrics.water_pressure <= 1.1)
+        else
         {
-            tft.setTextColor(TFT_GREEN, TFT_BLACK);
+            tft.setTextColor(TFT_WHITE, TFT_BLACK);
         }
+        text = "";
+        text += config.metrics.water_pressure;
+        text += " Bar";
     }
     else
     {
-        tft.setTextColor(TFT_WHITE, TFT_BLACK);
+        text = "n/a";
     }
-    text = "";
-    text += config.metrics.water_pressure;
-    text += " Bar";
     tft.drawString(text, 180, 87, 1);
 }
+
 void displayPump(domopool_Config &config)
 {
     // printText(0, 50, "Pump:", 1, 1);
@@ -380,8 +388,7 @@ void displayPressed(domopool_Config &config)
                 }
                 else
                 {
-                    setPumpDuration(0);
-                    startPump(1);
+                    startPump(1, 0);
                 }
             }
         }
