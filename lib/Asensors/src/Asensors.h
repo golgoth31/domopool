@@ -11,8 +11,7 @@
 bool checkAddress(DeviceAddress deviceAddress, int offset);
 void registerDevices(domopool_Config &config, DallasTemperature &tempSensors);
 float roundTemp(float temp);
-void showAddressFromEeprom();
-void resetEepromSensorsTemp();
+void resetSensorsTempAddr(domopool_Config &config);
 void initializeDS18B20(domopool_Config &config, DallasTemperature &tempSensors);
 void initializeADS115(domopool_Config &config, Adafruit_ADS1115 &ads);
 void getDS18B20(domopool_Config &config, DallasTemperature &tempSensors);

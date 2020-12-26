@@ -33,7 +33,7 @@ void pref2config(domopool_Config &config)
     config.sensors.water_pressure.enabled = prefs.getBool("wp_enabled", true);
     config.sensors.water_pressure.threshold = prefs.getBool("wp_threshold", 0);
     config.sensors.water_pressure.adc_pin = prefs.getBool("wp_adc_pin", 0);
-    config.sensors.wait_for_conversion = prefs.getBool("waitConvertion", false);
+    config.sensors.wait_for_conversion = prefs.getBool("waitConvertion", true);
     config.sensors.temp_resolution = prefs.getShort("tempResolution", 12);
     config.sensors.twin.enabled = prefs.getBool("twin_enabled", false);
     config.sensors.twin.init = prefs.getBool("twin_init", false);
@@ -48,6 +48,7 @@ void pref2config(domopool_Config &config)
     config.pump.force_check = prefs.getBool("forceCheck", false);
     config.pump.force_duration = prefs.getUInt("forceDuration", 0);
     config.pump.force_start_time = prefs.getUInt("forceStartTime", 0);
+    config.global.force_light = prefs.getBool("forceLight", false);
 }
 
 bool initConfig()
@@ -126,6 +127,7 @@ void config2pref(domopool_Config &config)
     prefs.putBool("forceFilter", config.pump.force_filter);
     prefs.putBool("forcePH", config.pump.force_ph);
     prefs.putBool("forceCH", config.pump.force_ch);
+    prefs.putBool("forceLight", config.global.force_light);
     prefs.putBool("forceCheck", config.pump.force_check);
     prefs.putUInt("forceDuration", config.pump.force_duration);
     prefs.putUInt("forceStartTime", config.pump.force_start_time);
@@ -139,28 +141,6 @@ void saveConfiguration(domopool_Config &config)
     config2pref(config);
     Serial.println(F("[Conf] Done"));
 }
-
-// void metrics2doc(domopool_Config &config, JsonDocument &doc)
-// {
-//     doc["metrics"]["over15Duration"] = config.metrics.over_15_duration;
-//     doc["metrics"]["ch"] = config.metrics.ch;
-//     doc["metrics"]["ph"] = config.metrics.ph;
-//     doc["metrics"]["tempAmbiant"] = config.metrics.tamb;
-//     doc["metrics"]["tempWater"] = config.metrics.twater;
-//     doc["metrics"]["waterPressure"] = config.metrics.water_pressure;
-//     doc["metrics"]["hour"] = config.metrics.hour;
-//     doc["metrics"]["savedTempWater"] = config.metrics.saved_twater;
-// }
-// void states2doc(domopool_Config &config, JsonDocument &doc)
-// {
-//     doc["states"]["filterOn"] = config.states.filter_on;
-//     doc["states"]["phOn"] = config.states.ph_on;
-//     doc["states"]["chOn"] = config.states.ch_on;
-//     doc["states"]["automatic"] = config.states.automatic;
-//     doc["states"]["startup"] = config.states.startup;
-//     doc["states"]["ntp"] = config.states.ntp;
-//     doc["states"]["rtc"] = config.states.rtc;
-// }
 
 void initConfigData(domopool_Config &config)
 {
@@ -183,6 +163,7 @@ bool stopPump(const int8_t p)
     {
     case 1:
         prefs.putBool("forceFilter", false);
+        setPumpDuration(0);
         break;
     case 2:
         prefs.putBool("forceCH", false);
@@ -190,14 +171,17 @@ bool stopPump(const int8_t p)
     case 3:
         prefs.putBool("forcePH", false);
         break;
+    case 4:
+        prefs.putBool("forceLight", false);
+        break;
 
     default:
         return false;
         break;
     }
-    setPumpDuration(0);
     return true;
 }
+
 bool startPump(const int8_t p, uint32_t duration)
 {
     prefs.putBool("auto", false);
@@ -212,6 +196,9 @@ bool startPump(const int8_t p, uint32_t duration)
         break;
     case 3:
         prefs.putBool("forcePH", true);
+        break;
+    case 4:
+        prefs.putBool("forceLight", true);
         break;
 
     default:
@@ -255,11 +242,8 @@ void resetConfig()
 
 void reboot()
 {
-    if (!prefs.getBool("init", true))
-    {
-        Serial.println(F("[WiFi] Rebooting system"));
-        esp_restart();
-    }
+    Serial.println(F("[WiFi] Rebooting system"));
+    esp_restart();
 }
 
 void setWP(int adc_pin, float threshold)

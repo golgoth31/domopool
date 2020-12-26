@@ -73,17 +73,94 @@ void handleBodyFilter(AsyncWebServerRequest *request, uint8_t *data, size_t len,
     {
         printf("Decoding failed: %s\n", PB_GET_ERROR(&stream));
     }
-    if (filter.state == domopool_Filter_states_start)
+    switch (filter.state)
     {
+    case domopool_Filter_states_start:
         startPump(1, filter.duration);
-    }
-    else if (filter.state == domopool_Filter_states_stop)
-    {
+        break;
+    case domopool_Filter_states_stop:
         stopPump(1);
-    }
-    else if (filter.state == domopool_Filter_states_auto)
-    {
+        break;
+    case domopool_Filter_states_auto:
         setPumpAuto();
+        break;
+
+    default:
+        request->send(500);
+        break;
+    }
+    // if (filter.state == domopool_Filter_states_start)
+    // {
+    //     startPump(1, filter.duration);
+    // }
+    // else if (filter.state == domopool_Filter_states_stop)
+    // {
+    //     stopPump(1);
+    // }
+    // else if (filter.state == domopool_Filter_states_auto)
+    // {
+    //     setPumpAuto();
+    // }
+    // else
+    // {
+    //     request->send(500);
+    // }
+}
+
+void handleBodySwitch(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total, const int8_t switchtype)
+{
+    uint8_t buffer[total];
+    if (!index)
+    {
+        Serial.printf("BodyStart: %u B\n", total);
+    }
+    for (size_t i = 0; i < len; i++)
+    {
+        buffer[i] = data[i];
+    }
+    if (index + len == total)
+    {
+        Serial.printf("BodyEnd: %u B\n", total);
+    }
+    /* Allocate space for the decoded message. */
+    domopool_Switch locswitch = domopool_Switch_init_default;
+
+    /* Create a stream that reads from the buffer. */
+    pb_istream_t stream = pb_istream_from_buffer(buffer, total);
+    /* Now we are ready to decode the message. */
+    bool status = pb_decode(&stream, domopool_Switch_fields, &locswitch);
+
+    /* Check for errors... */
+    if (!status)
+    {
+        printf("Decoding failed: %s\n", PB_GET_ERROR(&stream));
+        request->send(500);
+    }
+    if (switchtype > 1 && switchtype < 5)
+    {
+        switch (locswitch.state)
+        {
+        case domopool_Filter_states_start:
+            startPump(switchtype, 0);
+            break;
+        case domopool_Filter_states_auto:
+            startPump(switchtype, 0);
+            break;
+        case domopool_Filter_states_stop:
+            stopPump(switchtype);
+            break;
+
+        default:
+            break;
+        }
+        // if (locswitch.state)
+        // {
+        //     startPump(switchtype, 0);
+        // }
+        // else
+        // {
+        //     stopPump(switchtype);
+        // }
     }
     else
     {
@@ -303,6 +380,7 @@ void startServer(domopool_Config &config, Adafruit_ADS1115 &ads)
         infos.versions.platformio = PLATFORMIO;
         strcpy(infos.versions.tft_espi, TFT_ESPI_VERSION);
         strcpy(infos.versions.xtensa, __VERSION__);
+        strcpy(infos.versions.dallastemp, DALLASTEMPLIBVERSION);
         uint8_t buffer[128];
         size_t message_length;
         bool status;
@@ -452,6 +530,42 @@ void startServer(domopool_Config &config, Adafruit_ADS1115 &ads)
            size_t len,
            size_t index,
            size_t total) { handleBodyFilter(request, data, len, index, total); });
+    server.on(
+        "/api/v1/ch",
+        HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+            request->send(200);
+        },
+        NULL,
+        [](AsyncWebServerRequest *request,
+           uint8_t *data,
+           size_t len,
+           size_t index,
+           size_t total) { handleBodySwitch(request, data, len, index, total, 2); });
+    // server.on(
+    //     "/api/v1/ph",
+    //     HTTP_POST,
+    //     [](AsyncWebServerRequest *request) {
+    //         request->send(200);
+    //     },
+    //     NULL,
+    //     [](AsyncWebServerRequest *request,
+    //        uint8_t *data,
+    //        size_t len,
+    //        size_t index,
+    //        size_t total) { handleBodySwitch(request, data, len, index, total,3); });
+    server.on(
+        "/api/v1/light",
+        HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+            request->send(200);
+        },
+        NULL,
+        [](AsyncWebServerRequest *request,
+           uint8_t *data,
+           size_t len,
+           size_t index,
+           size_t total) { handleBodySwitch(request, data, len, index, total, 4); });
 
     // mqtt
     server.on("/api/v1/mqtt", HTTP_GET, [&config](AsyncWebServerRequest *request) {
@@ -485,6 +599,20 @@ void startServer(domopool_Config &config, Adafruit_ADS1115 &ads)
            size_t len,
            size_t index,
            size_t total) { handleBodyMqtt(request, data, len, index, total); });
+
+    // sensors
+    server.on("/api/v1/sensors/reset", HTTP_GET, [&config](AsyncWebServerRequest *request) {
+        resetSensorsTempAddr(config);
+        saveConfiguration(config);
+        request->send(200);
+    });
+
+    // reboot
+    server.on("/api/v1/reboot", HTTP_GET, [&config](AsyncWebServerRequest *request) {
+        saveConfiguration(config);
+        reboot();
+        request->send(200);
+    });
 
     // config
     server.on(
@@ -545,21 +673,11 @@ void startServer(domopool_Config &config, Adafruit_ADS1115 &ads)
                 request->send(500);
             }
         });
-    // AsyncCallbackJsonWebHandler *configHandler = new AsyncCallbackJsonWebHandler(
-    //     "/api/v1/config",
-    //     [&config](AsyncWebServerRequest *request, JsonVariant &json) {
-    //         JsonObject jsonObj = json.as<JsonObject>();
-    //         if (jsonObj["reset"] == "true")
-    //         {
-    //             resetConfig();
-    //         }
-    //         else
-    //         {
-    //             request->send(500);
-    //         }
-    //         request->send(200, "application/json", "{}");
-    //     });
-    // server.addHandler(configHandler);
+    server.on("/api/v1/config/reset", HTTP_GET, [&config](AsyncWebServerRequest *request) {
+        resetConfig();
+        request->send(200);
+        reboot();
+    });
 
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "GET,OPTIONS,POST");

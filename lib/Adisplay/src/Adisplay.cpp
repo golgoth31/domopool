@@ -307,7 +307,7 @@ void displayDate(domopool_Config &config)
 {
     tft.setTextColor(TFT_LIGHTGREY, TFT_BLACK);
     tft.setTextSize(2);
-    tft.setTextDatum(MC_DATUM);
+    tft.setTextDatum(CL_DATUM);
     tft.drawString(printDate(), 0, 115, 1);
     tft.drawString(printTime(false), 0, 137, 1);
     tft.drawString(config.network.ip, 0, 159, 1);
@@ -404,6 +404,21 @@ void displayPressed(domopool_Config &config)
                 else
                 {
                     setPumpAuto();
+                }
+            }
+        }
+        if ((x > CH_X) && (x < CH_X + CH_W))
+        {
+            if ((y > CH_Y) && (y <= CH_Y + CH_H))
+            {
+                Serial.println("ch");
+                if (config.states.ch_on)
+                {
+                    stopPump(2);
+                }
+                else
+                {
+                    startPump(2, 0);
                 }
             }
         }

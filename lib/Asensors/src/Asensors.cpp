@@ -2,16 +2,41 @@
 
 Preferences sensPrefs;
 
-bool checkAddress(DeviceAddress deviceAddress, const char *temp)
+String twout = "twout";
+String twin = "twin";
+String tamb = "tamb";
+
+bool checkAddress(DeviceAddress deviceAddress, String temp)
 {
     bool ret = true;
     for (uint8_t i = 0; i < 8; i++)
     {
-        if (sensPrefs.getUChar(temp + i, 0) != deviceAddress[i])
+        // Serial.print(F("Char "));
+        // Serial.print(i);
+        // Serial.print(" from prefs: ");
+        // Serial.print(sensPrefs.getUChar(temp + i, 0));
+        // Serial.println();
+
+        // Serial.print(F("Char "));
+        // Serial.print(i);
+        // Serial.print(" from device: ");
+        // Serial.print(deviceAddress[i]);
+        // Serial.println();
+        temp.concat(i);
+        if (sensPrefs.getUChar(temp.c_str(), 0) == deviceAddress[i])
+        {
+            ret = true;
+        }
+        else
         {
             ret = false;
         }
     }
+    Serial.print(F("Known "));
+    Serial.print(temp);
+    Serial.print(": ");
+    Serial.print(ret);
+    Serial.println();
     return ret;
 }
 
@@ -32,17 +57,18 @@ void printAddress(DeviceAddress deviceAddress)
     }
 }
 
-void printAddressFromPref(const char *temp)
+void printAddressFromPref(String temp)
 {
 
     for (uint8_t i = 0; i < 8; i++)
     {
+        temp.concat(i);
         Serial.print(F("0x"));
-        if (sensPrefs.getUChar(temp + i, 0) < 0x10)
+        if (sensPrefs.getUChar(temp.c_str(), 0) < 0x10)
         {
             Serial.print(F("0"));
         }
-        Serial.print(sensPrefs.getUChar(temp + i, 0), HEX);
+        Serial.print(sensPrefs.getUChar(temp.c_str(), 0), HEX);
         if (i < 7)
         {
             Serial.print(F(", "));
@@ -59,31 +85,44 @@ void registerDevices(domopool_Config &config, DallasTemperature &tempSensors)
     Serial.print(num);
     Serial.println(F(" sensors"));
 
-    bool twout = false;
-    bool tamb = false;
-    bool twin = false;
+    bool twout_bool = false;
+    bool tamb_bool = false;
+    bool twin_bool = false;
 
     for (int j = 0; j < num; j++)
     {
+
         bool devOk = tempSensors.getAddress(deviceAddress, j);
         if (devOk)
         {
-            twout = checkAddress(deviceAddress, "twout");
-            tamb = checkAddress(deviceAddress, "tamb");
-            twin = checkAddress(deviceAddress, "twin");
+            Serial.print(F("[Sens] Found ds18b20 address: "));
+            printAddress(deviceAddress);
+            Serial.println();
 
-            if (twout)
+            twout_bool = checkAddress(deviceAddress, twout);
+            tamb_bool = checkAddress(deviceAddress, tamb);
+            if (config.sensors.twin.enabled)
             {
+                twin_bool = checkAddress(deviceAddress, twin);
+            }
+
+            if (twout_bool)
+            {
+                for (uint8_t i = 0; i < 8; i++)
+                {
+                    config.sensors.twout.addr[i] = deviceAddress[i];
+                }
                 continue;
             }
-            else if (!config.sensors.twout.init && !tamb && !twin)
+            else if (!config.sensors.twout.init && !tamb_bool && !twin_bool)
             {
 
                 Serial.print(F("[Sens] twout read address: "));
-
+                String temp_str = twout;
                 for (uint8_t i = 0; i < 8; i++)
                 {
-                    sensPrefs.putUChar("twout" + i, deviceAddress[i]);
+                    temp_str.concat(i);
+                    sensPrefs.putUChar(temp_str.c_str(), deviceAddress[i]);
                     config.sensors.twout.addr[i] = deviceAddress[i];
                     config.sensors.twout.init = true;
                 }
@@ -97,18 +136,24 @@ void registerDevices(domopool_Config &config, DallasTemperature &tempSensors)
                 continue;
             }
 
-            if (tamb)
+            if (tamb_bool)
             {
+                for (uint8_t i = 0; i < 8; i++)
+                {
+                    config.sensors.tamb.addr[i] = deviceAddress[i];
+                }
                 continue;
             }
-            else if (!config.sensors.tamb.init && !twout && !twin)
+            else if (!config.sensors.tamb.init && !twout_bool && !twin_bool)
             {
 
                 Serial.print(F("[Sens] tamb read address: "));
 
+                String temp_str = tamb;
                 for (uint8_t i = 0; i < 8; i++)
                 {
-                    sensPrefs.putUChar("tamb" + i, deviceAddress[i]);
+                    temp_str.concat(i);
+                    sensPrefs.putUChar(temp_str.c_str(), deviceAddress[i]);
                     config.sensors.tamb.addr[i] = deviceAddress[i];
                     config.sensors.tamb.init = true;
                 }
@@ -123,18 +168,24 @@ void registerDevices(domopool_Config &config, DallasTemperature &tempSensors)
             if (config.sensors.twin.enabled)
             {
 
-                if (twin)
+                if (twin_bool)
                 {
+                    for (uint8_t i = 0; i < 8; i++)
+                    {
+                        config.sensors.twin.addr[i] = deviceAddress[i];
+                    }
                     continue;
                 }
-                else if (!config.sensors.twin.init && !twout && !tamb)
+                else if (!config.sensors.twin.init && !twout_bool && !tamb_bool)
                 {
 
                     Serial.print(F("[Sens] twin read address: "));
 
+                    String temp_str = twin;
                     for (uint8_t i = 0; i < 8; i++)
                     {
-                        sensPrefs.putUChar("twin" + i, deviceAddress[i]);
+                        temp_str.concat(i);
+                        sensPrefs.putUChar(temp_str.c_str(), deviceAddress[i]);
                         config.sensors.twin.addr[i] = deviceAddress[i];
                         config.sensors.twin.init = true;
                     }
@@ -173,16 +224,22 @@ void showAddressFromPref()
 {
 
     Serial.print(F("[Sens] twout pref address: "));
-    Serial.println(sensPrefs.getString("twout", "not saved"));
+    printAddressFromPref(twout);
+    Serial.println();
     Serial.print(F("[Sens] tamb pref address: "));
-    Serial.println(sensPrefs.getString("tamb", "not saved"));
+    printAddressFromPref(tamb);
+    Serial.println();
     Serial.print(F("[Sens] twin pref address: "));
-    Serial.println(sensPrefs.getString("twin", "not saved"));
+    printAddressFromPref(twin);
+    Serial.println();
 }
 
-void resetSensorsTempAddr()
+void resetSensorsTempAddr(domopool_Config &config)
 {
     sensPrefs.clear();
+    config.sensors.twout.init = false;
+    config.sensors.twin.init = false;
+    config.sensors.tamb.init = false;
 }
 
 void initializeDS18B20(domopool_Config &config, DallasTemperature &tempSensors)
@@ -194,11 +251,10 @@ void initializeDS18B20(domopool_Config &config, DallasTemperature &tempSensors)
 
     registerDevices(config, tempSensors);
     showAddressFromPref();
-
-    Serial.println(F("[Sens] Setting sensors options..."));
-
     tempSensors.setWaitForConversion(config.sensors.wait_for_conversion);
     tempSensors.setResolution(config.sensors.temp_resolution);
+
+    Serial.println(F("[Sens] Setting sensors options..."));
 }
 
 void initializeADS115(domopool_Config &config, Adafruit_ADS1115 &ads)
@@ -225,35 +281,71 @@ void getDS18B20(domopool_Config &config, DallasTemperature &tempSensors)
     if (!config.tests.enabled)
     {
         tempSensors.requestTemperatures();
-
         uint8_t tempAddr[8];
+
+        String temp_str = twout;
         for (uint8_t i = 0; i < 8; i++)
         {
-            tempAddr[i] = sensPrefs.getUChar("tamb" + i, 0);
+            temp_str.concat(i);
+            tempAddr[i] = sensPrefs.getUChar(temp_str.c_str(), 0);
         }
+        // printAddressFromPref("twout");
 
         // Serial.print(F("Sensor 'twout' value: "));
-        float twout = tempSensors.getTempC(tempAddr);
-        // Serial.println(config.sensors.twout.val);
-        float tempMoy = twout;
+        float twout_val = tempSensors.getTempC(tempAddr);
+        Serial.print(F("[Sens] twout temp: "));
+        if (twout_val == DEVICE_DISCONNECTED_C)
+        {
+            Serial.print("could not read twout temperature data");
+        }
+        else
+        {
+            Serial.print(twout_val);
+        }
+        Serial.println();
+        float tempMoy = twout_val;
+
         if (config.sensors.twin.enabled)
         {
-            // Serial.print(F("Sensor 'twin' value: "));
+            temp_str = twin;
             for (uint8_t i = 0; i < 8; i++)
             {
-                tempAddr[i] = sensPrefs.getUChar("tamb" + i, 0);
+                temp_str.concat(i);
+                tempAddr[i] = sensPrefs.getUChar(temp_str.c_str(), 0);
             }
-            float twin = tempSensors.getTempC(tempAddr);
-            // Serial.println(config.sensors.twin.val);
-            tempMoy = (twout + twin) / 2;
+            float twin_val = tempSensors.getTempC(tempAddr);
+            Serial.print(F("[Sens] twin temp: "));
+            if (twin_val == DEVICE_DISCONNECTED_C)
+            {
+                Serial.print("could not read twin temperature data");
+            }
+            else
+            {
+                Serial.print(twin_val);
+            }
+            Serial.println();
+            tempMoy = (twout_val + twin_val) / 2;
         }
-        config.metrics.twater = roundTemp(tempMoy);
 
+        config.metrics.twater = tempMoy;
+
+        temp_str = tamb;
         for (uint8_t i = 0; i < 8; i++)
         {
-            tempAddr[i] = sensPrefs.getUChar("tamb" + i, 0);
+            temp_str.concat(i);
+            tempAddr[i] = sensPrefs.getUChar(temp_str.c_str(), 0);
         }
         config.metrics.tamb = tempSensors.getTempC(tempAddr);
+        Serial.print(F("[Sens] tamb temp: "));
+        if (config.metrics.tamb == DEVICE_DISCONNECTED_C)
+        {
+            Serial.print("could not read tamb temperature data");
+        }
+        else
+        {
+            Serial.print(config.metrics.tamb);
+        }
+        Serial.println();
     }
     else
     {

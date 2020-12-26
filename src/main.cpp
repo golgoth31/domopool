@@ -16,11 +16,11 @@
 #include <Adisplay.h>
 #include "config.h"
 
-#define ONE_WIRE_BUS 39
+#define ONE_WIRE_BUS 25
 #define filterPin 13
-#define phPin 9
-#define chPin 10
-#define lightPin 11
+#define phPin 32
+#define chPin 33
+#define lightPin 16
 #define SDA 26
 #define SCL 27
 #define pressure_adc_pin 0
@@ -37,6 +37,7 @@
 
 // configure timed actions
 unsigned long lastReadingTime = 0;
+int count_time_10s = 0;   // used to trigger action every 30s (15*2s)
 int count_time_30s = 0;   // used to trigger action every 30s (15*2s)
 int count_time_30min = 0; // used to trigger action every 30min (60*30s)
 int count_time_24h = 0;   // used to trigger action every 24h (2880*30)
@@ -63,6 +64,7 @@ void setup(void)
 
     initConfig();
     pumpInit(config, filterPin, chPin, phPin);
+    lightInit(lightPin);
 
     initAlarms();
     initDisplay();
@@ -93,7 +95,8 @@ void setup(void)
 
     initConfigData(config);
 
-    config.tests.enabled = true;
+    saveConfiguration(config);
+    config.tests.enabled = false;
     config.tests.tamb = 25.38;
     config.tests.twater = 25;
     config.tests.pressure = 0.8;
@@ -105,7 +108,7 @@ void loop(void)
     {
         lastReadingTime = millis();
     }
-    reboot();
+    // reboot();
     restartNetwork(ssid, password, config, ads);
 
     displayPressed(config);
@@ -115,6 +118,7 @@ void loop(void)
     if ((millis() - lastReadingTime) >= 2000)
     {
         pref2config(config);
+        setLightState(config);
         getDS18B20(config, tempSensors);
         getWP(config, ads);
         if (!config.states.startup)
@@ -131,13 +135,25 @@ void loop(void)
         }
         else
         {
-            int percent = (count_time_30s * 100) / 15;
+            int percent = (count_time_10s * 100) / 5;
             displayProgressBar(percent, TFT_DARKCYAN);
         }
         sendMetricsMqtt(config);
         sendStatesMqtt(config);
         count_time_30s++; // Count 15 cycles for sending XPL every 30s
+        count_time_10s++; // Count 15 cycles for sending XPL every 30s
         lastReadingTime = millis();
+    }
+
+    if (count_time_10s == 5)
+    {
+        if (config.states.startup)
+        {
+            Serial.println(F("End of startup blanking time"));
+            config.states.startup = false;
+            config.metrics.saved_twater = config.metrics.twater;
+            displayPageMain(config);
+        }
     }
 
     if (count_time_30s == 15)
@@ -152,14 +168,6 @@ void loop(void)
         Serial.println(config.metrics.twater);
         Serial.print(F("Sensor 'tamb' value: "));
         Serial.println(config.metrics.tamb);
-
-        if (config.states.startup)
-        {
-            Serial.println(F("End of startup blanking time"));
-            config.states.startup = false;
-            config.metrics.saved_twater = config.metrics.twater;
-            displayPageMain(config);
-        }
         count_time_30min++; // Count 60 cycles for 30 min
         count_time_30s = 0;
     }

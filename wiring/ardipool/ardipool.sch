@@ -131,7 +131,7 @@ L Device:R R1
 U 1 1 5EB654E3
 P 2000 3250
 F 0 "R1" H 2070 3296 50  0000 L CNN
-F 1 "4.7k" H 2070 3205 50  0000 L CNN
+F 1 "2.7k" H 2070 3205 50  0000 L CNN
 F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 1930 3250 50  0001 C CNN
 F 3 "~" H 2000 3250 50  0001 C CNN
 	1    2000 3250
@@ -147,15 +147,15 @@ Text GLabel 2700 3900 0    50   Input ~ 0
 SDA
 Text GLabel 2700 3800 0    50   Input ~ 0
 SCL
-Text GLabel 1700 2300 0    50   Input ~ 0
+Text GLabel 1700 2300 0    50   Output ~ 0
 Relay1-Filter
-Text GLabel 1700 2400 0    50   Input ~ 0
+Text GLabel 1700 1500 0    50   Output ~ 0
 Relay2-ph
-Text GLabel 1700 2500 0    50   Input ~ 0
+Text GLabel 1700 1600 0    50   Output ~ 0
 Relay3-ch
-Text GLabel 1700 2600 0    50   Input ~ 0
+Text GLabel 3300 2000 2    50   Output ~ 0
 Relay4-light
-Text GLabel 1700 1200 0    50   Input ~ 0
+Text GLabel 1700 1700 0    50   Input ~ 0
 DS18B20
 Text GLabel 1700 1800 0    50   Input ~ 0
 SDA
@@ -180,12 +180,6 @@ Wire Wire Line
 	3950 1500 3950 900 
 Wire Wire Line
 	1700 2300 2000 2300
-Wire Wire Line
-	1700 2400 2000 2400
-Wire Wire Line
-	1700 2500 2000 2500
-Wire Wire Line
-	1700 2600 2000 2600
 $Comp
 L power:+3.3V #PWR0101
 U 1 1 5F1A2297
@@ -371,8 +365,6 @@ Text GLabel 1700 1100 0    50   Input ~ 0
 A0
 Wire Wire Line
 	1700 1100 2000 1100
-Wire Wire Line
-	2000 1200 1700 1200
 $Comp
 L arduitouch:TFT T1
 U 1 1 5F24AC21
@@ -768,4 +760,14 @@ U 5F11BCC8
 F0 "Sheet5F11BCC7" 50
 F1 "extensionBoard.sch" 50
 $EndSheet
+Wire Wire Line
+	1700 1700 2000 1700
+Wire Wire Line
+	1700 2100 2000 2100
+Wire Wire Line
+	3100 2000 3300 2000
+Wire Wire Line
+	1700 1600 2000 1600
+Wire Wire Line
+	1700 1500 2000 1500
 $EndSCHEMATC

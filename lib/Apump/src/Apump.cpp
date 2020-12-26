@@ -7,11 +7,12 @@ int ton;
 int toff;
 bool phInject = false;
 bool phOn = false;
-bool chOn = false;
+
 time_t timestamp;
 int pumpFilterRelayPin;
 int pumpPhRelayPin;
 int pumpChRelayPin;
+int lightRelayPin;
 int countForceDuration = 0;
 
 uint8_t tab[29][24] = {
@@ -90,6 +91,33 @@ void pumpInit(domopool_Config &config, int filterPin, int chPin, int phPin)
     }
 }
 
+void lightInit(int lightPin)
+{
+
+    Serial.print(F("[Relay] Light pin: "));
+    Serial.println(lightPin);
+
+    pinMode(lightPin, OUTPUT);
+    digitalWrite(lightPin, HIGH);
+
+    lightRelayPin = lightPin;
+}
+
+void setLightState(domopool_Config &config)
+{
+
+    if (config.global.force_light)
+    {
+        digitalWrite(lightRelayPin, LOW);
+        config.states.light_on = true;
+    }
+    else
+    {
+        digitalWrite(lightRelayPin, HIGH);
+        config.states.light_on = false;
+    }
+}
+
 void setFilterState(domopool_Config &config, int hour)
 {
     // keep using water temperature if last shown is below 2 degreC
@@ -128,16 +156,45 @@ void setFilterState(domopool_Config &config, int hour)
         }
         config.states.automatic = config.pump.automatic;
 
+        bool chOn = false;
+        bool fOn = false;
         // set the pump state based on table calculation or forced
-        if ((state && config.pump.automatic) || config.pump.force_filter)
+        if (state && config.pump.automatic)
+        {
+            fOn = true;
+            if (((config.metrics.saved_twater > 15 && config.metrics.over_15_duration > chWaitThreshold) || config.metrics.saved_twater > 18))
+            {
+                chOn = true;
+            }
+        }
+        else
+        {
+            fOn = false;
+        }
+        if (config.pump.force_filter)
+        {
+            fOn = true;
+            if (config.pump.force_ch)
+            {
+                chOn = true;
+            }
+        }
+
+        // set the pump state based on table calculation or forced
+        if (fOn)
         {
             Serial.println(F("[Filter] On"));
             config.states.filter_on = true;
             digitalWrite(pumpFilterRelayPin, LOW);
-            if ((config.metrics.saved_twater > 15 && config.metrics.over_15_duration > chWaitThreshold) || config.metrics.saved_twater > 18 || config.pump.force_ch)
+            if (chOn)
             {
                 config.states.ch_on = true;
                 digitalWrite(pumpChRelayPin, LOW);
+            }
+            else
+            {
+                config.states.ch_on = false;
+                digitalWrite(pumpChRelayPin, HIGH);
             }
         }
         else
