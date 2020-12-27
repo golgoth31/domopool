@@ -71,40 +71,27 @@ void handleBodyFilter(AsyncWebServerRequest *request, uint8_t *data, size_t len,
     /* Check for errors... */
     if (!status)
     {
-        printf("Decoding failed: %s\n", PB_GET_ERROR(&stream));
+        Serial.printf("Decoding failed: %s\n", PB_GET_ERROR(&stream));
     }
-    switch (filter.state)
+    else
     {
-    case domopool_Filter_states_start:
-        startPump(1, filter.duration);
-        break;
-    case domopool_Filter_states_stop:
-        stopPump(1);
-        break;
-    case domopool_Filter_states_auto:
-        setPumpAuto();
-        break;
-
-    default:
-        request->send(500);
-        break;
+        Serial.printf("Filter state: %u\n", filter.state);
+        switch (filter.state)
+        {
+        case domopool_Filter_states_start:
+            startPump(1, filter.duration);
+            break;
+        case domopool_Filter_states_stop:
+            stopPump(1);
+            break;
+        case domopool_Filter_states_auto:
+            setPumpAuto();
+            break;
+        default:
+            request->send(500);
+            break;
+        }
     }
-    // if (filter.state == domopool_Filter_states_start)
-    // {
-    //     startPump(1, filter.duration);
-    // }
-    // else if (filter.state == domopool_Filter_states_stop)
-    // {
-    //     stopPump(1);
-    // }
-    // else if (filter.state == domopool_Filter_states_auto)
-    // {
-    //     setPumpAuto();
-    // }
-    // else
-    // {
-    //     request->send(500);
-    // }
 }
 
 void handleBodySwitch(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total, const int8_t switchtype)
@@ -153,19 +140,12 @@ void handleBodySwitch(AsyncWebServerRequest *request, uint8_t *data, size_t len,
         default:
             break;
         }
-        // if (locswitch.state)
-        // {
-        //     startPump(switchtype, 0);
-        // }
-        // else
-        // {
-        //     stopPump(switchtype);
-        // }
     }
     else
     {
         request->send(500);
     }
+    request->send(200);
 }
 
 void handleBodyMqtt(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)

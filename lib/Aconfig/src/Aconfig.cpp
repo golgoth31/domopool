@@ -158,17 +158,19 @@ bool setPumpDuration(uint32_t duration)
 
 bool stopPump(const int8_t p)
 {
-    prefs.putBool("auto", false);
     switch (p)
     {
     case 1:
+        prefs.putBool("auto", false);
         prefs.putBool("forceFilter", false);
         setPumpDuration(0);
         break;
     case 2:
+        prefs.putBool("auto", false);
         prefs.putBool("forceCH", false);
         break;
     case 3:
+        prefs.putBool("auto", false);
         prefs.putBool("forcePH", false);
         break;
     case 4:
@@ -184,17 +186,21 @@ bool stopPump(const int8_t p)
 
 bool startPump(const int8_t p, uint32_t duration)
 {
-    prefs.putBool("auto", false);
     switch (p)
     {
     case 1:
+        prefs.putBool("auto", false);
         prefs.putBool("forceFilter", true);
         setPumpDuration(duration);
         break;
     case 2:
+        prefs.putBool("auto", false);
+        prefs.putBool("forceFilter", true);
         prefs.putBool("forceCH", true);
         break;
     case 3:
+        prefs.putBool("auto", false);
+        prefs.putBool("forceFilter", true);
         prefs.putBool("forcePH", true);
         break;
     case 4:

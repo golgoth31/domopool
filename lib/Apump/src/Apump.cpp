@@ -214,7 +214,7 @@ void setFilterState(domopool_Config &config, int hour)
                 config.metrics.over_15_duration++;
                 pumpPrefs.putShort("chDuration", config.metrics.over_15_duration);
             }
-            else if (config.metrics.saved_twater < 14 && config.metrics.over_15_duration > 72)
+            if (config.metrics.saved_twater < 14 && config.metrics.over_15_duration > 72)
             {
                 config.metrics.over_15_duration = 0;
                 pumpPrefs.putShort("chDuration", 0);
