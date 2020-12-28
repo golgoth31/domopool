@@ -61,7 +61,7 @@ void handleBodyFilter(AsyncWebServerRequest *request, uint8_t *data, size_t len,
         Serial.printf("BodyEnd: %u B\n", total);
     }
     /* Allocate space for the decoded message. */
-    domopool_Filter filter = domopool_Filter_init_zero;
+    domopool_Filter filter = domopool_Filter_init_default;
 
     /* Create a stream that reads from the buffer. */
     pb_istream_t stream = pb_istream_from_buffer(buffer, total);
