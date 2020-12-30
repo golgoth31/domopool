@@ -66,6 +66,7 @@ void loadDefaultConfig(domopool_Config &config)
 {
     // domopool_Config_init_zero();
     config.has_alarms = true;
+    config.alarms.has_ads1115 = true;
     config.has_global = true;
     config.has_metrics = true;
     config.has_network = true;

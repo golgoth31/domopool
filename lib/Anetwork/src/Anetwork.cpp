@@ -634,7 +634,7 @@ void startServer(domopool_Config &config, ADS1115 &ads)
         HTTP_GET,
         [&config, &ads](AsyncWebServerRequest *request) {
             domopool_AnalogSensor threshold;
-            threshold.threshold = getWPAnalog(config.sensors.water_pressure.adc_pin, ads);
+            threshold.threshold = getWPAnalog(config, ads);
             threshold.adc_pin = config.sensors.water_pressure.adc_pin;
             threshold.enabled = config.sensors.water_pressure.enabled;
             uint8_t buffer[1024];

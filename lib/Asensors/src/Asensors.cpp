@@ -257,31 +257,62 @@ void initializeDS18B20(domopool_Config &config, DallasTemperature &tempSensors)
     Serial.println(F("[Sens] Setting sensors options..."));
 }
 
+bool setADS1115(domopool_Config &config, ADS1115 &ads)
+{
+    if (ads.isConnected())
+    {
+        ads.setGain(0);     // 6.144 volt
+        ads.setDataRate(7); // fast
+        ads.setMode(0);
+        ads.readADC(config.sensors.water_pressure.adc_pin);
+        config.alarms.ads1115.not_connected = false;
+    }
+    else
+    {
+        config.alarms.ads1115.not_connected = true;
+    };
+}
+
 void initializeADS115(domopool_Config &config, ADS1115 &ads, int sda, int scl)
 {
-    ads.begin(sda, scl);
-    Serial.println(F("[Sens] ADS1115 started"));
-    if (ads.isReady())
+    if (ads.begin(sda, scl))
     {
-        ads.requestADC(config.sensors.water_pressure.adc_pin);
+        config.alarms.ads1115.not_started = false;
+        if (setADS1115(config, ads))
+        {
+            Serial.println(F("[Sens] ADS1115 started"));
+        }
     }
+    else
+    {
+        config.alarms.ads1115.not_started = true;
+        Serial.println(F("[Sens] ADS1115 not started"));
+    };
 }
 
 void getWP(domopool_Config &config, ADS1115 &ads)
 {
     if (config.sensors.water_pressure.enabled)
     {
-        config.metrics.water_pressure = (getWPAnalog(config.sensors.water_pressure.adc_pin, ads) - config.sensors.water_pressure.threshold) * 4;
+        config.metrics.water_pressure = (getWPAnalog(config, ads) - config.sensors.water_pressure.threshold) * 4;
     }
 }
 
-float getWPAnalog(int pin, ADS1115 &ads)
+float getWPAnalog(domopool_Config &config, ADS1115 &ads)
 {
     int16_t val = 0;
+    if (config.alarms.ads1115.not_connected)
+    {
+        setADS1115(config, ads);
+    };
     if (ads.isReady())
     {
+        config.alarms.ads1115.not_ready = false;
         val = ads.getValue();
-        ads.requestADC(pin);
+    }
+    else
+    {
+        config.alarms.ads1115.not_ready = true;
     }
     return (val * 0.1875) / 1000;
 }
