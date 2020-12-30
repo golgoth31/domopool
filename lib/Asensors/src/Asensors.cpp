@@ -257,13 +257,17 @@ void initializeDS18B20(domopool_Config &config, DallasTemperature &tempSensors)
     Serial.println(F("[Sens] Setting sensors options..."));
 }
 
-void initializeADS115(domopool_Config &config, Adafruit_ADS1115 &ads)
+void initializeADS115(domopool_Config &config, ADS1115 &ads, int sda, int scl)
 {
-    ads.begin();
+    ads.begin(sda, scl);
     Serial.println(F("[Sens] ADS1115 started"));
+    if (ads.isReady())
+    {
+        ads.requestADC(config.sensors.water_pressure.adc_pin);
+    }
 }
 
-void getWP(domopool_Config &config, Adafruit_ADS1115 &ads)
+void getWP(domopool_Config &config, ADS1115 &ads)
 {
     if (config.sensors.water_pressure.enabled)
     {
@@ -271,9 +275,15 @@ void getWP(domopool_Config &config, Adafruit_ADS1115 &ads)
     }
 }
 
-float getWPAnalog(int pin, Adafruit_ADS1115 &ads)
+float getWPAnalog(int pin, ADS1115 &ads)
 {
-    return (ads.readADC_SingleEnded(pin) * 0.1875) / 1000;
+    int16_t val = 0;
+    if (ads.isReady())
+    {
+        val = ads.getValue();
+        ads.requestADC(pin);
+    }
+    return (val * 0.1875) / 1000;
 }
 
 void getDS18B20(domopool_Config &config, DallasTemperature &tempSensors)

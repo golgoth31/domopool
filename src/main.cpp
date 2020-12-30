@@ -4,7 +4,7 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <TimeLib.h>
-#include <Adafruit_ADS1015.h>
+#include <ADS1X15.h>
 
 // Local libraries
 #include <Aconfig.h>
@@ -47,7 +47,7 @@ OneWire ow(ONE_WIRE_BUS);
 DallasTemperature tempSensors(&ow);
 
 // Setup adc
-Adafruit_ADS1115 ads;
+ADS1115 ads(0x48);
 
 domopool_Config config = domopool_Config_init_default;
 
@@ -73,8 +73,10 @@ void setup(void)
 
     display2boot(F("[Sens] Starting..."), config);
 
+    config.sensors.water_pressure.adc_pin = pressure_adc_pin;
     // start ds18b20 sensors
     initializeDS18B20(config, tempSensors);
+    initializeADS115(config, ads, SDA, SCL);
 
     config.states.net_active = startNetwork(ssid, password, config, ads);
     if (config.states.net_active)

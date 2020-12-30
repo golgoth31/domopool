@@ -338,7 +338,7 @@ void startOTA()
     ArduinoOTA.begin();
 }
 
-void startServer(domopool_Config &config, Adafruit_ADS1115 &ads)
+void startServer(domopool_Config &config, ADS1115 &ads)
 {
     // For CORS
     server.on("/*", HTTP_OPTIONS, [](AsyncWebServerRequest *request) {
@@ -635,6 +635,8 @@ void startServer(domopool_Config &config, Adafruit_ADS1115 &ads)
         [&config, &ads](AsyncWebServerRequest *request) {
             domopool_AnalogSensor threshold;
             threshold.threshold = getWPAnalog(config.sensors.water_pressure.adc_pin, ads);
+            threshold.adc_pin = config.sensors.water_pressure.adc_pin;
+            threshold.enabled = config.sensors.water_pressure.enabled;
             uint8_t buffer[1024];
             size_t message_length;
             bool status;
@@ -667,7 +669,7 @@ void startServer(domopool_Config &config, Adafruit_ADS1115 &ads)
     });
     server.begin();
 }
-bool startNetwork(const char *ssid, const char *password, domopool_Config &config, Adafruit_ADS1115 &ads)
+bool startNetwork(const char *ssid, const char *password, domopool_Config &config, ADS1115 &ads)
 {
     if (!SPIFFS.begin(true))
     {
@@ -719,7 +721,7 @@ void stopNetwork()
     server.end();
     mqttClient.disconnect();
 }
-void restartNetwork(const char *ssid, const char *password, domopool_Config &config, Adafruit_ADS1115 &ads)
+void restartNetwork(const char *ssid, const char *password, domopool_Config &config, ADS1115 &ads)
 {
     if (WiFi.status() == WL_CONNECTION_LOST)
     {
