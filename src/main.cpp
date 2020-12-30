@@ -23,7 +23,7 @@
 #define lightPin 16
 #define SDA 26
 #define SCL 27
-#define pressure_adc_pin 0
+#define pressure_adc_pin 3
 
 // ArduiTouch touch screen pins for TFT_espi
 // #define DTFT_MISO 19
@@ -73,10 +73,10 @@ void setup(void)
 
     display2boot(F("[Sens] Starting..."), config);
 
-    config.sensors.water_pressure.adc_pin = pressure_adc_pin;
+    config.sensors.wp.adc_pin = pressure_adc_pin;
+    initializeADS115(config, ads, SDA, SCL);
     // start ds18b20 sensors
     initializeDS18B20(config, tempSensors);
-    initializeADS115(config, ads, SDA, SCL);
 
     config.states.net_active = startNetwork(ssid, password, config, ads);
     if (config.states.net_active)

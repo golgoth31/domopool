@@ -630,13 +630,11 @@ void startServer(domopool_Config &config, ADS1115 &ads)
            size_t index,
            size_t total) { handleBodyWP(request, data, len, index, total); });
     server.on(
-        "/api/v1/config/wp/cur_threshold",
+        "/api/v1/wp_threshold",
         HTTP_GET,
         [&config, &ads](AsyncWebServerRequest *request) {
-            domopool_AnalogSensor threshold;
-            threshold.threshold = getWPAnalog(config, ads);
-            threshold.adc_pin = config.sensors.water_pressure.adc_pin;
-            threshold.enabled = config.sensors.water_pressure.enabled;
+            domopool_AnalogSensor threshold = domopool_AnalogSensor_init_zero;
+            threshold.threshold = config.metrics.wp_volt;
             uint8_t buffer[1024];
             size_t message_length;
             bool status;
@@ -655,11 +653,14 @@ void startServer(domopool_Config &config, ADS1115 &ads)
                 request->send(500);
             }
         });
-    server.on("/api/v1/config/reset", HTTP_GET, [&config](AsyncWebServerRequest *request) {
-        resetConfig();
-        request->send(200);
-        reboot();
-    });
+    server.on(
+        "/api/v1/config/reset",
+        HTTP_GET,
+        [&config](AsyncWebServerRequest *request) {
+            resetConfig();
+            request->send(200);
+            reboot();
+        });
 
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "GET,OPTIONS,POST");

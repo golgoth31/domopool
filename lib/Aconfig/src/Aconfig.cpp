@@ -28,11 +28,11 @@ void pref2config(domopool_Config &config)
     config.network.allow_post = prefs.getBool("allowPost", true);
     config.network.mqtt.enabled = prefs.getBool("mqtt_enabled", false);
     config.sensors.ph.enabled = prefs.getBool("ph_enabled", false);
-    config.sensors.ph.threshold = prefs.getBool("ph_threshold", 0);
-    config.sensors.ph.adc_pin = prefs.getBool("ph_adc_pin", 1);
-    config.sensors.water_pressure.enabled = prefs.getBool("wp_enabled", true);
-    config.sensors.water_pressure.threshold = prefs.getBool("wp_threshold", 0);
-    config.sensors.water_pressure.adc_pin = prefs.getBool("wp_adc_pin", 0);
+    config.sensors.ph.threshold = prefs.getFloat("ph_threshold", 0);
+    config.sensors.ph.adc_pin = prefs.getShort("ph_adc_pin", 1);
+    config.sensors.wp.enabled = prefs.getBool("wp_enabled", true);
+    config.sensors.wp.threshold = prefs.getFloat("wp_threshold", 0);
+    config.sensors.wp.adc_pin = prefs.getShort("wp_adc_pin", 3);
     config.sensors.wait_for_conversion = prefs.getBool("waitConvertion", true);
     config.sensors.temp_resolution = prefs.getShort("tempResolution", 12);
     config.sensors.twin.enabled = prefs.getBool("twin_enabled", false);
@@ -79,7 +79,7 @@ void loadDefaultConfig(domopool_Config &config)
     config.sensors.has_tamb = true;
     config.sensors.has_twin = true;
     config.sensors.has_twout = true;
-    config.sensors.has_water_pressure = true;
+    config.sensors.has_wp = true;
     config.has_states = true;
     config.has_tests = true;
     boolean init = prefs.getBool("init", false);
@@ -114,9 +114,9 @@ void config2pref(domopool_Config &config)
     prefs.putBool("ph_enabled", config.sensors.ph.enabled);
     prefs.putFloat("ph_threshold", config.sensors.ph.threshold);
     prefs.putInt("ph_adc_pin", config.sensors.ph.adc_pin);
-    prefs.putBool("wp_enabled", config.sensors.water_pressure.enabled);
-    prefs.putFloat("wp_threshold", config.sensors.water_pressure.threshold);
-    prefs.putInt("wp_adc_pin", config.sensors.water_pressure.adc_pin);
+    prefs.putBool("wp_enabled", config.sensors.wp.enabled);
+    prefs.putFloat("wp_threshold", config.sensors.wp.threshold);
+    prefs.putShort("wp_adc_pin", config.sensors.wp.adc_pin);
     prefs.putShort("BacklightTime", config.global.lcd_backlight_duration);
     prefs.putDouble("ack_tone", config.global.ack_tone);
     prefs.putInt("ackDuration", config.global.ack_duration);
