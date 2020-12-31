@@ -263,9 +263,9 @@ bool setADS1115(domopool_Config &config, ADS1115 &ads)
     {
         ads.setGain(0);     // 6.144 volt
         ads.setDataRate(7); // fast
-        ads.setMode(0);     // continuous; 1 for single get
-        // ads.setMode(1);     // continuous; 1 for single get
-        ads.readADC(config.sensors.wp.adc_pin);
+        // ads.setMode(0);     // continuous; 1 for single get
+        ads.setMode(1); // continuous; 1 for single get
+        ads.requestADC(config.sensors.wp.adc_pin);
         config.alarms.ads1115.not_connected = false;
         return false;
     }
@@ -301,24 +301,25 @@ void getWP(domopool_Config &config, ADS1115 &ads)
 
 float getWPAnalog(domopool_Config &config, ADS1115 &ads)
 {
-    // int16_t val = 0;
+    int16_t raw = 0;
     if (config.alarms.ads1115.not_connected)
     {
         setADS1115(config, ads);
     };
-    // if (ads.isReady())
-    // {
-    // config.alarms.ads1115.not_ready = false;
-    // int16_t raw = ads.readADC(config.sensors.wp.adc_pin);
-    int16_t raw = ads.getValue();
-    // }
-    // else
-    // {
-    //     config.alarms.ads1115.not_ready = true;
-    // }
-    float val = ads.toVoltage(raw);
-    config.metrics.wp_volt = val;
-    return val;
+    if (ads.isReady())
+    {
+        raw = ads.getValue();
+        ads.requestADC(config.sensors.wp.adc_pin);
+        float val = ads.toVoltage(raw);
+        config.metrics.wp_volt = val;
+        config.alarms.ads1115.not_ready = false;
+        return val;
+    }
+    else
+    {
+        config.alarms.ads1115.not_ready = true;
+        return config.metrics.wp_volt;
+    }
 }
 
 void getDS18B20(domopool_Config &config, DallasTemperature &tempSensors)
