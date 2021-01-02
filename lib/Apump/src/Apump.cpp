@@ -1,7 +1,7 @@
 #include "Apump.h"
 
 Preferences pumpPrefs;
-const int8_t chWaitThreshold = 72;
+// const int8_t chWaitThreshold = 72;
 bool pump[24];
 int ton;
 int toff;
@@ -129,7 +129,7 @@ void setFilterState(domopool_Config &config, int hour)
     String p = "p";
     p += tempAbs;
     p += hour;
-    // Serial.println(pumpPrefs.getBool(p.c_str(), tab[tempAbs][hour]));
+
     bool state;
     if (tempAbs < 1 || tempAbs >= 30)
     {
@@ -138,6 +138,12 @@ void setFilterState(domopool_Config &config, int hour)
     else
     {
         state = pumpPrefs.getBool(p.c_str(), tab[tempAbs][hour]);
+    }
+
+    if (config.alarms.wp_high || (config.sensors.wp.enabled && config.alarms.wp_low))
+    {
+        state = false;
+        config.pump.force_check = true;
     }
 
     // Start the filter pump if needed
@@ -162,7 +168,7 @@ void setFilterState(domopool_Config &config, int hour)
         if (state && config.pump.automatic)
         {
             fOn = true;
-            if (((config.metrics.saved_twater > 15 && config.metrics.over_15_duration > chWaitThreshold) || config.metrics.saved_twater > 18))
+            if (((config.metrics.saved_twater > config.limits.ch_temp_threshold && config.metrics.over_15_duration > config.limits.wait_before_ch) || config.metrics.saved_twater > 18))
             {
                 chOn = true;
             }
@@ -209,12 +215,12 @@ void setFilterState(domopool_Config &config, int hour)
         // update chduration only once per hour
         if (config.metrics.hour != hour)
         {
-            if (config.metrics.saved_twater > 15 && config.metrics.over_15_duration <= chWaitThreshold)
+            if (config.metrics.saved_twater > config.limits.ch_temp_threshold && config.metrics.over_15_duration <= config.limits.wait_before_ch)
             {
                 config.metrics.over_15_duration++;
                 pumpPrefs.putShort("chDuration", config.metrics.over_15_duration);
             }
-            if (config.metrics.saved_twater < 14 && config.metrics.over_15_duration > chWaitThreshold)
+            if (config.metrics.saved_twater < config.limits.ch_temp_wait_reset && config.metrics.over_15_duration > config.limits.wait_before_ch)
             {
                 config.metrics.over_15_duration = 0;
                 pumpPrefs.putShort("chDuration", 0);

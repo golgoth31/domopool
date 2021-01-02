@@ -291,34 +291,81 @@ void initializeADS115(domopool_Config &config, ADS1115 &ads, int sda, int scl)
     };
 }
 
-void getWP(domopool_Config &config, ADS1115 &ads)
+// When wp is to far from 0 (when filter pump is stopped), recalibrate threshold
+// do not calibrate if threshold is above limits around wp vmin
+void autoWPThreshold(domopool_Config &config)
 {
-    if (config.sensors.wp.enabled)
+    float pct = (config.sensors.wp.vmin * config.sensors.wp.threshold_accuracy) / 100;
+    float l_min = config.sensors.wp.vmin - pct;
+    float l_max = config.sensors.wp.vmin + pct;
+    if (abs(config.metrics.wp) >= config.limits.wp_0_derive)
     {
-        config.metrics.wp = (getWPAnalog(config, ads) - config.sensors.wp.threshold) * 4;
+        if (config.sensors.wp.threshold < l_min || config.sensors.wp.threshold > l_max)
+        {
+            config.sensors.wp.threshold = config.metrics.wp_volt;
+            config.alarms.wp_broken = false;
+        }
+        else
+        {
+            config.alarms.wp_broken = true;
+            disableWP();
+        }
     }
 }
 
 float getWPAnalog(domopool_Config &config, ADS1115 &ads)
 {
     int16_t raw = 0;
+    float val = 0;
+
+    // set ads1115 if not connected before
     if (config.alarms.ads1115.not_connected)
     {
         setADS1115(config, ads);
-    };
+    }
+
+    // get data from ads1115
     if (ads.isReady())
     {
         raw = ads.getValue();
         ads.requestADC(config.sensors.wp.adc_pin);
-        float val = ads.toVoltage(raw);
+        val = ads.toVoltage(raw);
         config.metrics.wp_volt = val;
         config.alarms.ads1115.not_ready = false;
-        return val;
     }
     else
     {
         config.alarms.ads1115.not_ready = true;
-        return config.metrics.wp_volt;
+    }
+
+    // set analog threshold when pump is off
+    if (!config.states.filter_on)
+    {
+        autoWPThreshold(config);
+    }
+
+    return val;
+}
+
+void getWP(domopool_Config &config, ADS1115 &ads)
+{
+    config.metrics.wp = (getWPAnalog(config, ads) - config.sensors.wp.threshold) * 4;
+    if (config.metrics.wp >= config.limits.wp_max)
+    {
+        config.alarms.wp_high = true;
+    }
+    else
+    {
+        config.alarms.wp_high = false;
+    }
+
+    if (config.metrics.wp <= config.limits.wp_min || config.states.filter_on)
+    {
+        config.alarms.wp_low = true;
+    }
+    else
+    {
+        config.alarms.wp_low = false;
     }
 }
 

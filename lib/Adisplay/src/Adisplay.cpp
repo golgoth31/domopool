@@ -166,12 +166,17 @@ void displayTemp(domopool_Config &config)
     {
         tft.setTextColor(TFT_GREEN, TFT_BLACK);
     }
-    String text = "";
+
+    String text = "         ";
+    tft.drawString(text, 60, 37, 1);
+    text = "";
     text += config.metrics.twater;
     text += (char)247;
     text += "C";
     tft.drawString(text, 60, 37, 1);
 
+    text = "         ";
+    tft.drawString(text, 180, 37, 1);
     text = "";
     text += config.metrics.tamb;
     text += (char)247;
@@ -200,31 +205,26 @@ void displayTemp(domopool_Config &config)
 
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.drawString("Pressure", 180, 65, 1);
-    if (config.sensors.wp.enabled)
+    if (config.states.filter_on || config.sensors.wp.enabled)
     {
-        if (config.states.filter_on)
+        if (config.metrics.wp <= config.limits.wp_min || config.metrics.wp > config.limits.wp_max)
         {
-            if (config.metrics.wp <= 0.8 || config.metrics.wp > 1.1)
-            {
-                tft.setTextColor(TFT_RED, TFT_BLACK);
-            }
-            else if (config.metrics.wp > 0.8 || config.metrics.wp <= 1.1)
-            {
-                tft.setTextColor(TFT_GREEN, TFT_BLACK);
-            }
+            tft.setTextColor(TFT_RED, TFT_BLACK);
         }
-        else
+        else if (config.metrics.wp > config.limits.wp_min || config.metrics.wp <= config.limits.wp_max)
         {
-            tft.setTextColor(TFT_WHITE, TFT_BLACK);
+            tft.setTextColor(TFT_GREEN, TFT_BLACK);
         }
-        text = "";
-        text += config.metrics.wp;
-        text += " Bar";
     }
     else
     {
-        text = "n/a";
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);
     }
+    text = "         ";
+    tft.drawString(text, 180, 87, 1);
+    text = "";
+    text += config.metrics.wp;
+    text += " Bar";
     tft.drawString(text, 180, 87, 1);
 }
 

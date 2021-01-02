@@ -27,6 +27,11 @@ void startMqtt();
 void stopMqtt();
 void resetConfig();
 void reboot();
-void setWP(int adc_pin, float threshold);
+void setWP(int adc_pin, float threshold, int taccuracy, float vmin, float vmax);
+void enableWP();
 void disableWP();
+void setPH(int adc_pin, float threshold, int taccuracy, float vmin, float vmax);
+void disablePH();
+void setCH(int adc_pin, float threshold, int taccuracy, float vmin, float vmax);
+void disableCH();
 #endif

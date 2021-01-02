@@ -29,9 +29,21 @@ void pref2config(domopool_Config &config)
     config.network.mqtt.enabled = prefs.getBool("mqtt_enabled", false);
     config.sensors.ph.enabled = prefs.getBool("ph_enabled", false);
     config.sensors.ph.threshold = prefs.getFloat("ph_threshold", 0);
-    config.sensors.ph.adc_pin = prefs.getShort("ph_adc_pin", 1);
+    config.sensors.ph.threshold_accuracy = prefs.getShort("ph_t_accuracy", 0);
+    config.sensors.ph.vmin = prefs.getFloat("ph_vmin", 0);
+    config.sensors.ph.vmax = prefs.getFloat("ph_vmax", 0);
+    config.sensors.ph.adc_pin = prefs.getShort("ph_adc_pin", 2);
+    config.sensors.ch.enabled = prefs.getBool("ch_enabled", false);
+    config.sensors.ch.threshold = prefs.getFloat("ch_threshold", 0);
+    config.sensors.ch.threshold_accuracy = prefs.getShort("ch_t_accuracy", 0);
+    config.sensors.ch.vmin = prefs.getFloat("ch_vmin", 0);
+    config.sensors.ch.vmax = prefs.getFloat("ch_vmax", 0);
+    config.sensors.ch.adc_pin = prefs.getShort("ch_adc_pin", 1);
     config.sensors.wp.enabled = prefs.getBool("wp_enabled", true);
     config.sensors.wp.threshold = prefs.getFloat("wp_threshold", 0);
+    config.sensors.wp.threshold_accuracy = prefs.getShort("wp_t_accuracy", 8);
+    config.sensors.wp.vmin = prefs.getFloat("wp_vmin", 0.5);
+    config.sensors.wp.vmax = prefs.getFloat("wp_vmax", 4.5);
     config.sensors.wp.adc_pin = prefs.getShort("wp_adc_pin", 3);
     config.sensors.wait_for_conversion = prefs.getBool("waitConvertion", true);
     config.sensors.temp_resolution = prefs.getShort("tempResolution", 12);
@@ -49,6 +61,16 @@ void pref2config(domopool_Config &config)
     config.pump.force_duration = prefs.getUInt("forceDuration", 0);
     config.pump.force_start_time = prefs.getUInt("forceStartTime", 0);
     config.global.force_light = prefs.getBool("forceLight", false);
+    config.limits.ch_min = prefs.getFloat("ch_min", 0);
+    config.limits.ch_max = prefs.getFloat("ch_max", 0);
+    config.limits.ph_min = prefs.getFloat("ph_min", 0);
+    config.limits.ph_max = prefs.getFloat("ph_max", 0);
+    config.limits.wp_min = prefs.getFloat("wp_min", 0.2);
+    config.limits.wp_max = prefs.getFloat("wp_max", 2);
+    config.limits.ch_temp_threshold = prefs.getFloat("ch_t_threshold", 15);
+    config.limits.ch_temp_wait_reset = prefs.getFloat("ch_t_wait", 14);
+    config.limits.wait_before_ch = prefs.getShort("ch_wait", 72);
+    config.limits.wp_0_derive = prefs.getFloat("wp_0_derive", 0.03);
 }
 
 bool initConfig()
@@ -82,6 +104,7 @@ void loadDefaultConfig(domopool_Config &config)
     config.sensors.has_wp = true;
     config.has_states = true;
     config.has_tests = true;
+    config.has_limits = true;
     boolean init = prefs.getBool("init", false);
     if (!init)
     {
@@ -113,9 +136,21 @@ void config2pref(domopool_Config &config)
     prefs.putInt("tempResolution", config.sensors.temp_resolution);
     prefs.putBool("ph_enabled", config.sensors.ph.enabled);
     prefs.putFloat("ph_threshold", config.sensors.ph.threshold);
+    prefs.putInt("ph_t_accuracy", config.sensors.ph.threshold_accuracy);
+    prefs.putFloat("ph_vmin", config.sensors.ph.vmin);
+    prefs.putFloat("ph_vmax", config.sensors.ph.vmax);
     prefs.putInt("ph_adc_pin", config.sensors.ph.adc_pin);
+    prefs.putBool("ch_enabled", config.sensors.ch.enabled);
+    prefs.putFloat("ch_threshold", config.sensors.ch.threshold);
+    prefs.putInt("ch_t_accuracy", config.sensors.ch.threshold_accuracy);
+    prefs.putFloat("ch_vmin", config.sensors.ch.vmin);
+    prefs.putFloat("ch_vmax", config.sensors.ch.vmax);
+    prefs.putInt("ch_adc_pin", config.sensors.ch.adc_pin);
     prefs.putBool("wp_enabled", config.sensors.wp.enabled);
     prefs.putFloat("wp_threshold", config.sensors.wp.threshold);
+    prefs.putInt("wp_t_accuracy", config.sensors.wp.threshold_accuracy);
+    prefs.putFloat("wp_vmin", config.sensors.wp.vmin);
+    prefs.putFloat("wp_vmax", config.sensors.wp.vmax);
     prefs.putShort("wp_adc_pin", config.sensors.wp.adc_pin);
     prefs.putShort("BacklightTime", config.global.lcd_backlight_duration);
     prefs.putDouble("ack_tone", config.global.ack_tone);
@@ -134,6 +169,16 @@ void config2pref(domopool_Config &config)
     prefs.putUInt("forceStartTime", config.pump.force_start_time);
     prefs.putString("mqtt_server", config.network.mqtt.server);
     prefs.putBool("mqtt_enabled", config.network.mqtt.enabled);
+    prefs.putFloat("ch_min", config.limits.ch_min);
+    prefs.putFloat("ch_max", config.limits.ch_max);
+    prefs.putFloat("ph_min", config.limits.ph_min);
+    prefs.putFloat("ph_max", config.limits.ph_max);
+    prefs.putFloat("wp_min", config.limits.wp_min);
+    prefs.putFloat("wp_max", config.limits.wp_max);
+    prefs.putFloat("ch_t_threshold", config.limits.ch_temp_threshold);
+    prefs.putFloat("ch_t_wait", config.limits.ch_temp_wait_reset);
+    prefs.putShort("ch_wait", config.limits.wait_before_ch);
+    prefs.putFloat("wp_0_derive", config.limits.wp_0_derive);
 }
 
 void saveConfiguration(domopool_Config &config)
@@ -253,14 +298,51 @@ void reboot()
     esp_restart();
 }
 
-void setWP(int adc_pin, float threshold)
+void setWP(int adc_pin, float threshold, int taccuracy, float vmin, float vmax)
+{
+    prefs.putFloat("wp_threshold", threshold);
+    prefs.putInt("wp_t_accuracy", taccuracy);
+    prefs.putInt("wp_adc_pin", adc_pin);
+    prefs.putFloat("wp_vmin", vmin);
+    prefs.putFloat("wp_vmax", vmax);
+}
+
+void enableWP()
 {
     prefs.putBool("wp_enabled", true);
-    prefs.putFloat("wp_threshold", threshold);
-    prefs.putInt("wp_adc_pin", adc_pin);
 }
 
 void disableWP()
 {
     prefs.putBool("wp_enabled", false);
+}
+
+void setPH(int adc_pin, float threshold, int taccuracy, float vmin, float vmax)
+{
+    prefs.putBool("ph_enabled", true);
+    prefs.putFloat("ph_threshold", threshold);
+    prefs.putInt("ph_t_accuracy", taccuracy);
+    prefs.putInt("ph_adc_pin", adc_pin);
+    prefs.putFloat("ph_vmin", vmin);
+    prefs.putFloat("ph_vmax", vmax);
+}
+
+void disablePH()
+{
+    prefs.putBool("ph_enabled", false);
+}
+
+void setCH(int adc_pin, float threshold, int taccuracy, float vmin, float vmax)
+{
+    prefs.putBool("ch_enabled", true);
+    prefs.putFloat("ch_threshold", threshold);
+    prefs.putInt("ch_t_accuracy", taccuracy);
+    prefs.putInt("ch_adc_pin", adc_pin);
+    prefs.putFloat("ch_vmin", vmin);
+    prefs.putFloat("ch_vmax", vmax);
+}
+
+void disableCH()
+{
+    prefs.putBool("ch_enabled", false);
 }

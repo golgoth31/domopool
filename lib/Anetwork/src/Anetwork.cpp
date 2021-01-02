@@ -190,7 +190,7 @@ void handleBodyMqtt(AsyncWebServerRequest *request, uint8_t *data, size_t len, s
     }
 }
 
-void handleBodyWP(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+void handleBodyAnalogSensor(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
 {
     uint8_t buffer[total];
     if (!index)
@@ -206,30 +206,19 @@ void handleBodyWP(AsyncWebServerRequest *request, uint8_t *data, size_t len, siz
         Serial.printf("BodyEnd: %u B\n", total);
     }
     /* Allocate space for the decoded message. */
-    domopool_AnalogSensor wp = domopool_AnalogSensor_init_default;
+    domopool_AnalogSensor sens = domopool_AnalogSensor_init_default;
 
     /* Create a stream that reads from the buffer. */
     pb_istream_t stream = pb_istream_from_buffer(buffer, total);
     /* Now we are ready to decode the message. */
-    bool status = pb_decode(&stream, domopool_AnalogSensor_fields, &wp);
+    bool status = pb_decode(&stream, domopool_AnalogSensor_fields, &sens);
 
     /* Check for errors... */
     if (!status)
     {
         printf("Decoding failed: %s\n", PB_GET_ERROR(&stream));
     }
-    if (wp.enabled == true)
-    {
-        setWP(wp.adc_pin, wp.threshold);
-    }
-    else if (wp.enabled == false)
-    {
-        disableWP();
-    }
-    else
-    {
-        request->send(500);
-    }
+    setWP(sens.adc_pin, sens.threshold, sens.threshold_accuracy, sens.vmin, sens.vmax);
 }
 
 void reconnect()
@@ -338,7 +327,7 @@ void startOTA()
     ArduinoOTA.begin();
 }
 
-void startServer(domopool_Config &config, ADS1115 &ads)
+void startServer(domopool_Config &config)
 {
     // For CORS
     server.on("/*", HTTP_OPTIONS, [](AsyncWebServerRequest *request) {
@@ -548,25 +537,28 @@ void startServer(domopool_Config &config, ADS1115 &ads)
            size_t total) { handleBodySwitch(request, data, len, index, total, 4); });
 
     // mqtt
-    server.on("/api/v1/mqtt", HTTP_GET, [&config](AsyncWebServerRequest *request) {
-        uint8_t buffer[128];
-        size_t message_length;
-        bool status;
-        pb_ostream_t pb_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
-        status = pb_encode(&pb_stream, domopool_Mqtt_fields, &config.network.mqtt);
-        message_length = pb_stream.bytes_written;
-        if (status)
-        {
-            AsyncResponseStream *response = request->beginResponseStream("text/plain");
-            response->write(buffer, message_length);
-            request->send(response);
-        }
-        else
-        {
-            printf("Encoding failed: %s\n", PB_GET_ERROR(&pb_stream));
-            request->send(500);
-        }
-    });
+    server.on(
+        "/api/v1/mqtt",
+        HTTP_GET,
+        [&config](AsyncWebServerRequest *request) {
+            uint8_t buffer[128];
+            size_t message_length;
+            bool status;
+            pb_ostream_t pb_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
+            status = pb_encode(&pb_stream, domopool_Mqtt_fields, &config.network.mqtt);
+            message_length = pb_stream.bytes_written;
+            if (status)
+            {
+                AsyncResponseStream *response = request->beginResponseStream("text/plain");
+                response->write(buffer, message_length);
+                request->send(response);
+            }
+            else
+            {
+                printf("Encoding failed: %s\n", PB_GET_ERROR(&pb_stream));
+                request->send(500);
+            }
+        });
     server.on(
         "/api/v1/mqtt",
         HTTP_POST,
@@ -618,7 +610,7 @@ void startServer(domopool_Config &config, ADS1115 &ads)
             }
         });
     server.on(
-        "/api/v1/config/wp",
+        "/api/v1/config/wp/spec",
         HTTP_POST,
         [](AsyncWebServerRequest *request) {
             request->send(200);
@@ -628,11 +620,25 @@ void startServer(domopool_Config &config, ADS1115 &ads)
            uint8_t *data,
            size_t len,
            size_t index,
-           size_t total) { handleBodyWP(request, data, len, index, total); });
+           size_t total) { handleBodyAnalogSensor(request, data, len, index, total); });
+    server.on(
+        "/api/v1/config/wp/enable",
+        HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+            enableWP();
+            request->send(200);
+        });
+    server.on(
+        "/api/v1/config/wp/disable",
+        HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+            disableWP();
+            request->send(200);
+        });
     server.on(
         "/api/v1/wp_threshold",
         HTTP_GET,
-        [&config, &ads](AsyncWebServerRequest *request) {
+        [&config](AsyncWebServerRequest *request) {
             domopool_AnalogSensor threshold = domopool_AnalogSensor_init_zero;
             threshold.threshold = config.metrics.wp_volt;
             uint8_t buffer[1024];
@@ -670,7 +676,7 @@ void startServer(domopool_Config &config, ADS1115 &ads)
     });
     server.begin();
 }
-bool startNetwork(const char *ssid, const char *password, domopool_Config &config, ADS1115 &ads)
+bool startNetwork(const char *ssid, const char *password, domopool_Config &config)
 {
     if (!SPIFFS.begin(true))
     {
@@ -699,7 +705,7 @@ bool startNetwork(const char *ssid, const char *password, domopool_Config &confi
     strcpy(config.network.dns, WiFi.dnsIP().toString().c_str());
     strcpy(config.network.netmask, WiFi.subnetMask().toString().c_str());
 
-    startServer(config, ads);
+    startServer(config);
 
     startOTA();
     espServer.begin();
@@ -722,12 +728,12 @@ void stopNetwork()
     server.end();
     mqttClient.disconnect();
 }
-void restartNetwork(const char *ssid, const char *password, domopool_Config &config, ADS1115 &ads)
+void restartNetwork(const char *ssid, const char *password, domopool_Config &config)
 {
     if (WiFi.status() == WL_CONNECTION_LOST)
     {
         stopNetwork();
-        startNetwork(ssid, password, config, ads);
+        startNetwork(ssid, password, config);
     }
 }
 void sendMetricsMqtt(domopool_Config &config)
