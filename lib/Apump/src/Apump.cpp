@@ -140,7 +140,13 @@ void setFilterState(domopool_Config &config, int hour)
         state = pumpPrefs.getBool(p.c_str(), tab[tempAbs][hour]);
     }
 
-    if (config.alarms.wp_high || (config.sensors.wp.enabled && config.alarms.wp_low))
+    if (config.alarms.wp_high)
+    {
+        state = false;
+        config.pump.force_check = true;
+    }
+
+    if (config.sensors.wp.enabled && config.alarms.wp_low && config.pump.automatic)
     {
         state = false;
         config.pump.force_check = true;
@@ -165,18 +171,15 @@ void setFilterState(domopool_Config &config, int hour)
         bool chOn = false;
         bool fOn = false;
         // set the pump state based on table calculation or forced
-        if (state && config.pump.automatic)
+        if (config.pump.automatic)
         {
-            fOn = true;
+            fOn = state;
             if (((config.metrics.saved_twater > config.limits.ch_temp_threshold && config.metrics.over_15_duration > config.limits.wait_before_ch) || config.metrics.saved_twater > 18))
             {
-                chOn = true;
+                chOn = state;
             }
         }
-        else
-        {
-            fOn = false;
-        }
+
         if (config.pump.force_filter)
         {
             fOn = true;
