@@ -12,7 +12,6 @@
 #include <Apump.h>
 #include <Asensors.h>
 #include <Atime.h>
-#include <Alarms.h>
 #include <Adisplay.h>
 #include "config.h"
 
@@ -66,7 +65,6 @@ void setup(void)
     pumpInit(config, filterPin, chPin, phPin);
     lightInit(lightPin);
 
-    initAlarms();
     initDisplay();
 
     loadDefaultConfig(config);
@@ -176,7 +174,7 @@ void loop(void)
 
     if (count_time_30min == 60)
     {
-        setSytemTime(config.states.rtc, config);
+        setSytemTime(config);
 
         Serial.println(F("*** 30m ***"));
         Serial.print(F("Time: "));

@@ -201,23 +201,23 @@ void registerDevices(domopool_Config &config, DallasTemperature &tempSensors)
     }
 }
 
-float roundTemp(float temp)
+float roundVal(float val)
 {
-    int abs = temp;
-    float dec = temp - abs;
-    if (dec < 0.25)
-    {
-        temp = abs;
-    }
-    else if (dec >= 0.25 && dec < 0.75)
-    {
-        temp = abs + 0.5;
-    }
-    else
-    {
-        temp = abs + 1;
-    }
-    return temp;
+    int abs = val * 100;
+    // int dec = (val - abs) * 100;
+    // if (dec < 25)
+    // {
+    //     val = abs;
+    // }
+    // else if (dec >= 25 && dec < 75)
+    // {
+    //     val = abs + 0.5;
+    // }
+    // else
+    // {
+    //     val = abs + 1;
+    // }
+    return abs / 100;
 }
 
 void showAddressFromPref()
@@ -349,7 +349,7 @@ float getWPAnalog(domopool_Config &config, ADS1115 &ads)
 
 void getWP(domopool_Config &config, ADS1115 &ads)
 {
-    config.metrics.wp = (getWPAnalog(config, ads) - config.sensors.wp.threshold) * 4;
+    config.metrics.wp = roundVal((getWPAnalog(config, ads) - config.sensors.wp.threshold) * 4);
     if (config.metrics.wp >= config.limits.wp_max)
     {
         config.alarms.wp_high = true;
@@ -420,7 +420,7 @@ void getDS18B20(domopool_Config &config, DallasTemperature &tempSensors)
             tempMoy = (twout_val + twin_val) / 2;
         }
 
-        config.metrics.twater = tempMoy;
+        config.metrics.twater = roundVal(tempMoy);
 
         temp_str = tamb;
         for (uint8_t i = 0; i < 8; i++)
@@ -428,7 +428,7 @@ void getDS18B20(domopool_Config &config, DallasTemperature &tempSensors)
             temp_str.concat(i);
             tempAddr[i] = sensPrefs.getUChar(temp_str.c_str(), 0);
         }
-        config.metrics.tamb = tempSensors.getTempC(tempAddr);
+        config.metrics.tamb = roundVal(tempSensors.getTempC(tempAddr));
         Serial.print(F("[Sens] tamb temp: "));
         if (config.metrics.tamb == DEVICE_DISCONNECTED_C)
         {

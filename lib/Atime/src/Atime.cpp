@@ -42,7 +42,7 @@ String printDate()
     return date;
 }
 
-void setSytemTime(bool rtcOk, domopool_Config &config)
+void setSytemTime(domopool_Config &config)
 {
     Serial.println(F("[Time] Get ntp time"));
 
@@ -58,10 +58,9 @@ void setSytemTime(bool rtcOk, domopool_Config &config)
         tmElem.Year = (timedata.tm_year + 1900) - 1970;
         time_t now = makeTime(tmElem);
         setTime(now);
-        if (rtcOk)
+        if (config.states.rtc)
         {
             Serial.println(F("[Time] Set RTC time"));
-            // RTC.set(now);
             RTC.SetDateTime(RtcDateTime(
                 timedata.tm_year + 1900,
                 tmElem.Month,
@@ -135,5 +134,5 @@ void initSystemTime(domopool_Config &config, int sda, int scl)
         setSyncProvider(getRTCTime);
     }
     // setSyncInterval(3600);
-    setSytemTime(config.states.rtc, config);
+    setSytemTime(config);
 }

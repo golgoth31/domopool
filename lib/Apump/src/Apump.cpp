@@ -125,28 +125,24 @@ void setFilterState(domopool_Config &config, int hour)
     {
         config.metrics.saved_twater = config.metrics.twater;
     }
-    uint8_t tempAbs = floor(config.metrics.saved_twater);
-    String p = "p";
-    p += tempAbs;
-    p += hour;
+
+    int8_t tempWaterAbs = abs(config.metrics.saved_twater);
+    int8_t tempAmbAbs = abs(config.metrics.tamb);
 
     bool state;
-    if (tempAbs < 1 || tempAbs >= 30)
+    if (tempWaterAbs <= config.limits.tw_min || tempWaterAbs >= config.limits.tw_max || tempAmbAbs <= config.limits.tamb_min)
     {
         state = true;
     }
     else
     {
-        state = pumpPrefs.getBool(p.c_str(), tab[tempAbs][hour]);
+        String p = "p";
+        p += tempWaterAbs;
+        p += hour;
+        state = pumpPrefs.getBool(p.c_str(), tab[tempWaterAbs][hour]);
     }
 
-    if (config.alarms.wp_high)
-    {
-        state = false;
-        config.pump.force_check = true;
-    }
-
-    if (config.sensors.wp.enabled && config.alarms.wp_low && config.pump.automatic)
+    if (config.alarms.wp_high || (config.sensors.wp.enabled && config.alarms.wp_low && config.pump.automatic))
     {
         state = false;
         config.pump.force_check = true;

@@ -5,7 +5,6 @@
 #include <ADS1X15.h>
 
 #include <Aconfig.h>
-// #include <Aconfig-struct.h>
 
 #ifndef __ASENSORS_H_UNDEFINED__
 #define __ASENSORS_H_UNDEFINED__

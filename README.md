@@ -23,7 +23,7 @@ Other hardware:
 - Read/write configuration from preferences (nvs storage)
 - Auto-detect DS18B20
 - Mesure temperature and evaluate filter time based on day hour.
-- Get/Set values as json through http request
+- Get/Set values through grpc request
 - Set time with ntp
 
 ### Configuration
@@ -70,7 +70,6 @@ Other table exemples:
 
 ## ToDo
 
-- force filter pump for limited time
-- set hour ntp and rtc are not ok
+- set hour if ntp and rtc are not ok
 - add Hbridge driver for peristaltic pump (ph)
-- add ability to redefine filter pump steps or
+- add ability to redefine filter pump steps
