@@ -350,6 +350,9 @@ void startServer(domopool_Config &config)
         strcpy(infos.versions.tft_espi, TFT_ESPI_VERSION);
         strcpy(infos.versions.xtensa, __VERSION__);
         strcpy(infos.versions.dallastemp, DALLASTEMPLIBVERSION);
+        strcpy(infos.versions.ads1115, ADS1X15_LIB_VERSION);
+        strcpy(infos.versions.nanopb, "0.4.4");
+        strcpy(infos.versions.mqtt, "3.1.1");
         uint8_t buffer[128];
         size_t message_length;
         bool status;
@@ -646,6 +649,28 @@ void startServer(domopool_Config &config)
             bool status;
             pb_ostream_t pb_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
             status = pb_encode(&pb_stream, domopool_AnalogSensor_fields, &threshold);
+            message_length = pb_stream.bytes_written;
+            if (status)
+            {
+                AsyncResponseStream *response = request->beginResponseStream("text/plain");
+                response->write(buffer, message_length);
+                request->send(response);
+            }
+            else
+            {
+                printf("Encoding failed: %s\n", PB_GET_ERROR(&pb_stream));
+                request->send(500);
+            }
+        });
+    server.on(
+        "/api/v1/alarms",
+        HTTP_GET,
+        [&config](AsyncWebServerRequest *request) {
+            uint8_t buffer[1024];
+            size_t message_length;
+            bool status;
+            pb_ostream_t pb_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
+            status = pb_encode(&pb_stream, domopool_Alarms_fields, &config.alarms);
             message_length = pb_stream.bytes_written;
             if (status)
             {

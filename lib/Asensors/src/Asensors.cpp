@@ -201,9 +201,9 @@ void registerDevices(domopool_Config &config, DallasTemperature &tempSensors)
     }
 }
 
-float roundVal(float val)
+float roundVal(float val, uint8_t factor)
 {
-    int abs = val * 100;
+    int abs = val * factor;
     // int dec = (val - abs) * 100;
     // if (dec < 25)
     // {
@@ -217,7 +217,7 @@ float roundVal(float val)
     // {
     //     val = abs + 1;
     // }
-    return abs / 100;
+    return (float)abs / (float)factor;
 }
 
 void showAddressFromPref()
@@ -311,6 +311,10 @@ void autoWPThreshold(domopool_Config &config)
             disableWP();
         }
     }
+    else
+    {
+        config.alarms.wp_broken = false;
+    }
 }
 
 float getWPAnalog(domopool_Config &config, ADS1115 &ads)
@@ -349,7 +353,7 @@ float getWPAnalog(domopool_Config &config, ADS1115 &ads)
 
 void getWP(domopool_Config &config, ADS1115 &ads)
 {
-    config.metrics.wp = roundVal((getWPAnalog(config, ads) - config.sensors.wp.threshold) * 4);
+    config.metrics.wp = roundVal((getWPAnalog(config, ads) - config.sensors.wp.threshold) * 4, config.sensors.wp.precision_factor);
     if (config.metrics.wp >= config.limits.wp_max)
     {
         config.alarms.wp_high = true;
@@ -366,6 +370,11 @@ void getWP(domopool_Config &config, ADS1115 &ads)
     else
     {
         config.alarms.wp_low = false;
+    }
+
+    if (config.tests.enabled)
+    {
+        config.metrics.wp = config.tests.pressure;
     }
 }
 
@@ -410,7 +419,7 @@ void getDS18B20(domopool_Config &config, DallasTemperature &tempSensors)
             Serial.print(F("[Sens] twin temp: "));
             if (twin_val == DEVICE_DISCONNECTED_C)
             {
-                Serial.print("could not read twin temperature data");
+                Serial.print("could not read twin");
             }
             else
             {
@@ -420,7 +429,7 @@ void getDS18B20(domopool_Config &config, DallasTemperature &tempSensors)
             tempMoy = (twout_val + twin_val) / 2;
         }
 
-        config.metrics.twater = roundVal(tempMoy);
+        config.metrics.twater = roundVal(tempMoy, config.sensors.precision_factor);
 
         temp_str = tamb;
         for (uint8_t i = 0; i < 8; i++)
@@ -428,11 +437,11 @@ void getDS18B20(domopool_Config &config, DallasTemperature &tempSensors)
             temp_str.concat(i);
             tempAddr[i] = sensPrefs.getUChar(temp_str.c_str(), 0);
         }
-        config.metrics.tamb = roundVal(tempSensors.getTempC(tempAddr));
+        config.metrics.tamb = roundVal(tempSensors.getTempC(tempAddr), config.sensors.precision_factor);
         Serial.print(F("[Sens] tamb temp: "));
         if (config.metrics.tamb == DEVICE_DISCONNECTED_C)
         {
-            Serial.print("could not read tamb temperature data");
+            Serial.print("could not read tamb");
         }
         else
         {
@@ -444,5 +453,32 @@ void getDS18B20(domopool_Config &config, DallasTemperature &tempSensors)
     {
         config.metrics.twater = config.tests.twater;
         config.metrics.tamb = config.tests.tamb;
+    }
+
+    if (config.metrics.twater <= config.limits.tw_min)
+    {
+        config.alarms.tw_frost = true;
+    }
+    else
+    {
+        config.alarms.tw_frost = false;
+    }
+
+    if (config.metrics.twater >= config.limits.tw_max)
+    {
+        config.alarms.tw_high = true;
+    }
+    else
+    {
+        config.alarms.tw_high = false;
+    }
+
+    if (config.metrics.tamb <= config.limits.tamb_min)
+    {
+        config.alarms.tamb_frost = true;
+    }
+    else
+    {
+        config.alarms.tamb_frost = false;
     }
 }

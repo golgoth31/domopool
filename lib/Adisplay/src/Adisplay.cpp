@@ -167,20 +167,16 @@ void displayTemp(domopool_Config &config)
         tft.setTextColor(TFT_GREEN, TFT_BLACK);
     }
 
-    String text = "         ";
-    tft.drawString(text, 60, 37, 1);
-    text = "";
+    String text = " ";
     text += config.metrics.twater;
     text += (char)247;
-    text += "C";
+    text += "C ";
     tft.drawString(text, 60, 37, 1);
 
-    text = "         ";
-    tft.drawString(text, 180, 37, 1);
-    text = "";
+    text = " ";
     text += config.metrics.tamb;
     text += (char)247;
-    text += "C";
+    text += "C ";
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.drawString("Ambiant", 180, 15, 1);
     tft.drawString(text, 180, 37, 1);
@@ -220,8 +216,7 @@ void displayTemp(domopool_Config &config)
     {
         tft.setTextColor(TFT_WHITE, TFT_BLACK);
     }
-    text = "         ";
-    tft.drawString(text, 180, 87, 1);
+
     text = "";
     text += config.metrics.wp;
     text += " Bar";

@@ -3,8 +3,8 @@
 Preferences pumpPrefs;
 // const int8_t chWaitThreshold = 72;
 bool pump[24];
-int ton;
-int toff;
+uint16_t ton;
+uint16_t toff;
 bool phInject = false;
 bool phOn = false;
 
@@ -126,11 +126,10 @@ void setFilterState(domopool_Config &config, int hour)
         config.metrics.saved_twater = config.metrics.twater;
     }
 
-    int8_t tempWaterAbs = abs(config.metrics.saved_twater);
-    int8_t tempAmbAbs = abs(config.metrics.tamb);
+    int8_t tempWaterAbs = (int)config.metrics.saved_twater;
 
     bool state;
-    if (tempWaterAbs <= config.limits.tw_min || tempWaterAbs >= config.limits.tw_max || tempAmbAbs <= config.limits.tamb_min)
+    if (config.alarms.tw_frost || config.alarms.tamb_frost || config.alarms.tw_high)
     {
         state = true;
     }

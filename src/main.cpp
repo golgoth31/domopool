@@ -97,8 +97,8 @@ void setup(void)
 
     saveConfiguration(config);
     config.tests.enabled = false;
-    config.tests.tamb = 25.38;
-    config.tests.twater = 25;
+    config.tests.tamb = -1.23;
+    config.tests.twater = 0;
     config.tests.pressure = 0.8;
 }
 
