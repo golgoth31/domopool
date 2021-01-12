@@ -112,7 +112,7 @@ void loop(void)
     restartNetwork(ssid, password, config);
 
     displayPressed(config);
-    sendData(config);
+    handleNetwork(config);
 
     // Get sensors every 2 seconds
     if ((millis() - lastReadingTime) >= 2000)
@@ -140,8 +140,8 @@ void loop(void)
         }
         sendMetricsMqtt(config);
         sendStatesMqtt(config);
-        count_time_30s++; // Count 15 cycles for sending XPL every 30s
-        count_time_10s++; // Count 15 cycles for sending XPL every 30s
+        count_time_30s++;
+        count_time_10s++;
         lastReadingTime = millis();
     }
 
@@ -154,6 +154,7 @@ void loop(void)
             config.metrics.saved_twater = config.metrics.twater;
             displayPageMain(config);
         }
+        count_time_10s = 0;
     }
 
     if (count_time_30s == 15)
@@ -168,22 +169,22 @@ void loop(void)
         Serial.println(config.metrics.twater);
         Serial.print(F("Sensor 'tamb' value: "));
         Serial.println(config.metrics.tamb);
-        count_time_30min++; // Count 60 cycles for 30 min
+        // count_time_30min++; // Count 60 cycles for 30 min
         count_time_30s = 0;
     }
 
-    if (count_time_30min == 60)
-    {
-        setSytemTime(config);
+    // if (count_time_30min == 60)
+    // {
+    //     setSytemTime(config);
 
-        Serial.println(F("*** 30m ***"));
-        Serial.print(F("Time: "));
-        Serial.println(printTime(true));
-        Serial.print(F("Sensor 'water' value: "));
-        Serial.println(config.metrics.twater);
-        Serial.print(F("Sensor 'tamb' value: "));
-        Serial.println(config.metrics.tamb);
+    //     Serial.println(F("*** 30m ***"));
+    //     Serial.print(F("Time: "));
+    //     Serial.println(printTime(true));
+    //     Serial.print(F("Sensor 'water' value: "));
+    //     Serial.println(config.metrics.twater);
+    //     Serial.print(F("Sensor 'tamb' value: "));
+    //     Serial.println(config.metrics.tamb);
 
-        count_time_30min = 0;
-    }
+    //     count_time_30min = 0;
+    // }
 }

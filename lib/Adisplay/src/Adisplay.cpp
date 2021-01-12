@@ -212,7 +212,7 @@ void displayTemp(domopool_Config &config)
 
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.drawString("Pressure", 180, 65, 1);
-    if (config.states.filter_on || config.sensors.wp.enabled)
+    if (config.states.filter_on && config.sensors.wp.enabled)
     {
         if (config.metrics.wp <= config.limits.wp_min || config.metrics.wp > config.limits.wp_max)
         {

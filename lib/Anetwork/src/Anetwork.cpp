@@ -1,7 +1,7 @@
 #include "Anetwork.h"
 
 WiFiClient espClient;
-WiFiServer espServer(1234);
+// WiFiServer espServer(1234);
 PubSubClient mqttClient(espClient);
 AsyncWebServer server(80);
 IPAddress MQTTServer;
@@ -10,6 +10,7 @@ byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 int ip1, ip2, ip3, ip4;
 int8_t OTAdot = 0;
 const int ConfigDocSize = 2048;
+bool wifiEnabled = true;
 
 void callback(char *topic, byte *payload, unsigned int length)
 {
@@ -701,50 +702,54 @@ void startServer(domopool_Config &config)
     });
     server.begin();
 }
+
 bool startNetwork(const char *ssid, const char *password, domopool_Config &config)
 {
     if (!SPIFFS.begin(true))
     {
         Serial.println("[FS] error on opening SPIFFS");
     };
-    Serial.println(F("[WiFi] Connecting"));
-    Serial.print(F("[WiFi] "));
-    bool wifiUp = false;
+    Serial.print(F("[WiFi] Connecting "));
     WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED)
+
+    // Wait 5s for wifi connection
+    for (size_t i = 0; i < 10; i++)
     {
         delay(500);
-
         Serial.print(".");
-
-        wifiUp = true;
+        wifiEnabled = false;
+        if (WiFi.isConnected())
+        {
+            wifiEnabled = true;
+            break;
+        }
     }
 
-    Serial.println("");
-    Serial.println(F("[WiFi] Connected"));
-    Serial.print(F("[WiFi] IP address: "));
-    Serial.println(WiFi.localIP());
+    if (WiFi.isConnected())
+    {
+        Serial.println("");
+        Serial.println(F("[WiFi] Connected"));
+        Serial.print(F("[WiFi] IP address: "));
+        Serial.println(WiFi.localIP());
 
-    strcpy(config.network.ip, WiFi.localIP().toString().c_str());
-    strcpy(config.network.gateway, WiFi.gatewayIP().toString().c_str());
-    strcpy(config.network.dns, WiFi.dnsIP().toString().c_str());
-    strcpy(config.network.netmask, WiFi.subnetMask().toString().c_str());
+        strcpy(config.network.ip, WiFi.localIP().toString().c_str());
+        strcpy(config.network.gateway, WiFi.gatewayIP().toString().c_str());
+        strcpy(config.network.dns, WiFi.dnsIP().toString().c_str());
+        strcpy(config.network.netmask, WiFi.subnetMask().toString().c_str());
 
-    startServer(config);
+        startServer(config);
 
-    startOTA();
-    espServer.begin();
+        startOTA();
+        // espServer.begin();
 
-    WiFiClient client = espServer.available();
+        // WiFiClient client = espServer.available();
 
-    Serial.println("[WiFi] Ready");
-    // Serial.print("IP address: ");
-    // Serial.println(WiFi.localIP());
+        Serial.println("[WiFi] Ready");
 
-    mqttClient.setServer(config.network.mqtt.server, 1883);
-    mqttClient.setCallback(callback);
-
-    return wifiUp;
+        mqttClient.setServer(config.network.mqtt.server, 1883);
+        mqttClient.setCallback(callback);
+    }
+    return WiFi.isConnected();
 }
 
 void stopNetwork()
@@ -752,15 +757,18 @@ void stopNetwork()
     ArduinoOTA.end();
     server.end();
     mqttClient.disconnect();
+    WiFi.disconnect();
 }
+
 void restartNetwork(const char *ssid, const char *password, domopool_Config &config)
 {
-    if (WiFi.status() == WL_CONNECTION_LOST)
+    if (wifiEnabled && !WiFi.isConnected())
     {
         stopNetwork();
         startNetwork(ssid, password, config);
     }
 }
+
 void sendMetricsMqtt(domopool_Config &config)
 {
     // DynamicJsonDocument doc(ConfigDocSize);
@@ -769,6 +777,7 @@ void sendMetricsMqtt(domopool_Config &config)
     // serializeJson(doc, output);
     // mqttClient.publish("domopool/metrics", output.c_str());
 }
+
 void sendStatesMqtt(domopool_Config &config)
 {
     // DynamicJsonDocument doc(ConfigDocSize);
@@ -778,22 +787,25 @@ void sendStatesMqtt(domopool_Config &config)
     // mqttClient.publish("domopool/states", output.c_str());
 }
 
-void sendData(domopool_Config &config)
+void handleNetwork(domopool_Config &config)
 {
-    ArduinoOTA.handle();
-    if (config.network.mqtt.enabled)
+    if (WiFi.isConnected())
     {
-        if (!mqttClient.connected())
+        ArduinoOTA.handle();
+        if (config.network.mqtt.enabled)
         {
-            reconnect();
+            if (!mqttClient.connected())
+            {
+                reconnect();
+            }
+            mqttClient.loop();
         }
-        mqttClient.loop();
-    }
-    else
-    {
-        if (mqttClient.connected())
+        else
         {
-            mqttClient.disconnect();
+            if (mqttClient.connected())
+            {
+                mqttClient.disconnect();
+            }
         }
     }
 }

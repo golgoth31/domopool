@@ -4,7 +4,7 @@
 #include <WiFi.h>
 #include <time.h>
 #include <WiFiUdp.h>
-#include <WiFiServer.h>
+// #include <WiFiServer.h>
 #include <ArduinoOTA.h>
 #include <ESPAsyncWebServer.h>
 #include <PubSubClient.h>
@@ -23,7 +23,7 @@
 bool checkIP(const char *ip);
 bool startNetwork(const char *ssid, const char *password, domopool_Config &config);
 void restartNetwork(const char *ssid, const char *password, domopool_Config &config);
-void sendData(domopool_Config &config);
+void handleNetwork(domopool_Config &config);
 void sendMetricsMqtt(domopool_Config &config);
 void sendStatesMqtt(domopool_Config &config);
 #endif
