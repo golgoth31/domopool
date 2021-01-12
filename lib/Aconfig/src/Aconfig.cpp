@@ -75,7 +75,7 @@ void pref2config(domopool_Config &config)
     config.limits.ch_temp_wait_reset = prefs.getFloat("ch_t_wait", 14);
     config.limits.wait_before_ch = prefs.getShort("ch_wait", 72);
     config.limits.wp_0_derive = prefs.getFloat("wp_0_derive", 0.03);
-    config.limits.tw_min = prefs.getShort("tw_min", 1);
+    config.limits.tw_min = prefs.getFloat("tw_min", 1);
     config.limits.tw_max = prefs.getFloat("tw_max", 30);
     config.limits.tamb_min = prefs.getFloat("tamb_min", 0);
 }
@@ -190,9 +190,9 @@ void config2pref(domopool_Config &config)
     prefs.putFloat("ch_t_wait", config.limits.ch_temp_wait_reset);
     prefs.putShort("ch_wait", config.limits.wait_before_ch);
     prefs.putFloat("wp_0_derive", config.limits.wp_0_derive);
-    prefs.putShort("tw_min", config.limits.tw_min);
-    prefs.putShort("tw_max", config.limits.tw_max);
-    prefs.putShort("tamb_min", config.limits.tamb_min);
+    prefs.putFloat("tw_min", config.limits.tw_min);
+    prefs.putFloat("tw_max", config.limits.tw_max);
+    prefs.putFloat("tamb_min", config.limits.tamb_min);
 }
 
 void saveConfiguration(domopool_Config &config)

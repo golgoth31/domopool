@@ -1,7 +1,6 @@
 #include "Anetwork.h"
 
 WiFiClient espClient;
-// WiFiServer espServer(1234);
 PubSubClient mqttClient(espClient);
 AsyncWebServer server(80);
 IPAddress MQTTServer;
@@ -712,20 +711,7 @@ bool startNetwork(const char *ssid, const char *password, domopool_Config &confi
     Serial.print(F("[WiFi] Connecting "));
     WiFi.begin(ssid, password);
 
-    // Wait 5s for wifi connection
-    for (size_t i = 0; i < 10; i++)
-    {
-        delay(500);
-        Serial.print(".");
-        wifiEnabled = false;
-        if (WiFi.isConnected())
-        {
-            wifiEnabled = true;
-            break;
-        }
-    }
-
-    if (WiFi.isConnected())
+    if (WiFi.waitForConnectResult() == WL_CONNECTED)
     {
         Serial.println("");
         Serial.println(F("[WiFi] Connected"));
@@ -740,9 +726,6 @@ bool startNetwork(const char *ssid, const char *password, domopool_Config &confi
         startServer(config);
 
         startOTA();
-        // espServer.begin();
-
-        // WiFiClient client = espServer.available();
 
         Serial.println("[WiFi] Ready");
 
