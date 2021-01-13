@@ -56,7 +56,7 @@ void initDisplay()
     // tft.drawCentreString("Domopool startup !", 120, 160, 1);
     // delay(1000);
     String startup = "Domopool startup";
-    displayProgressBarText(startup, TFT_DARKCYAN);
+    displayProgressBarText(startup, TFT_CYAN);
 
     ledcSetup(0, 1E5, 12);
     ledcAttachPin(21, 0);
@@ -318,13 +318,26 @@ void displayPump(domopool_Config &config)
 }
 void displayDate(domopool_Config &config)
 {
-    tft.setTextColor(TFT_LIGHTGREY, TFT_BLACK);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.setTextSize(2);
     tft.setTextDatum(CL_DATUM);
     tft.drawString(printDate(), 0, 115, 1);
     tft.drawString(printTime(false), 0, 137, 1);
-    tft.drawString(config.network.ip, 0, 159, 1);
 }
+
+void displayWifi(domopool_Config &config, bool connecting)
+{
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.setTextSize(2);
+    tft.setTextDatum(CL_DATUM);
+    String wifiText = config.network.ip;
+    if (connecting)
+    {
+        wifiText = "Connecting";
+    }
+    tft.drawString(wifiText, 0, 159, 1);
+}
+
 void displayServices(domopool_Config &config)
 {
     tft.setTextSize(2);
@@ -350,6 +363,7 @@ void displayServices(domopool_Config &config)
     }
     tft.drawRightString("MQTT", 240, 129, 1);
 
+    String time = "TIME";
     if (config.states.rtc && config.states.ntp)
     {
         tft.setTextColor(TFT_GREEN, TFT_BLACK);
@@ -357,28 +371,28 @@ void displayServices(domopool_Config &config)
     else if (config.states.ntp)
     {
         tft.setTextColor(TFT_GOLD, TFT_BLACK);
+        time = "NTP";
     }
     else if (config.states.rtc)
     {
-        tft.setTextColor(TFT_DARKCYAN, TFT_BLACK);
+        tft.setTextColor(TFT_CYAN, TFT_BLACK);
+        time = "RTC";
     }
     else
     {
         tft.setTextColor(TFT_RED, TFT_BLACK);
     }
-    tft.drawRightString("TIME", 240, 150, 1);
+    tft.drawRightString(time, 240, 150, 1);
 }
 void displayPageMain(domopool_Config &config)
 {
     tft.fillScreen(TFT_BLACK);
 
-    tft.drawLine(120, 0, 120, 100, TFT_LIGHTGREY);
-    tft.drawLine(0, 50, 240, 50, TFT_LIGHTGREY);
-    tft.drawLine(0, 100, 240, 100, TFT_LIGHTGREY);
-
-    displayTemp(config);
-    displayDate(config);
+    tft.drawLine(120, 0, 120, 100, TFT_WHITE);
+    tft.drawLine(0, 50, 240, 50, TFT_WHITE);
+    tft.drawLine(0, 100, 240, 100, TFT_WHITE);
 }
+
 void displayPressed(domopool_Config &config)
 {
     uint16_t x, y;

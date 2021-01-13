@@ -745,11 +745,8 @@ void stopNetwork()
 
 void restartNetwork(const char *ssid, const char *password, domopool_Config &config)
 {
-    if (wifiEnabled && !WiFi.isConnected())
-    {
-        stopNetwork();
-        startNetwork(ssid, password, config);
-    }
+    stopNetwork();
+    config.states.net_active = startNetwork(ssid, password, config);
 }
 
 void sendMetricsMqtt(domopool_Config &config)
@@ -790,5 +787,10 @@ void handleNetwork(domopool_Config &config)
                 mqttClient.disconnect();
             }
         }
+    }
+    else
+    {
+        stopNetwork();
+        config.states.net_active = false;
     }
 }

@@ -17,6 +17,7 @@ void display2boot(String text, domopool_Config &config);
 void displayPump(domopool_Config &config);
 void displayTemp(domopool_Config &config);
 void displayDate(domopool_Config &config);
+void displayWifi(domopool_Config &config, bool connecting);
 void displayServices(domopool_Config &config);
 void displayPressed(domopool_Config &config);
 void displayStartup();

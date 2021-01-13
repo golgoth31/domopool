@@ -108,8 +108,6 @@ void loop(void)
     {
         lastReadingTime = millis();
     }
-    // reboot();
-    restartNetwork(ssid, password, config);
 
     displayPressed(config);
     handleNetwork(config);
@@ -123,9 +121,11 @@ void loop(void)
         getWP(config, ads);
         if (!config.states.startup)
         {
-            displayDate(config);
-            displayServices(config);
             displayTemp(config);
+            displayDate(config);
+            displayWifi(config, false);
+            displayServices(config);
+
             setFilterState(config, hour());
             if (config.sensors.ph.enabled)
             {
@@ -136,7 +136,7 @@ void loop(void)
         else
         {
             int percent = (count_time_10s * 100) / 5;
-            displayProgressBar(percent, TFT_DARKCYAN);
+            displayProgressBar(percent, TFT_CYAN);
         }
         sendMetricsMqtt(config);
         sendStatesMqtt(config);
@@ -169,22 +169,22 @@ void loop(void)
         Serial.println(config.metrics.twater);
         Serial.print(F("Sensor 'tamb' value: "));
         Serial.println(config.metrics.tamb);
-        // count_time_30min++; // Count 60 cycles for 30 min
+        count_time_30min++; // Count 60 cycles for 30 min
         count_time_30s = 0;
     }
 
-    // if (count_time_30min == 60)
-    // {
-    //     setSytemTime(config);
+    if (count_time_30min >= 60)
+    {
+        if (!config.states.net_active)
+        {
+            displayWifi(config, true);
+            restartNetwork(ssid, password, config);
+        }
+        if (config.states.net_active)
+        {
+            displayWifi(config, false);
+        }
 
-    //     Serial.println(F("*** 30m ***"));
-    //     Serial.print(F("Time: "));
-    //     Serial.println(printTime(true));
-    //     Serial.print(F("Sensor 'water' value: "));
-    //     Serial.println(config.metrics.twater);
-    //     Serial.print(F("Sensor 'tamb' value: "));
-    //     Serial.println(config.metrics.tamb);
-
-    //     count_time_30min = 0;
-    // }
+        count_time_30min = 0;
+    }
 }
