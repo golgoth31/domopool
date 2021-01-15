@@ -45,7 +45,7 @@ void handleUploadUi(AsyncWebServerRequest *request, String filename, size_t inde
     }
 }
 
-void handleBodyFilter(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+void handleBodyRelay(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
 {
     uint8_t buffer[total];
     if (!index)
@@ -61,61 +61,12 @@ void handleBodyFilter(AsyncWebServerRequest *request, uint8_t *data, size_t len,
         Serial.printf("BodyEnd: %u B\n", total);
     }
     /* Allocate space for the decoded message. */
-    domopool_Filter filter = domopool_Filter_init_default;
+    domopool_Relay locswitch = domopool_Relay_init_default;
 
     /* Create a stream that reads from the buffer. */
     pb_istream_t stream = pb_istream_from_buffer(buffer, total);
     /* Now we are ready to decode the message. */
-    bool status = pb_decode(&stream, domopool_Filter_fields, &filter);
-
-    /* Check for errors... */
-    if (!status)
-    {
-        Serial.printf("Decoding failed: %s\n", PB_GET_ERROR(&stream));
-    }
-    else
-    {
-        Serial.printf("Filter state: %u\n", filter.state);
-        switch (filter.state)
-        {
-        case domopool_Filter_states_start:
-            startPump(1, filter.duration);
-            break;
-        case domopool_Filter_states_stop:
-            stopPump(1);
-            break;
-        case domopool_Filter_states_auto:
-            setPumpAuto();
-            break;
-        default:
-            request->send(500);
-            break;
-        }
-    }
-}
-
-void handleBodySwitch(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total, const int8_t switchtype)
-{
-    uint8_t buffer[total];
-    if (!index)
-    {
-        Serial.printf("BodyStart: %u B\n", total);
-    }
-    for (size_t i = 0; i < len; i++)
-    {
-        buffer[i] = data[i];
-    }
-    if (index + len == total)
-    {
-        Serial.printf("BodyEnd: %u B\n", total);
-    }
-    /* Allocate space for the decoded message. */
-    domopool_Switch locswitch = domopool_Switch_init_default;
-
-    /* Create a stream that reads from the buffer. */
-    pb_istream_t stream = pb_istream_from_buffer(buffer, total);
-    /* Now we are ready to decode the message. */
-    bool status = pb_decode(&stream, domopool_Switch_fields, &locswitch);
+    bool status = pb_decode(&stream, domopool_Relay_fields, &locswitch);
 
     /* Check for errors... */
     if (!status)
@@ -123,28 +74,23 @@ void handleBodySwitch(AsyncWebServerRequest *request, uint8_t *data, size_t len,
         printf("Decoding failed: %s\n", PB_GET_ERROR(&stream));
         request->send(500);
     }
-    if (switchtype > 1 && switchtype < 5)
-    {
-        switch (locswitch.state)
-        {
-        case domopool_Filter_states_start:
-            startPump(switchtype, 0);
-            break;
-        case domopool_Filter_states_auto:
-            startPump(switchtype, 0);
-            break;
-        case domopool_Filter_states_stop:
-            stopPump(switchtype);
-            break;
 
-        default:
-            break;
-        }
-    }
-    else
+    switch (locswitch.state)
     {
-        request->send(500);
+    case domopool_Relay_states_start:
+        startRelay(locswitch.relay, locswitch.duration);
+        break;
+    case domopool_Relay_states_auto:
+        setRelayAuto();
+        break;
+    case domopool_Relay_states_stop:
+        stopRelay(locswitch.relay);
+        break;
+
+    default:
+        break;
     }
+
     request->send(200);
 }
 
@@ -336,219 +282,31 @@ void startServer(domopool_Config &config)
 
     // Serving pages
     // root
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        String compile = __DATE__;
-        compile += " ";
-        compile += __TIME__;
-        domopool_Infos infos = domopool_Infos_init_default;
-        strcpy(infos.board_name, ARDUINO_BOARD);
-        strcpy(infos.compile, compile.c_str());
-        infos.has_versions = true;
-        strcpy(infos.versions.domopool, "test");
-        strcpy(infos.versions.esp_idf, esp_get_idf_version());
-        infos.versions.platformio = PLATFORMIO;
-        strcpy(infos.versions.tft_espi, TFT_ESPI_VERSION);
-        strcpy(infos.versions.xtensa, __VERSION__);
-        strcpy(infos.versions.dallastemp, DALLASTEMPLIBVERSION);
-        strcpy(infos.versions.ads1115, ADS1X15_LIB_VERSION);
-        strcpy(infos.versions.nanopb, "0.4.4");
-        strcpy(infos.versions.mqtt, "3.1.1");
-        uint8_t buffer[128];
-        size_t message_length;
-        bool status;
-        pb_ostream_t pb_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
-        status = pb_encode(&pb_stream, domopool_Infos_fields, &infos);
-        message_length = pb_stream.bytes_written;
-        if (status)
-        {
-            AsyncResponseStream *response = request->beginResponseStream("text/plain");
-            response->write(buffer, message_length);
-            request->send(response);
-        }
-        else
-        {
-            printf("Encoding failed: %s\n", PB_GET_ERROR(&pb_stream));
-            request->send(500);
-        }
-    });
-
-    // metrics
-    server.on("/metrics", HTTP_GET, [&config](AsyncWebServerRequest *request) {
-        uint8_t buffer[128];
-        size_t message_length;
-        bool status;
-        pb_ostream_t pb_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
-        status = pb_encode(&pb_stream, domopool_Metrics_fields, &config.metrics);
-        message_length = pb_stream.bytes_written;
-        if (status)
-        {
-            AsyncResponseStream *response = request->beginResponseStream("text/plain");
-            response->write(buffer, message_length);
-            request->send(response);
-        }
-        else
-        {
-            printf("Encoding failed: %s\n", PB_GET_ERROR(&pb_stream));
-            request->send(500);
-        }
-    });
-
-    // healthz
-    server.on("/healthz", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(200);
-    });
-
-    // metrics
-    server.on("/readyz", HTTP_GET, [&config](AsyncWebServerRequest *request) {
-        if (config.states.startup)
-        {
-            request->send(404);
-        }
-        request->send(200);
-    });
-
-    // favicon
-    server.on("/favicon.*", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(SPIFFS, "/favicon.png", "image/png");
-    });
-
-    // ui
-    server.on("/bundle.js", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->redirect("/ui/bundle.js");
-    });
-    server.serveStatic("/ui/", SPIFFS, "/").setDefaultFile("index.html");
     server.on(
-        "/ui/upload",
-        HTTP_POST,
-        [](AsyncWebServerRequest *request) {
-            AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "OK");
-            response->addHeader("Connection", "close");
-            request->send(response);
-        },
-        [](AsyncWebServerRequest *request,
-           const String &filename,
-           size_t index,
-           uint8_t *data,
-           size_t len, bool final) { handleUploadUi(request, filename, index, data, len, final); });
-
-    // api
-    // states
-    server.on("/api/v1/states", HTTP_GET, [&config](AsyncWebServerRequest *request) {
-        uint8_t buffer[128];
-        size_t message_length;
-        bool status;
-        pb_ostream_t pb_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
-        status = pb_encode(&pb_stream, domopool_States_fields, &config.states);
-        message_length = pb_stream.bytes_written;
-        if (status)
-        {
-            AsyncResponseStream *response = request->beginResponseStream("text/plain");
-            response->write(buffer, message_length);
-            request->send(response);
-        }
-        else
-        {
-            printf("Encoding failed: %s\n", PB_GET_ERROR(&pb_stream));
-            request->send(500);
-        }
-    });
-
-    // filter
-    server.on("/api/v1/filter", HTTP_GET, [&config](AsyncWebServerRequest *request) {
-        domopool_Filter_states state;
-        if (config.states.automatic)
-        {
-            state = domopool_Filter_states_auto;
-        }
-        else if (config.pump.force_filter)
-        {
-            state = domopool_Filter_states_start;
-        }
-        else
-        {
-            state = domopool_Filter_states_stop;
-        }
-        domopool_Filter filter = domopool_Filter_init_zero;
-        filter.state = state;
-        filter.duration = config.pump.force_duration;
-        filter.start_time = config.pump.force_start_time;
-        uint8_t buffer[128];
-        size_t message_length;
-        bool status;
-        pb_ostream_t pb_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
-        status = pb_encode(&pb_stream, domopool_Filter_fields, &filter);
-        message_length = pb_stream.bytes_written;
-        if (status)
-        {
-            AsyncResponseStream *response = request->beginResponseStream("text/plain");
-            response->write(buffer, message_length);
-            request->send(response);
-        }
-        else
-        {
-            printf("Encoding failed: %s\n", PB_GET_ERROR(&pb_stream));
-            request->send(500);
-        }
-    });
-    server.on(
-        "/api/v1/filter",
-        HTTP_POST,
-        [](AsyncWebServerRequest *request) {
-            request->send(200);
-        },
-        NULL,
-        [](AsyncWebServerRequest *request,
-           uint8_t *data,
-           size_t len,
-           size_t index,
-           size_t total) { handleBodyFilter(request, data, len, index, total); });
-    server.on(
-        "/api/v1/ch",
-        HTTP_POST,
-        [](AsyncWebServerRequest *request) {
-            request->send(200);
-        },
-        NULL,
-        [](AsyncWebServerRequest *request,
-           uint8_t *data,
-           size_t len,
-           size_t index,
-           size_t total) { handleBodySwitch(request, data, len, index, total, 2); });
-    // server.on(
-    //     "/api/v1/ph",
-    //     HTTP_POST,
-    //     [](AsyncWebServerRequest *request) {
-    //         request->send(200);
-    //     },
-    //     NULL,
-    //     [](AsyncWebServerRequest *request,
-    //        uint8_t *data,
-    //        size_t len,
-    //        size_t index,
-    //        size_t total) { handleBodySwitch(request, data, len, index, total,3); });
-    server.on(
-        "/api/v1/light",
-        HTTP_POST,
-        [](AsyncWebServerRequest *request) {
-            request->send(200);
-        },
-        NULL,
-        [](AsyncWebServerRequest *request,
-           uint8_t *data,
-           size_t len,
-           size_t index,
-           size_t total) { handleBodySwitch(request, data, len, index, total, 4); });
-
-    // mqtt
-    server.on(
-        "/api/v1/mqtt",
+        "/",
         HTTP_GET,
-        [&config](AsyncWebServerRequest *request) {
+        [](AsyncWebServerRequest *request) {
+            String compile = __DATE__;
+            compile += " ";
+            compile += __TIME__;
+            domopool_Infos infos = domopool_Infos_init_default;
+            strcpy(infos.board_name, ARDUINO_BOARD);
+            strcpy(infos.compile, compile.c_str());
+            infos.has_versions = true;
+            strcpy(infos.versions.domopool, "test");
+            strcpy(infos.versions.esp_idf, esp_get_idf_version());
+            infos.versions.platformio = PLATFORMIO;
+            strcpy(infos.versions.tft_espi, TFT_ESPI_VERSION);
+            strcpy(infos.versions.xtensa, __VERSION__);
+            strcpy(infos.versions.dallastemp, DALLASTEMPLIBVERSION);
+            strcpy(infos.versions.ads1115, ADS1X15_LIB_VERSION);
+            strcpy(infos.versions.nanopb, "0.4.4");
+            strcpy(infos.versions.mqtt, "3.1.1");
             uint8_t buffer[128];
             size_t message_length;
             bool status;
             pb_ostream_t pb_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
-            status = pb_encode(&pb_stream, domopool_Mqtt_fields, &config.network.mqtt);
+            status = pb_encode(&pb_stream, domopool_Infos_fields, &infos);
             message_length = pb_stream.bytes_written;
             if (status)
             {
@@ -562,6 +320,119 @@ void startServer(domopool_Config &config)
                 request->send(500);
             }
         });
+
+    // healthz
+    server.on(
+        "/healthz",
+        HTTP_GET,
+        [](AsyncWebServerRequest *request) {
+            request->send(200);
+        });
+
+    // metrics
+    server.on(
+        "/readyz",
+        HTTP_GET,
+        [&config](AsyncWebServerRequest *request) {
+            if (config.states.startup)
+            {
+                request->send(404);
+            }
+            request->send(200);
+        });
+
+    // favicon
+    server.on(
+        "/favicon.*",
+        HTTP_GET,
+        [](AsyncWebServerRequest *request) {
+            request->send(SPIFFS, "/favicon.png", "image/png");
+        });
+
+    // ui
+    server.on(
+        "/bundle.js",
+        HTTP_GET,
+        [](AsyncWebServerRequest *request) {
+            request->redirect("/ui/bundle.js");
+        });
+    server.serveStatic("/ui/", SPIFFS, "/").setDefaultFile("index.html");
+    server.on(
+        "/ui/upload",
+        HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+            AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "OK");
+            response->addHeader("Connection", "close");
+            request->send(response);
+        },
+        [](AsyncWebServerRequest *request,
+           const String &filename,
+           size_t index,
+           uint8_t *data,
+           size_t len, bool final) {
+            handleUploadUi(request, filename, index, data, len, final);
+        });
+
+    // api
+    // relay
+    server.on(
+        "/api/v1/filter",
+        HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+            request->send(200);
+        },
+        NULL,
+        [](AsyncWebServerRequest *request,
+           uint8_t *data,
+           size_t len,
+           size_t index,
+           size_t total) {
+            handleBodyRelay(request, data, len, index, total);
+        });
+    server.on(
+        "/api/v1/ch",
+        HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+            request->send(200);
+        },
+        NULL,
+        [](AsyncWebServerRequest *request,
+           uint8_t *data,
+           size_t len,
+           size_t index,
+           size_t total) {
+            handleBodyRelay(request, data, len, index, total);
+        });
+    server.on(
+        "/api/v1/ph",
+        HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+            request->send(200);
+        },
+        NULL,
+        [](AsyncWebServerRequest *request,
+           uint8_t *data,
+           size_t len,
+           size_t index,
+           size_t total) {
+            handleBodyRelay(request, data, len, index, total);
+        });
+    server.on(
+        "/api/v1/light",
+        HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+            request->send(200);
+        },
+        NULL,
+        [](AsyncWebServerRequest *request,
+           uint8_t *data,
+           size_t len,
+           size_t index,
+           size_t total) {
+            handleBodyRelay(request, data, len, index, total);
+        });
+
+    // mqtt
     server.on(
         "/api/v1/mqtt",
         HTTP_POST,
@@ -573,21 +444,59 @@ void startServer(domopool_Config &config)
            uint8_t *data,
            size_t len,
            size_t index,
-           size_t total) { handleBodyMqtt(request, data, len, index, total); });
+           size_t total) {
+            handleBodyMqtt(request, data, len, index, total);
+        });
 
     // sensors
-    server.on("/api/v1/sensors/reset", HTTP_GET, [&config](AsyncWebServerRequest *request) {
-        resetSensorsTempAddr(config);
-        saveConfiguration(config);
-        request->send(200);
-    });
+    server.on(
+        "/api/v1/sensors/reset",
+        HTTP_POST,
+        [&config](AsyncWebServerRequest *request) {
+            resetSensorsTempAddr(config);
+            saveConfiguration(config);
+            request->send(200);
+        });
+
+    // water pressure
+    server.on(
+        "/api/v1/wp/spec",
+        HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+            request->send(200);
+        },
+        NULL,
+        [](AsyncWebServerRequest *request,
+           uint8_t *data,
+           size_t len,
+           size_t index,
+           size_t total) {
+            handleBodyAnalogSensor(request, data, len, index, total);
+        });
+    server.on(
+        "/api/v1/wp/enable",
+        HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+            enableWP();
+            request->send(200);
+        });
+    server.on(
+        "/api/v1/wp/disable",
+        HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+            disableWP();
+            request->send(200);
+        });
 
     // reboot
-    server.on("/api/v1/reboot", HTTP_GET, [&config](AsyncWebServerRequest *request) {
-        saveConfiguration(config);
-        reboot();
-        request->send(200);
-    });
+    server.on(
+        "/api/v1/reboot",
+        HTTP_POST,
+        [&config](AsyncWebServerRequest *request) {
+            saveConfiguration(config);
+            reboot();
+            request->send(200);
+        });
 
     // config
     server.on(
@@ -613,80 +522,8 @@ void startServer(domopool_Config &config)
             }
         });
     server.on(
-        "/api/v1/config/wp/spec",
-        HTTP_POST,
-        [](AsyncWebServerRequest *request) {
-            request->send(200);
-        },
-        NULL,
-        [](AsyncWebServerRequest *request,
-           uint8_t *data,
-           size_t len,
-           size_t index,
-           size_t total) { handleBodyAnalogSensor(request, data, len, index, total); });
-    server.on(
-        "/api/v1/config/wp/enable",
-        HTTP_POST,
-        [](AsyncWebServerRequest *request) {
-            enableWP();
-            request->send(200);
-        });
-    server.on(
-        "/api/v1/config/wp/disable",
-        HTTP_POST,
-        [](AsyncWebServerRequest *request) {
-            disableWP();
-            request->send(200);
-        });
-    server.on(
-        "/api/v1/wp_threshold",
-        HTTP_GET,
-        [&config](AsyncWebServerRequest *request) {
-            domopool_AnalogSensor threshold = domopool_AnalogSensor_init_zero;
-            threshold.threshold = config.metrics.wp_volt;
-            uint8_t buffer[1024];
-            size_t message_length;
-            bool status;
-            pb_ostream_t pb_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
-            status = pb_encode(&pb_stream, domopool_AnalogSensor_fields, &threshold);
-            message_length = pb_stream.bytes_written;
-            if (status)
-            {
-                AsyncResponseStream *response = request->beginResponseStream("text/plain");
-                response->write(buffer, message_length);
-                request->send(response);
-            }
-            else
-            {
-                printf("Encoding failed: %s\n", PB_GET_ERROR(&pb_stream));
-                request->send(500);
-            }
-        });
-    server.on(
-        "/api/v1/alarms",
-        HTTP_GET,
-        [&config](AsyncWebServerRequest *request) {
-            uint8_t buffer[1024];
-            size_t message_length;
-            bool status;
-            pb_ostream_t pb_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
-            status = pb_encode(&pb_stream, domopool_Alarms_fields, &config.alarms);
-            message_length = pb_stream.bytes_written;
-            if (status)
-            {
-                AsyncResponseStream *response = request->beginResponseStream("text/plain");
-                response->write(buffer, message_length);
-                request->send(response);
-            }
-            else
-            {
-                printf("Encoding failed: %s\n", PB_GET_ERROR(&pb_stream));
-                request->send(500);
-            }
-        });
-    server.on(
         "/api/v1/config/reset",
-        HTTP_GET,
+        HTTP_POST,
         [&config](AsyncWebServerRequest *request) {
             resetConfig();
             request->send(200);
@@ -696,9 +533,10 @@ void startServer(domopool_Config &config)
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "GET,OPTIONS,POST");
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "access-control-allow-origin,content-type");
-    server.onNotFound([](AsyncWebServerRequest *request) {
-        request->send(404);
-    });
+    server.onNotFound(
+        [](AsyncWebServerRequest *request) {
+            request->send(404);
+        });
     server.begin();
 }
 

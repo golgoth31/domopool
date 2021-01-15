@@ -411,11 +411,11 @@ void displayPressed(domopool_Config &config)
                 Serial.println("filter");
                 if (config.states.filter_on)
                 {
-                    stopPump(1);
+                    stopRelay(0);
                 }
                 else
                 {
-                    startPump(1, 0);
+                    startRelay(0, 0);
                 }
             }
         }
@@ -426,11 +426,11 @@ void displayPressed(domopool_Config &config)
                 Serial.println("auto");
                 if (config.states.automatic)
                 {
-                    unsetPumpAuto();
+                    unsetRelayAuto();
                 }
                 else
                 {
-                    setPumpAuto();
+                    setRelayAuto();
                 }
             }
         }
@@ -441,11 +441,11 @@ void displayPressed(domopool_Config &config)
                 Serial.println("ch");
                 if (config.states.ch_on)
                 {
-                    stopPump(2);
+                    stopRelay(1);
                 }
                 else
                 {
-                    startPump(2, 0);
+                    startRelay(1, 0);
                 }
             }
         }

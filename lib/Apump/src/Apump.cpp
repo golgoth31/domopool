@@ -234,7 +234,7 @@ void setFilterState(domopool_Config &config, int hour)
             if (diff_time >= duration_sec)
             {
                 Serial.println("[pump] Stoping forced with duration");
-                stopPump(1);
+                stopRelay(0);
             }
         }
         config.metrics.hour = hour;

@@ -216,24 +216,24 @@ bool setPumpDuration(uint32_t duration)
     return true;
 }
 
-bool stopPump(const int8_t p)
+bool stopRelay(const int8_t p)
 {
     switch (p)
     {
-    case 1:
+    case 0:
         prefs.putBool("auto", false);
         prefs.putBool("forceFilter", false);
         setPumpDuration(0);
         break;
-    case 2:
+    case 1:
         prefs.putBool("auto", false);
         prefs.putBool("forceCH", false);
         break;
-    case 3:
+    case 2:
         prefs.putBool("auto", false);
         prefs.putBool("forcePH", false);
         break;
-    case 4:
+    case 3:
         prefs.putBool("forceLight", false);
         break;
 
@@ -244,26 +244,26 @@ bool stopPump(const int8_t p)
     return true;
 }
 
-bool startPump(const int8_t p, uint32_t duration)
+bool startRelay(const int8_t p, uint32_t duration)
 {
     switch (p)
     {
-    case 1:
+    case 0:
         prefs.putBool("auto", false);
         prefs.putBool("forceFilter", true);
         setPumpDuration(duration);
         break;
-    case 2:
+    case 1:
         prefs.putBool("auto", false);
         prefs.putBool("forceFilter", true);
         prefs.putBool("forceCH", true);
         break;
-    case 3:
+    case 2:
         prefs.putBool("auto", false);
         prefs.putBool("forceFilter", true);
         prefs.putBool("forcePH", true);
         break;
-    case 4:
+    case 3:
         prefs.putBool("forceLight", true);
         break;
 
@@ -273,7 +273,7 @@ bool startPump(const int8_t p, uint32_t duration)
     }
     return true;
 }
-bool setPumpAuto()
+bool setRelayAuto()
 {
     prefs.putBool("auto", true);
     prefs.putBool("forceCheck", true);
@@ -282,7 +282,7 @@ bool setPumpAuto()
     return true;
 }
 
-bool unsetPumpAuto()
+bool unsetRelayAuto()
 {
     prefs.putBool("auto", false);
     prefs.putInt("forceDuration", 0);
