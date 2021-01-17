@@ -8,6 +8,11 @@ TFT_eSPI_Button button[2];
 #define BUTTON_BOX_W 240
 #define BUTTON_BOX_H 150
 
+#define SENSORS_BOX_X 0
+#define SENSORS_BOX_Y 0
+#define SENSORS_BOX_W 120
+#define SENSORS_BOX_H 50
+
 int pBarw = 220;
 
 int FILTER_X;
@@ -34,6 +39,22 @@ int CH_W;
 int CH_H;
 int CH_TEXT_X;
 int CH_TEXT_Y;
+int WP_X;
+int WP_Y;
+int WP_W;
+int WP_H;
+int LINE_H1_XS;
+int LINE_H1_YS;
+int LINE_H1_XE;
+int LINE_H1_YE;
+int LINE_V1_XS;
+int LINE_V1_YS;
+int LINE_V1_XE;
+int LINE_V1_YE;
+int LINE_H2_XS;
+int LINE_H2_YS;
+int LINE_H2_XE;
+int LINE_H2_YE;
 
 void Button_ACK_Tone(domopool_Config &config)
 {
@@ -88,6 +109,26 @@ void initDisplay()
     CH_H = PH_H;
     CH_TEXT_X = CH_X + (CH_W / 2);
     CH_TEXT_Y = CH_Y + (CH_H / 2);
+
+    LINE_H1_XS = SENSORS_BOX_X;
+    LINE_H1_YS = SENSORS_BOX_H;
+    LINE_H1_XE = SENSORS_BOX_W * 2;
+    LINE_H1_YE = SENSORS_BOX_H;
+
+    LINE_H2_XS = SENSORS_BOX_X;
+    LINE_H2_YS = SENSORS_BOX_H * 2;
+    LINE_H2_XE = SENSORS_BOX_W * 2;
+    LINE_H2_YE = SENSORS_BOX_H * 2;
+
+    LINE_V1_XS = SENSORS_BOX_W;
+    LINE_V1_YS = SENSORS_BOX_Y;
+    LINE_V1_XE = SENSORS_BOX_W;
+    LINE_V1_YE = SENSORS_BOX_H * 2;
+
+    WP_X = SENSORS_BOX_W;
+    WP_Y = SENSORS_BOX_H;
+    WP_W = SENSORS_BOX_W;
+    WP_H = SENSORS_BOX_H;
 }
 
 // void pageOTA(String type)
@@ -146,7 +187,7 @@ void display2boot(String text, domopool_Config &config)
     }
 }
 
-void displayTemp(domopool_Config &config)
+void displaySensors(domopool_Config &config)
 {
 
     tft.setTextDatum(MC_DATUM);
@@ -212,20 +253,27 @@ void displayTemp(domopool_Config &config)
 
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.drawString("Pressure", 180, 65, 1);
-    if (config.states.filter_on && config.sensors.wp.enabled)
+    if (config.sensors.wp.enabled)
     {
-        if (config.metrics.wp <= config.limits.wp_min || config.metrics.wp > config.limits.wp_max)
+        if (config.states.filter_on)
         {
-            tft.setTextColor(TFT_RED, TFT_BLACK);
+            if (config.metrics.wp <= config.limits.wp_min || config.metrics.wp > config.limits.wp_max)
+            {
+                tft.setTextColor(TFT_RED, TFT_BLACK);
+            }
+            else if (config.metrics.wp > config.limits.wp_min || config.metrics.wp <= config.limits.wp_max)
+            {
+                tft.setTextColor(TFT_GREEN, TFT_BLACK);
+            }
         }
-        else if (config.metrics.wp > config.limits.wp_min || config.metrics.wp <= config.limits.wp_max)
+        else
         {
-            tft.setTextColor(TFT_GREEN, TFT_BLACK);
+            tft.setTextColor(TFT_WHITE, TFT_BLACK);
         }
     }
     else
     {
-        tft.setTextColor(TFT_WHITE, TFT_BLACK);
+        tft.setTextColor(TFT_CYAN, TFT_BLACK);
     }
 
     if (config.metrics.wp >= 0)
@@ -241,7 +289,7 @@ void displayTemp(domopool_Config &config)
     tft.drawString(text, 180, 87, 1);
 }
 
-void displayPump(domopool_Config &config)
+void displayRelay(domopool_Config &config)
 {
     // printText(0, 50, "Pump:", 1, 1);
     int color;
@@ -388,9 +436,9 @@ void displayPageMain(domopool_Config &config)
 {
     tft.fillScreen(TFT_BLACK);
 
-    tft.drawLine(120, 0, 120, 100, TFT_WHITE);
-    tft.drawLine(0, 50, 240, 50, TFT_WHITE);
-    tft.drawLine(0, 100, 240, 100, TFT_WHITE);
+    tft.drawLine(LINE_V1_XS, LINE_V1_YS, LINE_V1_XE, LINE_V1_YE, TFT_WHITE);
+    tft.drawLine(LINE_H1_XS, LINE_H1_YS, LINE_H1_XE, LINE_H1_YE, TFT_WHITE);
+    tft.drawLine(LINE_H2_XS, LINE_H2_YS, LINE_H2_XE, LINE_H2_YE, TFT_WHITE);
 }
 
 void displayPressed(domopool_Config &config)
@@ -404,6 +452,8 @@ void displayPressed(domopool_Config &config)
     {
         Serial.println("touched");
         Button_ACK_Tone(config);
+
+        // filter button
         if ((x > FILTER_X) && (x < FILTER_X + FILTER_W))
         {
             if ((y > FILTER_Y) && (y <= FILTER_Y + FILTER_H))
@@ -419,6 +469,8 @@ void displayPressed(domopool_Config &config)
                 }
             }
         }
+
+        // auto button
         if ((x > AUTO_X) && (x < AUTO_X + AUTO_W))
         {
             if ((y > AUTO_Y) && (y <= AUTO_Y + AUTO_H))
@@ -434,6 +486,8 @@ void displayPressed(domopool_Config &config)
                 }
             }
         }
+
+        // ch button
         if ((x > CH_X) && (x < CH_X + CH_W))
         {
             if ((y > CH_Y) && (y <= CH_Y + CH_H))
@@ -446,6 +500,23 @@ void displayPressed(domopool_Config &config)
                 else
                 {
                     startRelay(1, 0);
+                }
+            }
+        }
+
+        // water pressure activation
+        if ((x > WP_X) && (x < WP_X + WP_W))
+        {
+            if ((y > WP_Y) && (y <= WP_Y + WP_H))
+            {
+                Serial.println("wp");
+                if (config.sensors.wp.enabled)
+                {
+                    disableWP();
+                }
+                else
+                {
+                    enableWP();
                 }
             }
         }

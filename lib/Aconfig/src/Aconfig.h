@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include <Preferences.h>
 #include <TimeLib.h>
 #include <domopool.pb.h>
@@ -27,4 +28,6 @@ void setPH(int adc_pin, float threshold, int taccuracy, float vmin, float vmax);
 void disablePH();
 void setCH(int adc_pin, float threshold, int taccuracy, float vmin, float vmax);
 void disableCH();
+void metrics2doc(domopool_Config &config, JsonDocument &doc);
+void states2doc(domopool_Config &config, JsonDocument &doc);
 #endif

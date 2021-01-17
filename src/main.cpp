@@ -121,7 +121,7 @@ void loop(void)
         getWP(config, ads);
         if (!config.states.startup)
         {
-            displayTemp(config);
+            displaySensors(config);
             displayDate(config);
             displayWifi(config, false);
             displayServices(config);
@@ -131,7 +131,7 @@ void loop(void)
             {
                 setPhState(config);
             }
-            displayPump(config);
+            displayRelay(config);
         }
         else
         {

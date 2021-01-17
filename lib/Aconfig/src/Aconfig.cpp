@@ -360,3 +360,29 @@ void disableCH()
 {
     prefs.putBool("ch_enabled", false);
 }
+
+void metrics2doc(domopool_Config &config, JsonDocument &doc)
+{
+    doc["metrics"]["over15Duration"] = config.metrics.over_15_duration;
+    doc["metrics"]["ch"] = config.metrics.ch;
+    doc["metrics"]["ph"] = config.metrics.ph;
+    doc["metrics"]["tamb"] = config.metrics.tamb;
+    doc["metrics"]["twater"] = config.metrics.twater;
+    doc["metrics"]["wp"] = config.metrics.wp;
+    doc["metrics"]["hour"] = config.metrics.hour;
+    doc["metrics"]["savedTwater"] = config.metrics.saved_twater;
+    doc["metrics"]["wpVolt"] = config.metrics.wp_volt;
+}
+
+void states2doc(domopool_Config &config, JsonDocument &doc)
+{
+    doc["states"]["filterOn"] = config.states.filter_on;
+    doc["states"]["phOn"] = config.states.ph_on;
+    doc["states"]["chOn"] = config.states.ch_on;
+    doc["states"]["automatic"] = config.states.automatic;
+    doc["states"]["startup"] = config.states.startup;
+    doc["states"]["ntp"] = config.states.ntp;
+    doc["states"]["rtc"] = config.states.rtc;
+    doc["states"]["netActive"] = config.states.net_active;
+    doc["states"]["lightOn"] = config.states.light_on;
+}

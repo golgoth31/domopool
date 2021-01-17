@@ -589,20 +589,26 @@ void restartNetwork(const char *ssid, const char *password, domopool_Config &con
 
 void sendMetricsMqtt(domopool_Config &config)
 {
-    // DynamicJsonDocument doc(ConfigDocSize);
-    // metrics2doc(config, doc);
-    // String output = "";
-    // serializeJson(doc, output);
-    // mqttClient.publish("domopool/metrics", output.c_str());
+    if (config.network.mqtt.enabled)
+    {
+        DynamicJsonDocument doc(ConfigDocSize);
+        metrics2doc(config, doc);
+        String output = "";
+        serializeJson(doc, output);
+        mqttClient.publish("domopool/metrics", output.c_str());
+    }
 }
 
 void sendStatesMqtt(domopool_Config &config)
 {
-    // DynamicJsonDocument doc(ConfigDocSize);
-    // states2doc(config, doc);
-    // String output = "";
-    // serializeJson(doc, output);
-    // mqttClient.publish("domopool/states", output.c_str());
+    if (config.network.mqtt.enabled)
+    {
+        DynamicJsonDocument doc(ConfigDocSize);
+        states2doc(config, doc);
+        String output = "";
+        serializeJson(doc, output);
+        mqttClient.publish("domopool/states", output.c_str());
+    }
 }
 
 void handleNetwork(domopool_Config &config)
