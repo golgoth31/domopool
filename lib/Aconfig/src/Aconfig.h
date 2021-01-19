@@ -19,6 +19,7 @@ void config2pref(domopool_Config &config);
 void unsetForceCheck();
 void startMqtt();
 void stopMqtt();
+void setMqtt(String server);
 void resetConfig();
 void reboot();
 void setWP(int adc_pin, float threshold, int taccuracy, float vmin, float vmax);

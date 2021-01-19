@@ -306,6 +306,10 @@ void stopMqtt()
 {
     prefs.putBool("mqtt_enabled", false);
 }
+void setMqtt(String server)
+{
+    prefs.putString("mqtt_server", server);
+}
 
 void resetConfig()
 {

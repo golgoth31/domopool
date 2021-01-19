@@ -122,18 +122,7 @@ void handleBodyMqtt(AsyncWebServerRequest *request, uint8_t *data, size_t len, s
     {
         printf("Decoding failed: %s\n", PB_GET_ERROR(&stream));
     }
-    if (mqtt.enabled == true)
-    {
-        startMqtt();
-    }
-    else if (mqtt.enabled == false)
-    {
-        stopMqtt();
-    }
-    else
-    {
-        request->send(500);
-    }
+    setMqtt(mqtt.server);
 }
 
 void handleBodyAnalogSensor(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
@@ -434,7 +423,7 @@ void startServer(domopool_Config &config)
 
     // mqtt
     server.on(
-        "/api/v1/mqtt",
+        "/api/v1/mqtt/set",
         HTTP_POST,
         [](AsyncWebServerRequest *request) {
             request->send(200);
@@ -446,6 +435,20 @@ void startServer(domopool_Config &config)
            size_t index,
            size_t total) {
             handleBodyMqtt(request, data, len, index, total);
+        });
+    server.on(
+        "/api/v1/mqtt/enable",
+        HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+            startMqtt();
+            request->send(200);
+        });
+    server.on(
+        "/api/v1/mqtt/disable",
+        HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+            stopMqtt();
+            request->send(200);
         });
 
     // sensors
@@ -460,7 +463,7 @@ void startServer(domopool_Config &config)
 
     // water pressure
     server.on(
-        "/api/v1/wp/spec",
+        "/api/v1/wp/set",
         HTTP_POST,
         [](AsyncWebServerRequest *request) {
             request->send(200);
