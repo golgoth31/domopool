@@ -78,6 +78,9 @@ void pref2config(domopool_Config &config)
     config.limits.tw_min = prefs.getFloat("tw_min", 1);
     config.limits.tw_max = prefs.getFloat("tw_max", 30);
     config.limits.tamb_min = prefs.getFloat("tamb_min", 0);
+    config.sensors.adc_mode = prefs.getShort("adcMode", 1);
+    config.sensors.adc_datarate = prefs.getShort("adcDatarate", 4);
+    config.sensors.adc_gain = prefs.getShort("adcGain", 0);
 }
 
 bool initConfig()
@@ -193,6 +196,9 @@ void config2pref(domopool_Config &config)
     prefs.putFloat("tw_min", config.limits.tw_min);
     prefs.putFloat("tw_max", config.limits.tw_max);
     prefs.putFloat("tamb_min", config.limits.tamb_min);
+    prefs.putShort("adcMode", config.sensors.adc_mode);
+    prefs.putShort("adcDatarate", config.sensors.adc_datarate);
+    prefs.putShort("adcGain", config.sensors.adc_gain);
 }
 
 void saveConfiguration(domopool_Config &config)

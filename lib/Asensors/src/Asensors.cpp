@@ -261,10 +261,9 @@ bool setADS1115(domopool_Config &config, ADS1115 &ads)
 {
     if (ads.isConnected())
     {
-        ads.setGain(0);     // 6.144 volt
-        ads.setDataRate(7); // fast
-        // ads.setMode(0);     // continuous; 1 for single get
-        ads.setMode(1); // continuous; 1 for single get
+        ads.setGain(config.sensors.adc_gain);         // 6.144 volt
+        ads.setDataRate(config.sensors.adc_datarate); // fast
+        ads.setMode(config.sensors.adc_mode);         // continuous; 1 for single get
         ads.requestADC(config.sensors.wp.adc_pin);
         config.alarms.ads1115.not_connected = false;
         return false;
