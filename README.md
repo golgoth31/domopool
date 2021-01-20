@@ -21,10 +21,15 @@ Other hardware:
 ## Funtionalities
 
 - Read/write configuration from preferences (nvs storage)
-- Auto-detect DS18B20
-- Mesure temperature and evaluate filter time based on day hour.
+- Mesure water temperature, ambiant temperature and water pressure
+- Auto-detect DS18B20 (temperature sensors)
+- Avaluate filtering time based on day hour and water temperature
 - Get/Set values through grpc request
 - Set time with ntp
+- Send data with mqtt
+- alarms on temperatures and pressure
+- frost protection
+- low/high pressure protection
 
 ### Configuration
 
