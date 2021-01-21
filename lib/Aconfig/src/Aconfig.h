@@ -29,6 +29,7 @@ void setPH(int adc_pin, float threshold, int taccuracy, float vmin, float vmax);
 void disablePH();
 void setCH(int adc_pin, float threshold, int taccuracy, float vmin, float vmax);
 void disableCH();
+void alarms2doc(domopool_Config &config, JsonDocument &doc);
 void metrics2doc(domopool_Config &config, JsonDocument &doc);
 void states2doc(domopool_Config &config, JsonDocument &doc);
 #endif

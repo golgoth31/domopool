@@ -38,6 +38,7 @@
 unsigned long lastReadingTime = 0;
 int count_time_10s = 0;   // used to trigger action every 30s (15*2s)
 int count_time_30s = 0;   // used to trigger action every 30s (15*2s)
+int count_time_10min = 0; // used to trigger action every 30min (60*30s)
 int count_time_30min = 0; // used to trigger action every 30min (60*30s)
 int count_time_24h = 0;   // used to trigger action every 24h (2880*30)
 
@@ -100,6 +101,9 @@ void setup(void)
     config.tests.tamb = -1.23;
     config.tests.twater = 0;
     config.tests.pressure = 0.8;
+
+    // Get the first temp, next in 10 minutes
+    getDS18B20(config, tempSensors);
 }
 
 void loop(void)
@@ -117,8 +121,9 @@ void loop(void)
     {
         pref2config(config);
         setLightState(config);
-        getDS18B20(config, tempSensors);
+
         getWP(config, ads);
+
         if (!config.states.startup)
         {
             displaySensors(config);
@@ -139,8 +144,8 @@ void loop(void)
             displayProgressBar(percent, TFT_CYAN);
         }
         sendMetricsMqtt(config);
+        sendAlarmsMqtt(config);
         sendStatesMqtt(config);
-        count_time_30s++;
         count_time_10s++;
         lastReadingTime = millis();
     }
@@ -154,26 +159,39 @@ void loop(void)
             config.metrics.saved_twater = config.metrics.twater;
             displayPageMain(config);
         }
+
+        count_time_30s++;
+        count_time_10min++; // Count 60 cycles for 10 min
+        count_time_30min++; // Count 180 cycles for 30 min
         count_time_10s = 0;
     }
 
-    if (count_time_30s == 15)
+    if (count_time_30s == 3)
     {
         Serial.println(F("*** 30s ***"));
-        // setSytemTime(rtcOk);
-        Serial.print(F("Time: "));
-        Serial.println(printTime(true));
-        Serial.print(F("Date: "));
-        Serial.println(printDate());
-        Serial.print(F("Sensor 'water' value: "));
-        Serial.println(config.metrics.twater);
-        Serial.print(F("Sensor 'tamb' value: "));
-        Serial.println(config.metrics.tamb);
-        count_time_30min++; // Count 60 cycles for 30 min
+
+        // sendMetricsMqtt(config);
+
+        // Serial.print(F("Time: "));
+        // Serial.println(printTime(true));
+        // Serial.print(F("Date: "));
+        // Serial.println(printDate());
+        // Serial.print(F("Sensor 'water' value: "));
+        // Serial.println(config.metrics.twater);
+        // Serial.print(F("Sensor 'tamb' value: "));
+        // Serial.println(config.metrics.tamb);
+
         count_time_30s = 0;
     }
 
-    if (count_time_30min >= 60)
+    if (count_time_10min >= 60)
+    {
+        getDS18B20(config, tempSensors);
+
+        count_time_10min = 0;
+    }
+
+    if (count_time_30min >= 180)
     {
         if (!config.states.net_active)
         {

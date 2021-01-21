@@ -599,6 +599,18 @@ void sendStatesMqtt(domopool_Config &config)
     }
 }
 
+void sendAlarmsMqtt(domopool_Config &config)
+{
+    if (mqttClient.connected())
+    {
+        DynamicJsonDocument doc(ConfigDocSize);
+        alarms2doc(config, doc);
+        String output = "";
+        serializeJson(doc, output);
+        mqttClient.publish("domopool/states", output.c_str());
+    }
+}
+
 void reconnect()
 {
     Serial.println("[MQTT] Attempting MQTT connection...");

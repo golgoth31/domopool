@@ -42,7 +42,7 @@ void pref2config(domopool_Config &config)
     config.sensors.ch.adc_pin = prefs.getShort("ch_adc_pin", 1);
     config.sensors.ch.precision_factor = prefs.getShort("ch_prec_fact", 100);
     config.sensors.wp.enabled = prefs.getBool("wp_enabled", true);
-    config.sensors.wp.threshold = prefs.getFloat("wp_threshold", 0);
+    config.sensors.wp.threshold = prefs.getFloat("wp_threshold", 0.5);
     config.sensors.wp.threshold_accuracy = prefs.getShort("wp_t_accuracy", 8);
     config.sensors.wp.vmin = prefs.getFloat("wp_vmin", 0.5);
     config.sensors.wp.vmax = prefs.getFloat("wp_vmax", 4.5);
@@ -370,6 +370,25 @@ void setCH(int adc_pin, float threshold, int taccuracy, float vmin, float vmax)
 void disableCH()
 {
     prefs.putBool("ch_enabled", false);
+}
+
+void alarms2doc(domopool_Config &config, JsonDocument &doc)
+{
+    doc["alarms"]["ads1115"]["not_connected"] = config.alarms.ads1115.not_connected;
+    doc["alarms"]["ads1115"]["not_ready"] = config.alarms.ads1115.not_ready;
+    doc["alarms"]["ads1115"]["not_started"] = config.alarms.ads1115.not_started;
+    doc["alarms"]["ch"] = config.alarms.ch;
+    doc["alarms"]["filter"] = config.alarms.filter;
+    doc["alarms"]["mqtt"]["metrics"] = config.alarms.mqtt.metrics;
+    doc["alarms"]["mqtt"]["states"] = config.alarms.mqtt.states;
+    doc["alarms"]["ph"] = config.alarms.ph;
+    doc["alarms"]["rtc"] = config.alarms.rtc;
+    doc["alarms"]["tamb_frost"] = config.alarms.tamb_frost;
+    doc["alarms"]["tw_frost"] = config.alarms.tw_frost;
+    doc["alarms"]["tw_high"] = config.alarms.tw_high;
+    doc["alarms"]["wp_broken"] = config.alarms.wp_broken;
+    doc["alarms"]["wp_high"] = config.alarms.wp_high;
+    doc["alarms"]["wp_low"] = config.alarms.wp_low;
 }
 
 void metrics2doc(domopool_Config &config, JsonDocument &doc)

@@ -23,6 +23,7 @@ bool checkIP(const char *ip);
 bool startNetwork(const char *ssid, const char *password, domopool_Config &config);
 void restartNetwork(const char *ssid, const char *password, domopool_Config &config);
 void handleNetwork(domopool_Config &config);
+void sendAlarmsMqtt(domopool_Config &config);
 void sendMetricsMqtt(domopool_Config &config);
 void sendStatesMqtt(domopool_Config &config);
 #endif

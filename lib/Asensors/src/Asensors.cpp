@@ -299,7 +299,7 @@ void autoWPThreshold(domopool_Config &config)
     float l_max = config.sensors.wp.vmin + pct;
     if (abs(config.metrics.wp) >= config.limits.wp_0_derive)
     {
-        if (config.sensors.wp.threshold < l_min || config.sensors.wp.threshold > l_max)
+        if (config.metrics.wp_volt > l_min || config.metrics.wp_volt < l_max)
         {
             config.sensors.wp.threshold = config.metrics.wp_volt;
             config.alarms.wp_broken = false;
