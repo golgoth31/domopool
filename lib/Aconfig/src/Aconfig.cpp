@@ -7,7 +7,7 @@ Preferences prefs;
 void pref2config(domopool_Config &config)
 {
     String defaultNtpServer = "europe.pool.ntp.org";
-    String defaultMQTTServer = "192.168.10.194";
+    String defaultMQTTServer = "192.168.10.201";
     // double_t defaultAckTone = 4000;
     // float_t defaultPhThreshold = 7.4;
 
@@ -115,6 +115,7 @@ void loadDefaultConfig(domopool_Config &config)
     config.has_states = true;
     config.has_tests = true;
     config.has_limits = true;
+    config.alarms.has_mqtt = true;
     boolean init = prefs.getBool("init", false);
     if (!init)
     {

@@ -76,7 +76,7 @@ void setup(void)
     // start ds18b20 sensors
     initializeDS18B20(config, tempSensors);
 
-    config.states.net_active = startNetwork(ssid, password, config);
+    restartNetwork(ssid, password, config);
     if (config.states.net_active)
     {
         Serial.println(F("[Eth] Network is up"));

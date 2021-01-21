@@ -156,35 +156,6 @@ void handleBodyAnalogSensor(AsyncWebServerRequest *request, uint8_t *data, size_
     setWP(sens.adc_pin, sens.threshold, sens.threshold_accuracy, sens.vmin, sens.vmax);
 }
 
-void reconnect()
-{
-    // Loop until we're reconnected
-    while (!mqttClient.connected())
-    {
-        Serial.println("[MQTT] Attempting MQTT connection...");
-        // Create a random client ID
-        String clientId = "domopool-";
-        clientId += String(random(0xffff), HEX);
-        // Attempt to connect
-        if (mqttClient.connect(clientId.c_str()))
-        {
-            Serial.println("[MQTT] connected");
-            // // Once connected, publish an announcement...
-            // mqttClient.publish("metrics", "hello world");
-            // // ... and resubscribe
-            // mqttClient.subscribe("inTopic");
-        }
-        else
-        {
-            Serial.print("[MQTT] failed, rc=");
-            Serial.print(mqttClient.state());
-            Serial.println("[MQTT] try again in 5 seconds");
-            // Wait 5 seconds before retrying
-            delay(5000);
-        }
-    }
-}
-
 void software_Reboot()
 {
     delay(1000);
@@ -592,25 +563,61 @@ void restartNetwork(const char *ssid, const char *password, domopool_Config &con
 
 void sendMetricsMqtt(domopool_Config &config)
 {
-    if (config.network.mqtt.enabled)
+    if (mqttClient.connected())
     {
         DynamicJsonDocument doc(ConfigDocSize);
         metrics2doc(config, doc);
         String output = "";
         serializeJson(doc, output);
-        mqttClient.publish("domopool/metrics", output.c_str());
+        if (!mqttClient.publish("domopool/metrics", output.c_str()))
+        {
+            config.alarms.mqtt.metrics = true;
+        }
+        else
+        {
+            config.alarms.mqtt.metrics = false;
+        }
     }
 }
 
 void sendStatesMqtt(domopool_Config &config)
 {
-    if (config.network.mqtt.enabled)
+    if (mqttClient.connected())
     {
         DynamicJsonDocument doc(ConfigDocSize);
         states2doc(config, doc);
         String output = "";
         serializeJson(doc, output);
-        mqttClient.publish("domopool/states", output.c_str());
+        if (!mqttClient.publish("domopool/states", output.c_str()))
+        {
+            config.alarms.mqtt.states = true;
+        }
+        else
+        {
+            config.alarms.mqtt.metrics = false;
+        }
+    }
+}
+
+void reconnect()
+{
+    Serial.println("[MQTT] Attempting MQTT connection...");
+    // Create a random client ID
+    String clientId = "domopool-";
+    clientId += String(random(0xffff), HEX);
+    // Attempt to connect
+    if (mqttClient.connect(clientId.c_str()))
+    {
+        Serial.println("[MQTT] connected");
+        // // Once connected, publish an announcement...
+        // mqttClient.publish("metrics", "hello world");
+        // // ... and resubscribe
+        // mqttClient.subscribe("inTopic");
+    }
+    else
+    {
+        Serial.print("[MQTT] failed, rc=");
+        Serial.print(mqttClient.state());
     }
 }
 
@@ -625,7 +632,7 @@ void handleNetwork(domopool_Config &config)
             {
                 reconnect();
             }
-            mqttClient.loop();
+            // mqttClient.loop();
         }
         else
         {
@@ -634,6 +641,7 @@ void handleNetwork(domopool_Config &config)
                 mqttClient.disconnect();
             }
         }
+        config.states.mqtt_connected = mqttClient.connected();
     }
     else
     {

@@ -401,7 +401,7 @@ void displayServices(domopool_Config &config)
     }
     tft.drawRightString("NET", 240, 107, 1);
 
-    if (config.network.mqtt.enabled)
+    if (config.states.mqtt_connected)
     {
         tft.setTextColor(TFT_GREEN, TFT_BLACK);
     }
