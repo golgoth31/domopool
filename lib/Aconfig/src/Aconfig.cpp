@@ -323,6 +323,13 @@ void reboot()
     esp_restart();
 }
 
+void setADC(int mode, int gain, int datarate)
+{
+    prefs.putShort("adcMode", mode);
+    prefs.putShort("adcGain", gain);
+    prefs.putShort("adcDatarate", datarate);
+}
+
 void setWP(int adc_pin, float threshold, int taccuracy, float vmin, float vmax)
 {
     prefs.putFloat("wp_threshold", threshold);

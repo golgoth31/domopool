@@ -156,10 +156,35 @@ void handleBodyAnalogSensor(AsyncWebServerRequest *request, uint8_t *data, size_
     setWP(sens.adc_pin, sens.threshold, sens.threshold_accuracy, sens.vmin, sens.vmax);
 }
 
-void software_Reboot()
+void handleBodyADC(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
 {
-    delay(1000);
-    esp_restart();
+    uint8_t buffer[total];
+    if (!index)
+    {
+        Serial.printf("BodyStart: %u B\n", total);
+    }
+    for (size_t i = 0; i < len; i++)
+    {
+        buffer[i] = data[i];
+    }
+    if (index + len == total)
+    {
+        Serial.printf("BodyEnd: %u B\n", total);
+    }
+    /* Allocate space for the decoded message. */
+    domopool_Sensors sens = domopool_Sensors_init_default;
+
+    /* Create a stream that reads from the buffer. */
+    pb_istream_t stream = pb_istream_from_buffer(buffer, total);
+    /* Now we are ready to decode the message. */
+    bool status = pb_decode(&stream, domopool_Sensors_fields, &sens);
+
+    /* Check for errors... */
+    if (!status)
+    {
+        printf("Decoding failed: %s\n", PB_GET_ERROR(&stream));
+    }
+    setADC(sens.adc_mode, sens.adc_gain, sens.adc_datarate);
 }
 
 bool checkIP(const char *ip)
@@ -462,6 +487,22 @@ void startServer(domopool_Config &config)
             request->send(200);
         });
 
+    // water pressure
+    server.on(
+        "/api/v1/adc/set",
+        HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+            request->send(200);
+        },
+        NULL,
+        [](AsyncWebServerRequest *request,
+           uint8_t *data,
+           size_t len,
+           size_t index,
+           size_t total) {
+            handleBodyADC(request, data, len, index, total);
+        });
+
     // reboot
     server.on(
         "/api/v1/reboot",
@@ -558,6 +599,7 @@ void stopNetwork()
 void restartNetwork(const char *ssid, const char *password, domopool_Config &config)
 {
     stopNetwork();
+    delay(1000);
     config.states.net_active = startNetwork(ssid, password, config);
 }
 
