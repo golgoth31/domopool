@@ -143,7 +143,7 @@ void loop(void)
             int percent = (count_time_10s * 100) / 5;
             displayProgressBar(percent, TFT_CYAN);
         }
-        sendMetricsMqtt(config);
+        // sendMetricsMqtt(config);
         sendAlarmsMqtt(config);
         sendStatesMqtt(config);
         count_time_10s++;
@@ -170,7 +170,7 @@ void loop(void)
     {
         Serial.println(F("*** 30s ***"));
 
-        // sendMetricsMqtt(config);
+        sendMetricsMqtt(config);
 
         // Serial.print(F("Time: "));
         // Serial.println(printTime(true));

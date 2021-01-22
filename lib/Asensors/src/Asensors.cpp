@@ -264,7 +264,6 @@ bool setADS1115(domopool_Config &config, ADS1115 &ads)
         ads.setGain(config.sensors.adc_gain);
         ads.setDataRate(config.sensors.adc_datarate);
         ads.setMode(config.sensors.adc_mode);
-        ads.requestADC(config.sensors.wp.adc_pin);
         config.alarms.ads1115.not_connected = false;
         return false;
     }
@@ -272,7 +271,7 @@ bool setADS1115(domopool_Config &config, ADS1115 &ads)
     {
         config.alarms.ads1115.not_connected = true;
         return true;
-    };
+    }
 }
 
 void initializeADS115(domopool_Config &config, ADS1115 &ads, int sda, int scl)
@@ -280,8 +279,11 @@ void initializeADS115(domopool_Config &config, ADS1115 &ads, int sda, int scl)
     if (ads.begin(sda, scl))
     {
         config.alarms.ads1115.not_started = false;
-        setADS1115(config, ads);
-        Serial.println(F("[Sens] ADS1115 started"));
+        if (!setADS1115(config, ads))
+        {
+            ads.requestADC(config.sensors.wp.adc_pin);
+            Serial.println(F("[Sens] ADS1115 started"));
+        }
     }
     else
     {
@@ -322,11 +324,7 @@ float getWPAnalog(domopool_Config &config, ADS1115 &ads)
     int16_t raw = 0;
     float val = 0;
 
-    // set ads1115 if not connected before
-    if (config.alarms.ads1115.not_connected)
-    {
-        setADS1115(config, ads);
-    }
+    setADS1115(config, ads);
 
     // get data from ads1115
     if (ads.isReady())
@@ -334,28 +332,27 @@ float getWPAnalog(domopool_Config &config, ADS1115 &ads)
         raw = ads.getValue();
         ads.requestADC(config.sensors.wp.adc_pin);
         val = ads.toVoltage(raw);
-        config.metrics.wp_volt = val;
         config.alarms.ads1115.not_ready = false;
+        return val;
     }
     else
     {
         config.alarms.ads1115.not_ready = true;
+        return config.metrics.wp_volt;
     }
-
-    return val;
 }
 
 void getWP(domopool_Config &config, ADS1115 &ads)
 {
-    float wp_analog = getWPAnalog(config, ads);
+    config.metrics.wp_volt = getWPAnalog(config, ads);
 
     // autocalibrate
     if (!config.states.filter_on)
     {
-        config.sensors.wp.threshold = autoWPThreshold(config, wp_analog, config.sensors.wp.threshold);
+        config.sensors.wp.threshold = autoWPThreshold(config, config.metrics.wp_volt, config.sensors.wp.threshold);
     }
 
-    config.metrics.wp = roundVal((wp_analog - config.sensors.wp.threshold) * 4, config.sensors.wp.precision_factor);
+    config.metrics.wp = roundVal((config.metrics.wp_volt - config.sensors.wp.threshold) * 4, config.sensors.wp.precision_factor);
     if (config.metrics.wp >= config.limits.wp_max)
     {
         config.alarms.wp_high = true;
