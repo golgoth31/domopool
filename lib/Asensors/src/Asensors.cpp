@@ -292,17 +292,17 @@ void initializeADS115(domopool_Config &config, ADS1115 &ads, int sda, int scl)
 
 // When wp is to far from 0 (when filter pump is stopped), recalibrate threshold
 // do not calibrate if threshold is above limits around wp vmin
-void autoWPThreshold(domopool_Config &config)
+float autoWPThreshold(domopool_Config &config, float cur_val, float cur_threshold)
 {
     float pct = (config.sensors.wp.vmin * config.sensors.wp.threshold_accuracy) / 100;
     float l_min = config.sensors.wp.vmin - pct;
     float l_max = config.sensors.wp.vmin + pct;
     if (abs(config.metrics.wp) >= config.limits.wp_0_derive)
     {
-        if (config.metrics.wp_volt > l_min || config.metrics.wp_volt < l_max)
+        if (cur_val > l_min || cur_val < l_max)
         {
-            config.sensors.wp.threshold = config.metrics.wp_volt;
             config.alarms.wp_broken = false;
+            return cur_val;
         }
         else
         {
@@ -314,6 +314,7 @@ void autoWPThreshold(domopool_Config &config)
     {
         config.alarms.wp_broken = false;
     }
+    return cur_threshold;
 }
 
 float getWPAnalog(domopool_Config &config, ADS1115 &ads)
@@ -341,18 +342,20 @@ float getWPAnalog(domopool_Config &config, ADS1115 &ads)
         config.alarms.ads1115.not_ready = true;
     }
 
-    // set analog threshold when pump is off
-    if (!config.states.filter_on)
-    {
-        autoWPThreshold(config);
-    }
-
     return val;
 }
 
 void getWP(domopool_Config &config, ADS1115 &ads)
 {
-    config.metrics.wp = roundVal((getWPAnalog(config, ads) - config.sensors.wp.threshold) * 4, config.sensors.wp.precision_factor);
+    float wp_analog = getWPAnalog(config, ads);
+
+    // autocalibrate
+    if (!config.states.filter_on)
+    {
+        config.sensors.wp.threshold = autoWPThreshold(config, wp_analog, config.sensors.wp.threshold);
+    }
+
+    config.metrics.wp = roundVal((wp_analog - config.sensors.wp.threshold) * 4, config.sensors.wp.precision_factor);
     if (config.metrics.wp >= config.limits.wp_max)
     {
         config.alarms.wp_high = true;
