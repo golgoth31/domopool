@@ -34,6 +34,7 @@ void pref2config(domopool_Config &config)
     config.sensors.ph.vmax = prefs.getFloat("ph_vmax", 0);
     config.sensors.ph.adc_pin = prefs.getShort("ph_adc_pin", 2);
     config.sensors.ph.precision_factor = prefs.getShort("ph_prec_fact", 100);
+    config.sensors.ph.auto_cal = prefs.getBool("ph_auto_cal", true);
     config.sensors.ch.enabled = prefs.getBool("ch_enabled", false);
     config.sensors.ch.threshold = prefs.getFloat("ch_threshold", 0);
     config.sensors.ch.threshold_accuracy = prefs.getShort("ch_t_accuracy", 0);
@@ -41,6 +42,7 @@ void pref2config(domopool_Config &config)
     config.sensors.ch.vmax = prefs.getFloat("ch_vmax", 0);
     config.sensors.ch.adc_pin = prefs.getShort("ch_adc_pin", 1);
     config.sensors.ch.precision_factor = prefs.getShort("ch_prec_fact", 100);
+    config.sensors.ch.auto_cal = prefs.getBool("ch_auto_cal", true);
     config.sensors.wp.enabled = prefs.getBool("wp_enabled", true);
     config.sensors.wp.threshold = prefs.getFloat("wp_threshold", 0.5);
     config.sensors.wp.threshold_accuracy = prefs.getShort("wp_t_accuracy", 8);
@@ -48,6 +50,7 @@ void pref2config(domopool_Config &config)
     config.sensors.wp.vmax = prefs.getFloat("wp_vmax", 4.5);
     config.sensors.wp.adc_pin = prefs.getShort("wp_adc_pin", 3);
     config.sensors.wp.precision_factor = prefs.getShort("wp_prec_fact", 100);
+    config.sensors.wp.auto_cal = prefs.getBool("wp_auto_cal", true);
     config.sensors.wait_for_conversion = prefs.getBool("waitConvertion", true);
     config.sensors.temp_resolution = prefs.getShort("tempResolution", 12);
     config.sensors.precision_factor = prefs.getShort("precisonFact", 10);
@@ -62,7 +65,7 @@ void pref2config(domopool_Config &config)
     config.pump.force_ch = prefs.getBool("forceCH", false);
     config.pump.automatic = prefs.getBool("auto", true);
     config.pump.force_check = prefs.getBool("forceCheck", false);
-    config.pump.force_duration = prefs.getUInt("forceDuration", 0);
+    config.pump.force_duration = prefs.getShort("forceDuration", 0);
     config.pump.force_start_time = prefs.getUInt("forceStartTime", 0);
     config.global.force_light = prefs.getBool("forceLight", false);
     config.limits.ch_min = prefs.getFloat("ch_min", 0);
@@ -79,8 +82,8 @@ void pref2config(domopool_Config &config)
     config.limits.tw_max = prefs.getFloat("tw_max", 30);
     config.limits.tamb_min = prefs.getFloat("tamb_min", 0);
     config.sensors.adc_mode = prefs.getShort("adcMode", 1);
-    config.sensors.adc_datarate = prefs.getShort("adcDatarate", 4);
-    config.sensors.adc_gain = prefs.getShort("adcGain", 0);
+    config.sensors.adc_datarate = prefs.getShort("adcDatarate", 1);
+    config.sensors.adc_gain = prefs.getShort("adcGain", 1);
 }
 
 bool initConfig()
@@ -153,6 +156,7 @@ void config2pref(domopool_Config &config)
     prefs.putFloat("ph_vmax", config.sensors.ph.vmax);
     prefs.putShort("ph_adc_pin", config.sensors.ph.adc_pin);
     prefs.putShort("ph_prec_fact", config.sensors.ph.precision_factor);
+    prefs.putBool("ph_auto_cal", config.sensors.ph.auto_cal);
     prefs.putBool("ch_enabled", config.sensors.ch.enabled);
     prefs.putFloat("ch_threshold", config.sensors.ch.threshold);
     prefs.putShort("ch_t_accuracy", config.sensors.ch.threshold_accuracy);
@@ -160,6 +164,7 @@ void config2pref(domopool_Config &config)
     prefs.putFloat("ch_vmax", config.sensors.ch.vmax);
     prefs.putShort("ch_adc_pin", config.sensors.ch.adc_pin);
     prefs.putShort("ch_prec_fact", config.sensors.ch.precision_factor);
+    prefs.putBool("ch_auto_cal", config.sensors.ch.auto_cal);
     prefs.putBool("wp_enabled", config.sensors.wp.enabled);
     prefs.putFloat("wp_threshold", config.sensors.wp.threshold);
     prefs.putShort("wp_t_accuracy", config.sensors.wp.threshold_accuracy);
@@ -167,6 +172,7 @@ void config2pref(domopool_Config &config)
     prefs.putFloat("wp_vmax", config.sensors.wp.vmax);
     prefs.putShort("wp_adc_pin", config.sensors.wp.adc_pin);
     prefs.putShort("wp_prec_fact", config.sensors.wp.precision_factor);
+    prefs.putBool("wp_auto_cal", config.sensors.wp.auto_cal);
     prefs.putShort("BacklightTime", config.global.lcd_backlight_duration);
     prefs.putDouble("ack_tone", config.global.ack_tone);
     prefs.putInt("ackDuration", config.global.ack_duration);
@@ -180,7 +186,7 @@ void config2pref(domopool_Config &config)
     prefs.putBool("forceCH", config.pump.force_ch);
     prefs.putBool("forceLight", config.global.force_light);
     prefs.putBool("forceCheck", config.pump.force_check);
-    prefs.putUInt("forceDuration", config.pump.force_duration);
+    prefs.putShort("forceDuration", config.pump.force_duration);
     prefs.putUInt("forceStartTime", config.pump.force_start_time);
     prefs.putString("mqtt_server", config.network.mqtt.server);
     prefs.putBool("mqtt_enabled", config.network.mqtt.enabled);
@@ -216,31 +222,24 @@ void initConfigData(domopool_Config &config)
     config.states.ph_on = false;
 }
 
-bool setPumpDuration(uint32_t duration)
-{
-    prefs.putUInt("forceDuration", duration);
-    prefs.putUInt("forceStartTime", now());
-    return true;
-}
-
 bool stopRelay(const int8_t p)
 {
     switch (p)
     {
-    case 0:
+    case domopool_Relay_names_filter:
         prefs.putBool("auto", false);
         prefs.putBool("forceFilter", false);
-        setPumpDuration(0);
+        prefs.putShort("forceDuration", 0);
         break;
-    case 1:
+    case domopool_Relay_names_ch:
         prefs.putBool("auto", false);
         prefs.putBool("forceCH", false);
         break;
-    case 2:
+    case domopool_Relay_names_ph:
         prefs.putBool("auto", false);
         prefs.putBool("forcePH", false);
         break;
-    case 3:
+    case domopool_Relay_names_light:
         prefs.putBool("forceLight", false);
         break;
 
@@ -255,46 +254,61 @@ bool startRelay(const int8_t p, uint32_t duration)
 {
     switch (p)
     {
-    case 0:
+    // start filter
+    case domopool_Relay_names_filter:
         prefs.putBool("auto", false);
         prefs.putBool("forceFilter", true);
-        setPumpDuration(duration);
+        prefs.putBool("forceCH", false);
+        prefs.putBool("forcePH", false);
         break;
-    case 1:
+    // start ch
+    case domopool_Relay_names_ch:
         prefs.putBool("auto", false);
         prefs.putBool("forceFilter", true);
         prefs.putBool("forceCH", true);
         break;
-    case 2:
+    // start ph
+    case domopool_Relay_names_ph:
         prefs.putBool("auto", false);
         prefs.putBool("forceFilter", true);
         prefs.putBool("forcePH", true);
         break;
-    case 3:
+    // start light
+    case domopool_Relay_names_light:
         prefs.putBool("forceLight", true);
         break;
-
+    // all relay
+    case 4:
+        prefs.putBool("auto", false);
+        prefs.putBool("forceFilter", true);
+        prefs.putBool("forceCH", true);
+        prefs.putBool("forcePH", true);
+        break;
     default:
         return false;
         break;
     }
+    prefs.putShort("forceDuration", duration);
+    prefs.putUInt("forceStartTime", now());
     return true;
 }
-bool setRelayAuto()
+
+void unsetRelayAuto()
+{
+    prefs.putBool("auto", false);
+    prefs.putShort("forceDuration", 0);
+}
+
+void setRelayAuto()
 {
     prefs.putBool("auto", true);
     prefs.putBool("forceCheck", true);
     prefs.putBool("forceFilter", false);
-    setPumpDuration(0);
-    return true;
+    prefs.putBool("forceCH", false);
+    prefs.putBool("forcePH", false);
+    prefs.putShort("forceDuration", 0);
 }
 
-bool unsetRelayAuto()
-{
-    prefs.putBool("auto", false);
-    prefs.putInt("forceDuration", 0);
-    return true;
-}
 void unsetForceCheck()
 {
     prefs.putBool("forceCheck", false);
@@ -330,13 +344,14 @@ void setADC(int mode, int gain, int datarate)
     prefs.putShort("adcDatarate", datarate);
 }
 
-void setWP(int adc_pin, float threshold, int taccuracy, float vmin, float vmax)
+void setWP(int adc_pin, float threshold, int taccuracy, float vmin, float vmax, bool auto_cal)
 {
     prefs.putFloat("wp_threshold", threshold);
     prefs.putInt("wp_t_accuracy", taccuracy);
     prefs.putInt("wp_adc_pin", adc_pin);
     prefs.putFloat("wp_vmin", vmin);
     prefs.putFloat("wp_vmax", vmax);
+    prefs.putBool("wp_auto_cal", auto_cal);
 }
 
 void enableWP()
@@ -349,7 +364,7 @@ void disableWP()
     prefs.putBool("wp_enabled", false);
 }
 
-void setPH(int adc_pin, float threshold, int taccuracy, float vmin, float vmax)
+void setPH(int adc_pin, float threshold, int taccuracy, float vmin, float vmax, bool auto_cal)
 {
     prefs.putBool("ph_enabled", true);
     prefs.putFloat("ph_threshold", threshold);
@@ -357,6 +372,7 @@ void setPH(int adc_pin, float threshold, int taccuracy, float vmin, float vmax)
     prefs.putInt("ph_adc_pin", adc_pin);
     prefs.putFloat("ph_vmin", vmin);
     prefs.putFloat("ph_vmax", vmax);
+    prefs.putBool("ph_auto_cal", auto_cal);
 }
 
 void disablePH()
@@ -364,7 +380,7 @@ void disablePH()
     prefs.putBool("ph_enabled", false);
 }
 
-void setCH(int adc_pin, float threshold, int taccuracy, float vmin, float vmax)
+void setCH(int adc_pin, float threshold, int taccuracy, float vmin, float vmax, bool auto_cal)
 {
     prefs.putBool("ch_enabled", true);
     prefs.putFloat("ch_threshold", threshold);
@@ -372,6 +388,7 @@ void setCH(int adc_pin, float threshold, int taccuracy, float vmin, float vmax)
     prefs.putInt("ch_adc_pin", adc_pin);
     prefs.putFloat("ch_vmin", vmin);
     prefs.putFloat("ch_vmax", vmax);
+    prefs.putBool("ch_auto_cal", auto_cal);
 }
 
 void disableCH()

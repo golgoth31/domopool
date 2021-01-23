@@ -347,7 +347,7 @@ void getWP(domopool_Config &config, ADS1115 &ads)
     config.metrics.wp_volt = getWPAnalog(config, ads);
 
     // autocalibrate
-    if (!config.states.filter_on)
+    if (!config.states.filter_on && config.sensors.wp.auto_cal)
     {
         config.sensors.wp.threshold = autoWPThreshold(config, config.metrics.wp_volt, config.sensors.wp.threshold);
     }

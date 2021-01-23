@@ -482,7 +482,7 @@ void displayPressed(domopool_Config &config)
                 }
                 else
                 {
-                    setRelayAuto();
+                    startRelay(6, 0);
                 }
             }
         }

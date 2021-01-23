@@ -80,9 +80,6 @@ void handleBodyRelay(AsyncWebServerRequest *request, uint8_t *data, size_t len, 
     case domopool_Relay_states_start:
         startRelay(locswitch.relay, locswitch.duration);
         break;
-    case domopool_Relay_states_auto:
-        setRelayAuto();
-        break;
     case domopool_Relay_states_stop:
         stopRelay(locswitch.relay);
         break;
@@ -90,8 +87,6 @@ void handleBodyRelay(AsyncWebServerRequest *request, uint8_t *data, size_t len, 
     default:
         break;
     }
-
-    request->send(200);
 }
 
 void handleBodyMqtt(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
@@ -153,7 +148,7 @@ void handleBodyAnalogSensor(AsyncWebServerRequest *request, uint8_t *data, size_
     {
         printf("Decoding failed: %s\n", PB_GET_ERROR(&stream));
     }
-    setWP(sens.adc_pin, sens.threshold, sens.threshold_accuracy, sens.vmin, sens.vmax);
+    setWP(sens.adc_pin, sens.threshold, sens.threshold_accuracy, sens.vmin, sens.vmax, sens.auto_cal);
 }
 
 void handleBodyADC(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
@@ -415,6 +410,13 @@ void startServer(domopool_Config &config)
            size_t index,
            size_t total) {
             handleBodyRelay(request, data, len, index, total);
+        });
+    server.on(
+        "/api/v1/auto",
+        HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+            setRelayAuto();
+            request->send(200);
         });
 
     // mqtt
