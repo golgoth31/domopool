@@ -398,21 +398,21 @@ void disableCH()
 
 void alarms2doc(domopool_Config &config, JsonDocument &doc)
 {
-    doc["alarms"]["ads1115"]["not_connected"] = config.alarms.ads1115.not_connected;
-    doc["alarms"]["ads1115"]["not_ready"] = config.alarms.ads1115.not_ready;
-    doc["alarms"]["ads1115"]["not_started"] = config.alarms.ads1115.not_started;
+    doc["alarms"]["adsNotConnected"] = config.alarms.ads1115.not_connected;
+    doc["alarms"]["adsNotReady"] = config.alarms.ads1115.not_ready;
+    doc["alarms"]["adsNotStarted"] = config.alarms.ads1115.not_started;
     doc["alarms"]["ch"] = config.alarms.ch;
     doc["alarms"]["filter"] = config.alarms.filter;
-    doc["alarms"]["mqtt"]["metrics"] = config.alarms.mqtt.metrics;
-    doc["alarms"]["mqtt"]["states"] = config.alarms.mqtt.states;
+    doc["alarms"]["mqttMetrics"] = config.alarms.mqtt.metrics;
+    doc["alarms"]["mqttStates"] = config.alarms.mqtt.states;
     doc["alarms"]["ph"] = config.alarms.ph;
     doc["alarms"]["rtc"] = config.alarms.rtc;
-    doc["alarms"]["tamb_frost"] = config.alarms.tamb_frost;
-    doc["alarms"]["tw_frost"] = config.alarms.tw_frost;
-    doc["alarms"]["tw_high"] = config.alarms.tw_high;
-    doc["alarms"]["wp_broken"] = config.alarms.wp_broken;
-    doc["alarms"]["wp_high"] = config.alarms.wp_high;
-    doc["alarms"]["wp_low"] = config.alarms.wp_low;
+    doc["alarms"]["tambFrost"] = config.alarms.tamb_frost;
+    doc["alarms"]["twFrost"] = config.alarms.tw_frost;
+    doc["alarms"]["twHigh"] = config.alarms.tw_high;
+    doc["alarms"]["wpBroken"] = config.alarms.wp_broken;
+    doc["alarms"]["wpHigh"] = config.alarms.wp_high;
+    doc["alarms"]["wpLow"] = config.alarms.wp_low;
 }
 
 void metrics2doc(domopool_Config &config, JsonDocument &doc)

@@ -607,52 +607,50 @@ void restartNetwork(const char *ssid, const char *password, domopool_Config &con
 
 void sendMetricsMqtt(domopool_Config &config)
 {
-    if (mqttClient.connected())
+    config.metrics.time = getCurrentTime();
+    DynamicJsonDocument doc(ConfigDocSize);
+    metrics2doc(config, doc);
+    String output = "";
+    serializeJson(doc, output);
+    if (!mqttClient.publish("domopool/metrics", output.c_str()))
     {
-        config.metrics.time = getCurrentTime();
-        DynamicJsonDocument doc(ConfigDocSize);
-        metrics2doc(config, doc);
-        String output = "";
-        serializeJson(doc, output);
-        if (!mqttClient.publish("domopool/metrics", output.c_str()))
-        {
-            config.alarms.mqtt.metrics = true;
-        }
-        else
-        {
-            config.alarms.mqtt.metrics = false;
-        }
+        config.alarms.mqtt.metrics = true;
+    }
+    else
+    {
+        config.alarms.mqtt.metrics = false;
     }
 }
 
 void sendStatesMqtt(domopool_Config &config)
 {
-    if (mqttClient.connected())
+    DynamicJsonDocument doc(ConfigDocSize);
+    states2doc(config, doc);
+    String output = "";
+    serializeJson(doc, output);
+    if (!mqttClient.publish("domopool/states", output.c_str()))
     {
-        DynamicJsonDocument doc(ConfigDocSize);
-        states2doc(config, doc);
-        String output = "";
-        serializeJson(doc, output);
-        if (!mqttClient.publish("domopool/states", output.c_str()))
-        {
-            config.alarms.mqtt.states = true;
-        }
-        else
-        {
-            config.alarms.mqtt.states = false;
-        }
+        config.alarms.mqtt.states = true;
+    }
+    else
+    {
+        config.alarms.mqtt.states = false;
     }
 }
 
 void sendAlarmsMqtt(domopool_Config &config)
 {
-    if (mqttClient.connected())
+    DynamicJsonDocument doc(ConfigDocSize);
+    alarms2doc(config, doc);
+    String output = "";
+    serializeJson(doc, output);
+    if (mqttClient.publish("domopool/alarms", output.c_str()))
     {
-        DynamicJsonDocument doc(ConfigDocSize);
-        alarms2doc(config, doc);
-        String output = "";
-        serializeJson(doc, output);
-        mqttClient.publish("domopool/states", output.c_str());
+        config.alarms.mqtt.alarms = true;
+    }
+    else
+    {
+        config.alarms.mqtt.alarms = false;
     }
 }
 
