@@ -49,14 +49,6 @@ uint8_t tab[29][24] = {
     // {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, //30
 };
 
-void setPrefs(uint8_t t, uint8_t h, uint8_t state)
-{
-    if (pumpPrefs.getBool("p" + t + h, tab[t][h]) != state)
-    {
-        pumpPrefs.putBool("p" + t + h, state);
-    }
-}
-
 void pumpInit(domopool_Config &config, int filterPin, int chPin, int phPin)
 {
 

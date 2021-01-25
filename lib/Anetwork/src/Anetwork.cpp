@@ -609,6 +609,7 @@ void sendMetricsMqtt(domopool_Config &config)
 {
     if (mqttClient.connected())
     {
+        config.metrics.time = getCurrentTime();
         DynamicJsonDocument doc(ConfigDocSize);
         metrics2doc(config, doc);
         String output = "";
@@ -638,7 +639,7 @@ void sendStatesMqtt(domopool_Config &config)
         }
         else
         {
-            config.alarms.mqtt.metrics = false;
+            config.alarms.mqtt.states = false;
         }
     }
 }

@@ -426,6 +426,7 @@ void metrics2doc(domopool_Config &config, JsonDocument &doc)
     doc["metrics"]["hour"] = config.metrics.hour;
     doc["metrics"]["savedTwater"] = config.metrics.saved_twater;
     doc["metrics"]["wpVolt"] = config.metrics.wp_volt;
+    doc["metrics"]["time"] = config.metrics.time;
 }
 
 void states2doc(domopool_Config &config, JsonDocument &doc)

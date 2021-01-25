@@ -9,6 +9,7 @@
 #define __ATIME_H_UNDEFINED__
 void initSystemTime(domopool_Config &config, int sda, int scl);
 void setSytemTime(domopool_Config &config);
+time_t getCurrentTime();
 String printTime(bool seconds);
 String printDate();
 #endif

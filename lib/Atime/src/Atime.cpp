@@ -104,6 +104,18 @@ time_t getRTCTime()
     tmElem.Year = rdt.Year() - 1970;
     return makeTime(tmElem);
 }
+time_t getCurrentTime()
+{
+    tmElements_t tmElem;
+    tmElem.Day = day();
+    tmElem.Hour = hour();
+    tmElem.Minute = minute();
+    tmElem.Month = month();
+    tmElem.Second = second();
+    tmElem.Wday = weekday();
+    tmElem.Year = year() - 1970;
+    return makeTime(tmElem);
+}
 
 void initSystemTime(domopool_Config &config, int sda, int scl)
 {

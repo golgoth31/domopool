@@ -202,7 +202,7 @@ void loop(void)
         {
             displayWifi(config, false);
         }
-
+        setSytemTime(config);
         count_time_30min = 0;
     }
 }
