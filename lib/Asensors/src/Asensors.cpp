@@ -357,19 +357,19 @@ void getWP(domopool_Config &config, ADS1115 &ads)
     {
         config.alarms.wp_high = true;
     }
-    else
-    {
-        config.alarms.wp_high = false;
-    }
+    // else
+    // {
+    //     config.alarms.wp_high = false;
+    // }
 
-    if (config.metrics.wp <= config.limits.wp_min || config.states.filter_on)
+    if (config.metrics.wp <= config.limits.wp_min && config.states.filter_on)
     {
         config.alarms.wp_low = true;
     }
-    else
-    {
-        config.alarms.wp_low = false;
-    }
+    // else
+    // {
+    //     config.alarms.wp_low = false;
+    // }
 
     if (config.tests.enabled)
     {

@@ -459,6 +459,15 @@ void startServer(domopool_Config &config)
             request->send(200);
         });
 
+    // alarms
+    server.on(
+        "/api/v1/alarms/reset",
+        HTTP_POST,
+        [&config](AsyncWebServerRequest *request) {
+            config.alarms = domopool_Alarms_init_default;
+            request->send(200);
+        });
+
     // water pressure
     server.on(
         "/api/v1/wp/set",
@@ -616,10 +625,10 @@ void sendMetricsMqtt(domopool_Config &config)
     {
         config.alarms.mqtt.metrics = true;
     }
-    else
-    {
-        config.alarms.mqtt.metrics = false;
-    }
+    // else
+    // {
+    //     config.alarms.mqtt.metrics = false;
+    // }
 }
 
 void sendStatesMqtt(domopool_Config &config)
@@ -632,10 +641,10 @@ void sendStatesMqtt(domopool_Config &config)
     {
         config.alarms.mqtt.states = true;
     }
-    else
-    {
-        config.alarms.mqtt.states = false;
-    }
+    // else
+    // {
+    //     config.alarms.mqtt.states = false;
+    // }
 }
 
 void sendAlarmsMqtt(domopool_Config &config)
@@ -644,14 +653,14 @@ void sendAlarmsMqtt(domopool_Config &config)
     alarms2doc(config, doc);
     String output = "";
     serializeJson(doc, output);
-    if (mqttClient.publish("domopool/alarms", output.c_str()))
+    if (!mqttClient.publish("domopool/alarms", output.c_str()))
     {
         config.alarms.mqtt.alarms = true;
     }
-    else
-    {
-        config.alarms.mqtt.alarms = false;
-    }
+    // else
+    // {
+    //     config.alarms.mqtt.alarms = false;
+    // }
 }
 
 void reconnect()

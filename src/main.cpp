@@ -144,9 +144,9 @@ void loop(void)
             displayProgressBar(percent, TFT_CYAN);
         }
         sendMetricsMqtt(config);
-        delay(50);
+        // delay(50);
         sendAlarmsMqtt(config);
-        delay(50);
+        // delay(50);
         sendStatesMqtt(config);
         count_time_10s++;
         lastReadingTime = millis();
