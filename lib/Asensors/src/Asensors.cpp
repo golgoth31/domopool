@@ -294,32 +294,26 @@ void initializeADS115(domopool_Config &config, ADS1115 &ads, int sda, int scl)
 
 // When wp is to far from 0 (when filter pump is stopped), recalibrate threshold
 // do not calibrate if threshold is above limits around wp vmin
-float autoWPThreshold(domopool_Config &config, float cur_val, float cur_threshold)
+void autoWPThreshold(domopool_Config &config)
 {
     float pct = (config.sensors.wp.vmin * config.sensors.wp.threshold_accuracy) / 100;
     float l_min = config.sensors.wp.vmin - pct;
     float l_max = config.sensors.wp.vmin + pct;
-    if (abs(config.metrics.wp) >= config.limits.wp_0_derive)
+
+    // Check if we are really far from 0.5V
+    if (config.metrics.wp_volt > l_min || config.metrics.wp_volt < l_max)
     {
-        if (cur_val > l_min || cur_val < l_max)
-        {
-            config.alarms.wp_broken = false;
-            return cur_val;
-        }
-        else
-        {
-            config.alarms.wp_broken = true;
-            disableWP();
-        }
+        config.alarms.wp_broken = false;
+        config.sensors.wp.threshold = config.metrics.wp_volt;
     }
     else
     {
-        config.alarms.wp_broken = false;
+        config.alarms.wp_broken = true;
+        disableWP();
     }
-    return cur_threshold;
 }
 
-float getWPAnalog(domopool_Config &config, ADS1115 &ads)
+void getWPAnalog(domopool_Config &config, ADS1115 &ads)
 {
     int16_t raw = 0;
     float val = 0;
@@ -333,23 +327,24 @@ float getWPAnalog(domopool_Config &config, ADS1115 &ads)
         ads.requestADC(config.sensors.wp.adc_pin);
         val = ads.toVoltage(raw);
         config.alarms.ads1115.not_ready = false;
-        return val;
+        config.metrics.wp_volt = val;
     }
     else
     {
         config.alarms.ads1115.not_ready = true;
-        return config.metrics.wp_volt;
     }
 }
 
 void getWP(domopool_Config &config, ADS1115 &ads)
 {
-    config.metrics.wp_volt = getWPAnalog(config, ads);
+    getWPAnalog(config, ads);
 
-    // autocalibrate
-    if (!config.states.filter_on && config.sensors.wp.auto_cal)
+    float cur_wp = (config.metrics.wp_volt - config.sensors.wp.threshold) * 4;
+
+    // autocalibrate if we have derived from 0 Bar
+    if (!config.states.filter_on && config.sensors.wp.auto_cal && abs(cur_wp) >= config.limits.wp_0_derive)
     {
-        config.sensors.wp.threshold = autoWPThreshold(config, config.metrics.wp_volt, config.sensors.wp.threshold);
+        autoWPThreshold(config);
     }
 
     config.metrics.wp = roundVal((config.metrics.wp_volt - config.sensors.wp.threshold) * 4, config.sensors.wp.precision_factor);

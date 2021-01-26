@@ -16,5 +16,5 @@ void initializeDS18B20(domopool_Config &config, DallasTemperature &tempSensors);
 void initializeADS115(domopool_Config &config, ADS1115 &ads, int sda, int scl);
 void getDS18B20(domopool_Config &config, DallasTemperature &tempSensors);
 void getWP(domopool_Config &config, ADS1115 &ads);
-float getWPAnalog(domopool_Config &config, ADS1115 &ads);
+void getWPAnalog(domopool_Config &config, ADS1115 &ads);
 #endif

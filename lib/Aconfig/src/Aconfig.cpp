@@ -77,7 +77,7 @@ void pref2config(domopool_Config &config)
     config.limits.ch_temp_threshold = prefs.getFloat("ch_t_threshold", 15);
     config.limits.ch_temp_wait_reset = prefs.getFloat("ch_t_wait", 14);
     config.limits.wait_before_ch = prefs.getShort("ch_wait", 72);
-    config.limits.wp_0_derive = prefs.getFloat("wp_0_derive", 0.03);
+    config.limits.wp_0_derive = prefs.getFloat("wp_0_derive", 0.01);
     config.limits.tw_min = prefs.getFloat("tw_min", 1);
     config.limits.tw_max = prefs.getFloat("tw_max", 30);
     config.limits.tamb_min = prefs.getFloat("tamb_min", 0);
@@ -337,21 +337,21 @@ void reboot()
     esp_restart();
 }
 
-void setADC(int mode, int gain, int datarate)
+void setADC(domopool_Sensors &sens)
 {
-    prefs.putShort("adcMode", mode);
-    prefs.putShort("adcGain", gain);
-    prefs.putShort("adcDatarate", datarate);
+    prefs.putShort("adcMode", sens.adc_mode);
+    prefs.putShort("adcGain", sens.adc_gain);
+    prefs.putShort("adcDatarate", sens.adc_datarate);
 }
 
-void setWP(int adc_pin, float threshold, int taccuracy, float vmin, float vmax, bool auto_cal)
+void setWP(domopool_AnalogSensor &analog)
 {
-    prefs.putFloat("wp_threshold", threshold);
-    prefs.putInt("wp_t_accuracy", taccuracy);
-    prefs.putInt("wp_adc_pin", adc_pin);
-    prefs.putFloat("wp_vmin", vmin);
-    prefs.putFloat("wp_vmax", vmax);
-    prefs.putBool("wp_auto_cal", auto_cal);
+    prefs.putFloat("wp_threshold", analog.threshold);
+    prefs.putInt("wp_t_accuracy", analog.threshold_accuracy);
+    prefs.putInt("wp_adc_pin", analog.adc_pin);
+    prefs.putFloat("wp_vmin", analog.vmin);
+    prefs.putFloat("wp_vmax", analog.vmax);
+    prefs.putBool("wp_auto_cal", analog.auto_cal);
 }
 
 void enableWP()
@@ -364,15 +364,19 @@ void disableWP()
     prefs.putBool("wp_enabled", false);
 }
 
-void setPH(int adc_pin, float threshold, int taccuracy, float vmin, float vmax, bool auto_cal)
+void setPH(domopool_AnalogSensor &analog)
+{
+    prefs.putFloat("ph_threshold", analog.threshold);
+    prefs.putInt("ph_t_accuracy", analog.threshold_accuracy);
+    prefs.putInt("ph_adc_pin", analog.adc_pin);
+    prefs.putFloat("ph_vmin", analog.vmin);
+    prefs.putFloat("ph_vmax", analog.vmax);
+    prefs.putBool("ph_auto_cal", analog.auto_cal);
+}
+
+void enablePH()
 {
     prefs.putBool("ph_enabled", true);
-    prefs.putFloat("ph_threshold", threshold);
-    prefs.putInt("ph_t_accuracy", taccuracy);
-    prefs.putInt("ph_adc_pin", adc_pin);
-    prefs.putFloat("ph_vmin", vmin);
-    prefs.putFloat("ph_vmax", vmax);
-    prefs.putBool("ph_auto_cal", auto_cal);
 }
 
 void disablePH()
@@ -380,20 +384,41 @@ void disablePH()
     prefs.putBool("ph_enabled", false);
 }
 
-void setCH(int adc_pin, float threshold, int taccuracy, float vmin, float vmax, bool auto_cal)
+void setCH(domopool_AnalogSensor &analog)
+{
+    prefs.putFloat("ch_threshold", analog.threshold);
+    prefs.putInt("ch_t_accuracy", analog.threshold_accuracy);
+    prefs.putInt("ch_adc_pin", analog.adc_pin);
+    prefs.putFloat("ch_vmin", analog.vmin);
+    prefs.putFloat("ch_vmax", analog.vmax);
+    prefs.putBool("ch_auto_cal", analog.auto_cal);
+}
+
+void enableCH()
 {
     prefs.putBool("ch_enabled", true);
-    prefs.putFloat("ch_threshold", threshold);
-    prefs.putInt("ch_t_accuracy", taccuracy);
-    prefs.putInt("ch_adc_pin", adc_pin);
-    prefs.putFloat("ch_vmin", vmin);
-    prefs.putFloat("ch_vmax", vmax);
-    prefs.putBool("ch_auto_cal", auto_cal);
 }
 
 void disableCH()
 {
     prefs.putBool("ch_enabled", false);
+}
+
+void setLimits(domopool_Limits &limits)
+{
+    prefs.putFloat("ch_min", limits.ch_min);
+    prefs.putFloat("ch_max", limits.ch_max);
+    prefs.putFloat("ph_min", limits.ph_min);
+    prefs.putFloat("ph_max", limits.ph_max);
+    prefs.putFloat("wp_min", limits.wp_min);
+    prefs.putFloat("wp_max", limits.wp_max);
+    prefs.putFloat("ch_t_threshold", limits.ch_temp_threshold);
+    prefs.putFloat("ch_t_wait", limits.ch_temp_wait_reset);
+    prefs.putShort("ch_wait", limits.wait_before_ch);
+    prefs.putFloat("wp_0_derive", limits.wp_0_derive);
+    prefs.putFloat("tw_min", limits.tw_min);
+    prefs.putFloat("tw_max", limits.tw_max);
+    prefs.putFloat("tamb_min", limits.tamb_min);
 }
 
 void alarms2doc(domopool_Config &config, JsonDocument &doc)
