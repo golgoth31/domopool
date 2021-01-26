@@ -465,6 +465,10 @@ void startServer(domopool_Config &config)
         HTTP_POST,
         [&config](AsyncWebServerRequest *request) {
             config.alarms = domopool_Alarms_init_default;
+            config.alarms.has_ads1115 = true;
+            config.alarms.has_mqtt = true;
+            config.alarms.mqtt = domopool_MqttAlarms_init_default;
+            config.alarms.ads1115 = domopool_Ads115Alarms_init_default;
             request->send(200);
         });
 
