@@ -5,6 +5,8 @@ Preferences sensPrefs;
 String twout = "twout";
 String twin = "twin";
 String tamb = "tamb";
+uint8_t blankFilterStart = 0;
+uint8_t blankMaxNumber = 1;
 
 bool checkAddress(DeviceAddress deviceAddress, String temp)
 {
@@ -357,14 +359,24 @@ void getWP(domopool_Config &config, ADS1115 &ads)
     //     config.alarms.wp_high = false;
     // }
 
-    if (config.metrics.wp <= config.limits.wp_min && config.states.filter_on)
+    if (config.states.filter_on)
     {
-        config.alarms.wp_low = true;
+        if (config.metrics.wp <= config.limits.wp_min)
+        {
+            if (blankFilterStart == blankMaxNumber)
+            {
+                config.alarms.wp_low = true;
+            }
+            else
+            {
+                blankFilterStart++;
+            }
+        }
     }
-    // else
-    // {
-    //     config.alarms.wp_low = false;
-    // }
+    else
+    {
+        blankFilterStart = 0;
+    }
 
     if (config.tests.enabled)
     {
