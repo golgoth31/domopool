@@ -15,8 +15,8 @@ int pumpChRelayPin;
 int lightRelayPin;
 int countForceDuration = 0;
 
-uint8_t tab[29][24] = {
-    // {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, //0
+uint8_t tab[30][24] = {
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, //0
     {0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, //1
     {0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, //2
     {0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, //3
@@ -46,7 +46,7 @@ uint8_t tab[29][24] = {
     {0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0}, //27
     {0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0}, //28
     {0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0}, //29
-    // {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, //30
+                                                                              // {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, //30
 };
 
 void pumpInit(domopool_Config &config, int filterPin, int chPin, int phPin)
@@ -81,6 +81,7 @@ void pumpInit(domopool_Config &config, int filterPin, int chPin, int phPin)
         config.metrics.over_15_duration = 0;
         pumpPrefs.putShort("chDuration", 0);
     }
+    config.metrics.saved_twater = pumpPrefs.getFloat("saved_tw", 5);
 }
 
 void lightInit(int lightPin)
@@ -112,7 +113,11 @@ void setLightState(domopool_Config &config)
 
 void setFilterState(domopool_Config &config, int hour)
 {
+    bool chOn = false;
+    bool fOn = false;
+
     // keep using water temperature if last shown is below 2 degreC
+    // Only use water temp when pump is on
     if (config.states.filter_on || config.metrics.twater <= 2)
     {
         config.metrics.saved_twater = config.metrics.twater;
@@ -120,26 +125,38 @@ void setFilterState(domopool_Config &config, int hour)
 
     int8_t tempWaterAbs = (int)config.metrics.saved_twater;
 
-    bool state;
-    if (config.alarms.tw_frost || config.alarms.tamb_frost || config.alarms.tw_high)
+    // We set the default state depending on temp and hour
+    fOn = tab[tempWaterAbs][hour];
+    // ch follows filter state when temp is ok for enought time
+    if (config.metrics.saved_twater > config.limits.ch_temp_threshold && config.metrics.over_15_duration > config.limits.wait_before_ch)
     {
-        state = true;
-    }
-    else
-    {
-        String p = "p";
-        p += tempWaterAbs;
-        p += hour;
-        state = pumpPrefs.getBool(p.c_str(), tab[tempWaterAbs][hour]);
+        chOn = fOn;
     }
 
-    if (config.alarms.wp_high || (config.sensors.wp.enabled && config.alarms.wp_low && config.pump.automatic))
+    // We check alarms and enforce state if needed
+    // Temp alarms
+    if (config.alarms.tw_frost || config.alarms.tamb_frost || config.alarms.tw_high)
     {
-        state = false;
+        fOn = true;
         config.pump.force_check = true;
     }
 
-    // Start the filter pump if needed
+    // enforce state
+    if (config.pump.force_filter)
+    {
+        fOn = config.pump.force_filter;
+        chOn = config.pump.force_ch;
+    }
+
+    // Pressure alarms
+    if (config.alarms.wp_high || (config.sensors.wp.enabled && config.alarms.wp_low && config.pump.automatic))
+    {
+        fOn = false;
+        chOn = fOn;
+        config.pump.force_check = true;
+    }
+
+    // Apply relay states
     if (config.metrics.hour != hour || !config.pump.automatic || config.pump.force_check)
     {
         // setting force_check to false in case of automatic toggle (from false to true)
@@ -155,41 +172,23 @@ void setFilterState(domopool_Config &config, int hour)
         }
         config.states.automatic = config.pump.automatic;
 
-        bool chOn = false;
-        bool fOn = false;
-        // set the pump state based on table calculation or forced
-        if (config.pump.automatic)
+        // enforce ch to follow filter state when we are over 18°C
+        if (config.metrics.saved_twater > 18 && !config.pump.force_filter)
         {
-            fOn = state;
-            if (((config.metrics.saved_twater > config.limits.ch_temp_threshold && config.metrics.over_15_duration > config.limits.wait_before_ch) || config.metrics.saved_twater > 18))
-            {
-                chOn = state;
-            }
+            chOn = fOn;
         }
 
-        if (config.pump.force_filter)
-        {
-            fOn = true;
-            if (config.pump.force_ch)
-            {
-                chOn = true;
-            }
-        }
-
-        // set the pump state based on table calculation or forced
+        // Apply states to relay
         if (fOn)
         {
             Serial.println(F("[Filter] On"));
-            config.states.filter_on = true;
             digitalWrite(pumpFilterRelayPin, LOW);
             if (chOn)
             {
-                config.states.ch_on = true;
                 digitalWrite(pumpChRelayPin, LOW);
             }
             else
             {
-                config.states.ch_on = false;
                 digitalWrite(pumpChRelayPin, HIGH);
             }
         }
@@ -197,10 +196,10 @@ void setFilterState(domopool_Config &config, int hour)
         {
             Serial.println(F("[Filter] Off"));
             digitalWrite(pumpFilterRelayPin, HIGH);
-            config.states.filter_on = false;
-            config.states.ch_on = false;
             digitalWrite(pumpChRelayPin, HIGH);
         }
+        config.states.filter_on = fOn;
+        config.states.ch_on = chOn;
 
         // update chduration only once per hour
         if (config.metrics.hour != hour)
@@ -215,6 +214,9 @@ void setFilterState(domopool_Config &config, int hour)
                 config.metrics.over_15_duration = 0;
                 pumpPrefs.putShort("chDuration", 0);
             }
+
+            // preserve previous saved temperature
+            pumpPrefs.putFloat("saved_tw", config.metrics.saved_twater);
         }
         if (config.pump.force_filter && config.pump.force_duration != 0)
         {

@@ -158,7 +158,7 @@ void loop(void)
         {
             Serial.println(F("End of startup blanking time"));
             config.states.startup = false;
-            config.metrics.saved_twater = config.metrics.twater;
+            // config.metrics.saved_twater = config.metrics.twater;
             displayPageMain(config);
         }
 

@@ -229,7 +229,8 @@ bool stopRelay(const int8_t p)
     case domopool_Relay_names_filter:
         prefs.putBool("auto", false);
         prefs.putBool("forceFilter", false);
-        prefs.putShort("forceDuration", 0);
+        prefs.putBool("forceCH", false);
+        prefs.putBool("forcePH", false);
         break;
     case domopool_Relay_names_ch:
         prefs.putBool("auto", false);
@@ -239,14 +240,16 @@ bool stopRelay(const int8_t p)
         prefs.putBool("auto", false);
         prefs.putBool("forcePH", false);
         break;
-    case domopool_Relay_names_light:
-        prefs.putBool("forceLight", false);
-        break;
+        // stop light
+        // case domopool_Relay_names_light:
+        //     prefs.putBool("forceLight", false);
+        //     break;
 
     default:
         return false;
         break;
     }
+    prefs.putShort("forceDuration", 0);
     return true;
 }
 
@@ -274,9 +277,9 @@ bool startRelay(const int8_t p, uint32_t duration)
         prefs.putBool("forcePH", true);
         break;
     // start light
-    case domopool_Relay_names_light:
-        prefs.putBool("forceLight", true);
-        break;
+    // case domopool_Relay_names_light:
+    //     prefs.putBool("forceLight", true);
+    //     break;
     // all relay
     case 4:
         prefs.putBool("auto", false);
