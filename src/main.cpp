@@ -102,8 +102,10 @@ void setup(void)
     config.tests.twater = 0;
     config.tests.pressure = 0.8;
 
-    // Get the first temp, next in 10 minutes
+    // Get the first temp, then each 10 minutes
+    config.metrics.saved_twater = 15;
     getDS18B20(config, tempSensors);
+    sendTempsMqtt(config);
 }
 
 void loop(void)
@@ -189,6 +191,7 @@ void loop(void)
     if (count_time_10min >= 60)
     {
         getDS18B20(config, tempSensors);
+        sendTempsMqtt(config);
 
         count_time_10min = 0;
     }

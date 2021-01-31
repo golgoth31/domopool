@@ -36,4 +36,5 @@ void setLimits(domopool_Limits &limits);
 void alarms2doc(domopool_Config &config, JsonDocument &doc);
 void metrics2doc(domopool_Config &config, JsonDocument &doc);
 void states2doc(domopool_Config &config, JsonDocument &doc);
+void temps2doc(domopool_Config &config, JsonDocument &doc);
 #endif

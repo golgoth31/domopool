@@ -450,7 +450,7 @@ void displayPressed(domopool_Config &config)
 
     if (pressed && !config.states.startup)
     {
-        Serial.println("touched");
+        Serial.print("touched ");
         Button_ACK_Tone(config);
 
         // filter button
@@ -461,11 +461,11 @@ void displayPressed(domopool_Config &config)
                 Serial.println("filter");
                 if (config.states.filter_on)
                 {
-                    stopRelay(0);
+                    stopRelay(domopool_Relay_names_filter);
                 }
                 else
                 {
-                    startRelay(0, 0);
+                    startRelay(domopool_Relay_names_filter, 0);
                 }
             }
         }
@@ -493,13 +493,20 @@ void displayPressed(domopool_Config &config)
             if ((y > CH_Y) && (y <= CH_Y + CH_H))
             {
                 Serial.println("ch");
-                if (config.states.ch_on)
+                if (!config.pump.automatic)
                 {
-                    stopRelay(1);
+                    if (config.states.ch_on)
+                    {
+                        stopRelay(domopool_Relay_names_ch);
+                    }
+                    else
+                    {
+                        startRelay(domopool_Relay_names_ch, 0);
+                    }
                 }
                 else
                 {
-                    startRelay(1, 0);
+                    forceChDuration(config);
                 }
             }
         }

@@ -12,4 +12,5 @@ void setLightState(domopool_Config &config);
 void pumpFullTime(bool pump[24], bool state);
 void setFilterState(domopool_Config &config, int hour);
 void setPhState(domopool_Config &config);
+bool forceChDuration(domopool_Config &config);
 #endif

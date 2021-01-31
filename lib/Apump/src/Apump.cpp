@@ -81,7 +81,6 @@ void pumpInit(domopool_Config &config, int filterPin, int chPin, int phPin)
         config.metrics.over_15_duration = 0;
         pumpPrefs.putShort("chDuration", 0);
     }
-    config.metrics.saved_twater = pumpPrefs.getFloat("saved_tw", 5);
 }
 
 void lightInit(int lightPin)
@@ -172,12 +171,6 @@ void setFilterState(domopool_Config &config, int hour)
         }
         config.states.automatic = config.pump.automatic;
 
-        // enforce ch to follow filter state when we are over 18°C
-        if (config.metrics.saved_twater > 18 && !config.pump.force_filter)
-        {
-            chOn = fOn;
-        }
-
         // Apply states to relay
         if (fOn)
         {
@@ -204,7 +197,7 @@ void setFilterState(domopool_Config &config, int hour)
         // update chduration only once per hour
         if (config.metrics.hour != hour)
         {
-            if (config.metrics.saved_twater > config.limits.ch_temp_threshold && config.metrics.over_15_duration <= config.limits.wait_before_ch)
+            if (config.metrics.saved_twater >= config.limits.ch_temp_threshold && config.metrics.over_15_duration <= config.limits.wait_before_ch)
             {
                 config.metrics.over_15_duration++;
                 pumpPrefs.putShort("chDuration", config.metrics.over_15_duration);
@@ -214,9 +207,6 @@ void setFilterState(domopool_Config &config, int hour)
                 config.metrics.over_15_duration = 0;
                 pumpPrefs.putShort("chDuration", 0);
             }
-
-            // preserve previous saved temperature
-            pumpPrefs.putFloat("saved_tw", config.metrics.saved_twater);
         }
         if (config.pump.force_filter && config.pump.force_duration != 0)
         {
@@ -306,4 +296,10 @@ void setPhState(domopool_Config &config)
 
     Serial.print(F("[PH] Pump state: "));
     Serial.println(config.states.ph_on);
+}
+
+bool forceChDuration(domopool_Config &config)
+{
+    pumpPrefs.putShort("chDuration", config.limits.wait_before_ch + 1);
+    return true;
 }

@@ -5,6 +5,7 @@
 
 #include <Aconfig.h>
 #include <Atime.h>
+#include <Apump.h>
 
 #ifndef __ADISPLAY_H__
 #define __ADISPLAY_H__

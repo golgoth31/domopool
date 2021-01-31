@@ -26,4 +26,5 @@ void handleNetwork(domopool_Config &config);
 void sendAlarmsMqtt(domopool_Config &config);
 void sendMetricsMqtt(domopool_Config &config);
 void sendStatesMqtt(domopool_Config &config);
+void sendTempsMqtt(domopool_Config &config);
 #endif

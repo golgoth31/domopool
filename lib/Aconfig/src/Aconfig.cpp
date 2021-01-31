@@ -449,13 +449,17 @@ void metrics2doc(domopool_Config &config, JsonDocument &doc)
     doc["metrics"]["over15Duration"] = config.metrics.over_15_duration;
     doc["metrics"]["ch"] = config.metrics.ch;
     doc["metrics"]["ph"] = config.metrics.ph;
-    doc["metrics"]["tamb"] = config.metrics.tamb;
-    doc["metrics"]["twater"] = config.metrics.twater;
     doc["metrics"]["wp"] = config.metrics.wp;
-    doc["metrics"]["hour"] = config.metrics.hour;
-    doc["metrics"]["savedTwater"] = config.metrics.saved_twater;
     doc["metrics"]["wpVolt"] = config.metrics.wp_volt;
     doc["metrics"]["time"] = config.metrics.time;
+}
+
+void temps2doc(domopool_Config &config, JsonDocument &doc)
+{
+    doc["metrics"]["tamb"] = config.metrics.tamb;
+    doc["metrics"]["twater"] = config.metrics.twater;
+    doc["metrics"]["hour"] = config.metrics.hour;
+    doc["metrics"]["savedTwater"] = config.metrics.saved_twater;
 }
 
 void states2doc(domopool_Config &config, JsonDocument &doc)

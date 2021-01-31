@@ -332,25 +332,25 @@ void startServer(domopool_Config &config)
             }
         });
 
-    // healthz
-    server.on(
-        "/healthz",
-        HTTP_GET,
-        [](AsyncWebServerRequest *request) {
-            request->send(200);
-        });
+    // // healthz
+    // server.on(
+    //     "/healthz",
+    //     HTTP_GET,
+    //     [](AsyncWebServerRequest *request) {
+    //         request->send(200);
+    //     });
 
-    // metrics
-    server.on(
-        "/readyz",
-        HTTP_GET,
-        [&config](AsyncWebServerRequest *request) {
-            if (config.states.startup)
-            {
-                request->send(404);
-            }
-            request->send(200);
-        });
+    // // metrics
+    // server.on(
+    //     "/readyz",
+    //     HTTP_GET,
+    //     [&config](AsyncWebServerRequest *request) {
+    //         if (config.states.startup)
+    //         {
+    //             request->send(404);
+    //         }
+    //         request->send(200);
+    //     });
 
     // favicon
     server.on(
@@ -447,6 +447,13 @@ void startServer(domopool_Config &config)
         HTTP_POST,
         [](AsyncWebServerRequest *request) {
             setRelayAuto();
+            request->send(200);
+        });
+    server.on(
+        "/api/v1/auto-ch",
+        HTTP_POST,
+        [&config](AsyncWebServerRequest *request) {
+            forceChDuration(config);
             request->send(200);
         });
 
@@ -707,6 +714,22 @@ void sendAlarmsMqtt(domopool_Config &config)
     if (!mqttClient.publish("domopool/alarms", output.c_str()))
     {
         config.alarms.mqtt.alarms = true;
+    }
+    // else
+    // {
+    //     config.alarms.mqtt.alarms = false;
+    // }
+}
+
+void sendTempsMqtt(domopool_Config &config)
+{
+    DynamicJsonDocument doc(ConfigDocSize);
+    temps2doc(config, doc);
+    String output = "";
+    serializeJson(doc, output);
+    if (!mqttClient.publish("domopool/temps", output.c_str()))
+    {
+        config.alarms.mqtt.temps = true;
     }
     // else
     // {
