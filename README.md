@@ -9,8 +9,11 @@ The goal of this project is to automatise some parts of my pool, mainly the flte
 The base hardware is an esp32 devkitC.
 Other hardware:
 
-- arduitouch box: https://www.hwhardsoft.de/english/projects/arduitouch-esp/
-- LCD: Ili9341 240x320 RGB
+- Box: [arduitouch](https://www.az-delivery.de/en/products/az-touch-wandgehauseset-mit-touchscreen-fur-esp8266-und-esp32?_pos=4&_sid=61b662d69&_ss=r)
+    - LCD: Ili9341 240x320 RGB touch screen
+    - Power: Integrated 5V voltage regulator (input voltage 9 - 35V DC)
+    - Built-in piezo buzzer
+- Controler: [ESP32 board](https://www.az-delivery.de/en/collections/more-products-4/products/esp32-developmentboard)
 - Temperatures (water and ambiant): 2 DS18B20
 - Water pressure: GS07381-06 (200PSI) [amazon](https://www.amazon.fr/gp/product/B07YZL36FN/ref=ppx_yo_dt_b_asin_title_o06_s00?ie=UTF8&psc=1)
 - RTC: DS3231 [amazon](https://www.amazon.fr/gp/product/B07RDHPYJD/ref=ppx_yo_dt_b_asin_title_o08_s00?ie=UTF8&psc=1)
