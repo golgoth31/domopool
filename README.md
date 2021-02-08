@@ -18,6 +18,13 @@ Other hardware:
 - LevelShifter: TXS0108E [az-delivery](https://www.az-delivery.de/en/products/logiklevel-wandler-3-3v-5v?_pos=1&_sid=a0a8086aa&_ss=r)
 - Relay: 4-relay module 5V with optocoupler low-level trigger [az-delivery](https://www.az-delivery.de/en/products/4-relais-modul?_pos=2&_sid=34a975ef0&_ss=r)
 
+### Pictures
+
+- The box
+![Domopool box](doc/pictures/domopool-box.png)
+
+- The pressure sensor on top of the sand filter
+![Domopool pressure sencors](doc/pictures/domopool-press.png)
 ## Funtionalities
 
 - Read/write configuration from preferences (nvs storage)
