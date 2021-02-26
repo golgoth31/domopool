@@ -1,6 +1,6 @@
 // include the dependencies
 #include <Arduino.h>
-// #include <Wire.h>
+#include <esp_task_wdt.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <TimeLib.h>
@@ -23,6 +23,7 @@
 #define SDA 26
 #define SCL 27
 #define pressure_adc_pin 3
+#define WDT_TIMEOUT 30
 
 // ArduiTouch touch screen pins for TFT_espi
 // #define DTFT_MISO 19
@@ -106,6 +107,10 @@ void setup(void)
     config.metrics.saved_twater = 15;
     getDS18B20(config, tempSensors);
     sendTempsMqtt(config);
+
+    // Setting watchDog
+    esp_task_wdt_init(WDT_TIMEOUT, true); //enable panic so ESP32 restarts
+    esp_task_wdt_add(NULL);
 }
 
 void loop(void)
@@ -121,6 +126,7 @@ void loop(void)
     // Get sensors every 2 seconds
     if ((millis() - lastReadingTime) >= 2000)
     {
+
         pref2config(config);
         setLightState(config);
 
@@ -168,6 +174,9 @@ void loop(void)
         count_time_10min++; // Count 60 cycles for 10 min
         count_time_30min++; // Count 180 cycles for 30 min
         count_time_10s = 0;
+
+        // reset watchdog;
+        esp_task_wdt_reset();
     }
 
     if (count_time_30s == 3)
