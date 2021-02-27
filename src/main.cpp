@@ -156,6 +156,10 @@ void loop(void)
         sendAlarmsMqtt(config);
         // delay(50);
         sendStatesMqtt(config);
+
+        // reset watchdog;
+        esp_task_wdt_reset();
+
         count_time_10s++;
         lastReadingTime = millis();
     }
@@ -174,9 +178,6 @@ void loop(void)
         count_time_10min++; // Count 60 cycles for 10 min
         count_time_30min++; // Count 180 cycles for 30 min
         count_time_10s = 0;
-
-        // reset watchdog;
-        esp_task_wdt_reset();
     }
 
     if (count_time_30s == 3)
