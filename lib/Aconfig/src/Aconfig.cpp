@@ -20,6 +20,7 @@ void pref2config(domopool_Config &config)
     //no bug
     config.global.lcd_backlight_duration = prefs.getShort("BacklightTime", 30000);
     config.global.ack_duration = prefs.getInt("ackDuration", 100);
+    config.global.wdt_duration = prefs.getInt("wdtDuration", 60);
     config.global.serial_out = prefs.getBool("serialOut", true);
     config.global.display_startup = prefs.getBool("displayStartup", false);
     config.network.ntp.day_light = prefs.getShort("dayLight", 3600);
@@ -176,6 +177,7 @@ void config2pref(domopool_Config &config)
     prefs.putShort("BacklightTime", config.global.lcd_backlight_duration);
     prefs.putDouble("ack_tone", config.global.ack_tone);
     prefs.putInt("ackDuration", config.global.ack_duration);
+    prefs.putInt("wdtDuration", config.global.wdt_duration);
     prefs.putBool("serialOut", config.global.serial_out);
     prefs.putBool("displayStartup", config.global.display_startup);
     prefs.putShort("dayLight", config.network.ntp.day_light);

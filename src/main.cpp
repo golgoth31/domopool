@@ -23,7 +23,6 @@
 #define SDA 26
 #define SCL 27
 #define pressure_adc_pin 3
-#define WDT_TIMEOUT 30
 
 // ArduiTouch touch screen pins for TFT_espi
 // #define DTFT_MISO 19
@@ -109,7 +108,7 @@ void setup(void)
     sendTempsMqtt(config);
 
     // Setting watchDog
-    esp_task_wdt_init(WDT_TIMEOUT, true); //enable panic so ESP32 restarts
+    esp_task_wdt_init(config.global.wdt_duration, true); //enable panic so ESP32 restarts
     esp_task_wdt_add(NULL);
 }
 
