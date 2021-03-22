@@ -6,6 +6,7 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include <ESPAsyncWebServer.h>
+#include <WebSerial.hpp>
 #include <PubSubClient.h>
 #include <FS.h>
 #include <SPIFFS.h>

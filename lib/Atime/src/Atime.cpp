@@ -117,6 +117,46 @@ time_t getCurrentTime()
     return makeTime(tmElem);
 }
 
+String getCurrentTimeAsString()
+{
+    String date = "";
+    // 1977-04-22T06:00:00Z;
+    date += year();
+    date += "-";
+    if (month() < 10)
+    {
+        date += "0";
+    }
+    date += month();
+    date += "-";
+    if (day() < 10)
+    {
+        date += "0";
+    }
+    date += day();
+    date += "T";
+    if (hour() < 10)
+    {
+        date += "0";
+    }
+    date += hour();
+    date += ":";
+    if (minute() < 10)
+    {
+        date += "0";
+    }
+    date += minute();
+    date += ":";
+    if (second() < 10)
+    {
+        date += "0";
+    }
+    date += second();
+    date += "Z";
+
+    return date;
+}
+
 void initSystemTime(domopool_Config &config, int sda, int scl)
 {
     configTime(

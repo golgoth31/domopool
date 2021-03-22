@@ -12,4 +12,5 @@ void setSytemTime(domopool_Config &config);
 time_t getCurrentTime();
 String printTime(bool seconds);
 String printDate();
+String getCurrentTimeAsString();
 #endif

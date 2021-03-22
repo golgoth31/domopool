@@ -578,7 +578,7 @@ void startServer(domopool_Config &config)
         HTTP_POST,
         [&config](AsyncWebServerRequest *request) {
             saveConfiguration(config);
-            reboot();
+            // reboot();
             request->send(200);
         });
 
@@ -587,7 +587,7 @@ void startServer(domopool_Config &config)
         "/api/v1/config",
         HTTP_GET,
         [&config](AsyncWebServerRequest *request) {
-            uint8_t buffer[1024];
+            uint8_t buffer[2048];
             size_t message_length;
             bool status;
             pb_ostream_t pb_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
@@ -611,7 +611,7 @@ void startServer(domopool_Config &config)
         [&config](AsyncWebServerRequest *request) {
             resetConfig();
             request->send(200);
-            reboot();
+            // reboot();
         });
 
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
@@ -621,6 +621,7 @@ void startServer(domopool_Config &config)
         [](AsyncWebServerRequest *request) {
             request->send(404);
         });
+    // WebSerial.begin(&server);
     server.begin();
 }
 
@@ -674,7 +675,7 @@ void restartNetwork(const char *ssid, const char *password, domopool_Config &con
 
 void sendMetricsMqtt(domopool_Config &config)
 {
-    config.metrics.time = getCurrentTime();
+    strcpy(config.metrics.time, getCurrentTimeAsString().c_str());
     DynamicJsonDocument doc(ConfigDocSize);
     metrics2doc(config, doc);
     String output = "";

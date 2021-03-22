@@ -127,7 +127,7 @@ void setFilterState(domopool_Config &config, int hour)
     // We set the default state depending on temp and hour
     fOn = tab[tempWaterAbs][hour];
     // ch follows filter state when temp is ok for enought time
-    if (config.metrics.saved_twater > config.limits.ch_temp_threshold && config.metrics.over_15_duration > config.limits.wait_before_ch)
+    if (config.metrics.saved_twater >= config.limits.ch_temp_threshold && config.metrics.over_15_duration >= config.limits.wait_before_ch)
     {
         chOn = fOn;
     }
