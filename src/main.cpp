@@ -182,6 +182,10 @@ void loop(void)
     if (count_time_30s == 3)
     {
         Serial.println(F("*** 30s ***"));
+        if (config.pump.force_filter)
+        {
+            getDS18B20(config, tempSensors);
+        }
 
         // sendMetricsMqtt(config);
 
@@ -199,7 +203,10 @@ void loop(void)
 
     if (count_time_10min >= 60)
     {
-        getDS18B20(config, tempSensors);
+        if (config.pump.automatic)
+        {
+            getDS18B20(config, tempSensors);
+        }
         sendTempsMqtt(config);
 
         count_time_10min = 0;

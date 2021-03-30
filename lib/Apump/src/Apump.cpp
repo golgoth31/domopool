@@ -124,34 +124,44 @@ void setFilterState(domopool_Config &config, int hour)
 
     int8_t tempWaterAbs = (int)config.metrics.saved_twater;
 
-    // We set the default state depending on temp and hour
-    fOn = tab[tempWaterAbs][hour];
-    // ch follows filter state when temp is ok for enought time
-    if (config.metrics.saved_twater >= config.limits.ch_temp_threshold && config.metrics.over_15_duration >= config.limits.wait_before_ch)
+    // We set the default state depending on temp and hour and automatic
+    if (config.pump.automatic)
     {
-        chOn = fOn;
-    }
+        fOn = tab[tempWaterAbs][hour];
 
-    // We check alarms and enforce state if needed
-    // Temp alarms
-    if (config.alarms.tw_frost || config.alarms.tamb_frost || config.alarms.tw_high)
-    {
-        fOn = true;
-        config.pump.force_check = true;
-    }
+        // ch follows filter state when temp is ok for enought time
+        if (config.metrics.saved_twater >= config.limits.ch_temp_threshold && config.metrics.over_15_duration >= config.limits.wait_before_ch)
+        {
+            chOn = fOn;
+        }
 
-    // enforce state
-    if (config.pump.force_filter)
+        // We check alarms and enforce state if needed
+        // Temp alarms
+        if (config.alarms.tw_frost || config.alarms.tamb_frost || config.alarms.tw_high)
+        {
+            fOn = true;
+            config.pump.force_check = true;
+        }
+
+        // Pressure alarms
+        if (config.sensors.wp.enabled && config.alarms.wp_low)
+        {
+            fOn = false;
+            chOn = false;
+            config.pump.force_check = true;
+        }
+    }
+    else
     {
         fOn = config.pump.force_filter;
         chOn = config.pump.force_ch;
     }
 
     // Pressure alarms
-    if (config.alarms.wp_high || (config.sensors.wp.enabled && config.alarms.wp_low && config.pump.automatic))
+    if (config.alarms.wp_high)
     {
         fOn = false;
-        chOn = fOn;
+        chOn = false;
         config.pump.force_check = true;
     }
 
