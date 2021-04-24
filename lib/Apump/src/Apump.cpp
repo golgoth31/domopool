@@ -112,8 +112,8 @@ void setLightState(domopool_Config &config)
 
 void setFilterState(domopool_Config &config, int hour)
 {
-    bool chOn = false;
-    bool fOn = false;
+    bool chOn = config.pump.force_filter;
+    bool fOn = config.pump.force_ch;
 
     // keep using water temperature if last shown is below 2 degreC
     // Only use water temp when pump is on
@@ -128,6 +128,11 @@ void setFilterState(domopool_Config &config, int hour)
     if (config.pump.automatic)
     {
         fOn = tab[tempWaterAbs][hour];
+
+        if (config.pump.recover)
+        {
+            fOn = true;
+        }
 
         // ch follows filter state when temp is ok for enought time
         if (config.metrics.saved_twater >= config.limits.ch_temp_threshold && config.metrics.over_15_duration >= config.limits.wait_before_ch)
@@ -151,11 +156,6 @@ void setFilterState(domopool_Config &config, int hour)
             config.pump.force_check = true;
         }
     }
-    else
-    {
-        fOn = config.pump.force_filter;
-        chOn = config.pump.force_ch;
-    }
 
     // Pressure alarms
     if (config.alarms.wp_high)
@@ -173,13 +173,6 @@ void setFilterState(domopool_Config &config, int hour)
         {
             unsetForceCheck();
         }
-
-        // keep filter state when swithcing from automatic mode
-        if (!config.pump.force_filter && !config.pump.automatic && config.states.automatic)
-        {
-            config.pump.force_filter = config.states.filter_on;
-        }
-        config.states.automatic = config.pump.automatic;
 
         // Apply states to relay
         if (fOn)
@@ -201,8 +194,6 @@ void setFilterState(domopool_Config &config, int hour)
             digitalWrite(pumpFilterRelayPin, HIGH);
             digitalWrite(pumpChRelayPin, HIGH);
         }
-        config.states.filter_on = fOn;
-        config.states.ch_on = chOn;
 
         // update chduration only once per hour
         if (config.metrics.hour != hour)
@@ -231,8 +222,14 @@ void setFilterState(domopool_Config &config, int hour)
                 stopRelay(0);
             }
         }
+
         config.metrics.hour = hour;
     }
+
+    config.states.automatic = config.pump.automatic;
+    config.states.recover = config.pump.recover;
+    config.states.filter_on = fOn;
+    config.states.ch_on = chOn;
 }
 
 void setPhState(domopool_Config &config)

@@ -450,10 +450,10 @@ void startServer(domopool_Config &config)
             request->send(200);
         });
     server.on(
-        "/api/v1/auto-ch",
+        "/api/v1/recover",
         HTTP_POST,
         [&config](AsyncWebServerRequest *request) {
-            forceChDuration(config);
+            setRelayAutoRecover();
             request->send(200);
         });
 

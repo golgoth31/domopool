@@ -292,22 +292,26 @@ void displaySensors(domopool_Config &config)
 void displayRelay(domopool_Config &config)
 {
     // printText(0, 50, "Pump:", 1, 1);
-    int color;
+    int color = TFT_RED;
+    String autoText = "Auto";
 
     // filter auto
     if (config.pump.automatic)
     {
         color = TFT_GREEN;
     }
-    else
+
+    if (config.pump.recover)
     {
-        color = TFT_RED;
+        color = TFT_DARKGREEN;
+        autoText = "Reco";
     }
+
     tft.fillRoundRect(AUTO_X, AUTO_Y, AUTO_W, AUTO_H, 10, color);
     tft.setTextColor(TFT_BLACK);
     tft.setTextSize(2);
     tft.setTextDatum(MC_DATUM);
-    tft.drawString("Auto", AUTO_TEXT_X, AUTO_TEXT_Y);
+    tft.drawString(autoText, AUTO_TEXT_X, AUTO_TEXT_Y);
 
     // filter button
     if (config.states.filter_on)
@@ -493,20 +497,13 @@ void displayPressed(domopool_Config &config)
             if ((y > CH_Y) && (y <= CH_Y + CH_H))
             {
                 Serial.println("ch");
-                if (!config.pump.automatic)
+                if (config.states.ch_on)
                 {
-                    if (config.states.ch_on)
-                    {
-                        stopRelay(domopool_Relay_names_ch);
-                    }
-                    else
-                    {
-                        startRelay(domopool_Relay_names_ch, 0);
-                    }
+                    stopRelay(domopool_Relay_names_ch);
                 }
                 else
                 {
-                    forceChDuration(config);
+                    startRelay(domopool_Relay_names_ch, 0);
                 }
             }
         }

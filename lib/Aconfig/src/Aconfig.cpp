@@ -65,6 +65,7 @@ void pref2config(domopool_Config &config)
     config.pump.force_ph = prefs.getBool("forcePH", false);
     config.pump.force_ch = prefs.getBool("forceCH", false);
     config.pump.automatic = prefs.getBool("auto", true);
+    config.pump.recover = prefs.getBool("recover", false);
     config.pump.force_check = prefs.getBool("forceCheck", false);
     config.pump.force_duration = prefs.getShort("forceDuration", 0);
     config.pump.force_start_time = prefs.getUInt("forceStartTime", 0);
@@ -301,17 +302,31 @@ bool startRelay(const int8_t p, uint32_t duration)
 void unsetRelayAuto()
 {
     prefs.putBool("auto", false);
+    prefs.putBool("recover", false);
     prefs.putShort("forceDuration", 0);
 }
 
 void setRelayAuto()
 {
     prefs.putBool("auto", true);
+    prefs.putBool("recover", false);
     prefs.putBool("forceCheck", true);
     prefs.putBool("forceFilter", false);
     prefs.putBool("forceCH", false);
     prefs.putBool("forcePH", false);
     prefs.putShort("forceDuration", 0);
+}
+
+void unsetRelayAutoRecover()
+{
+    prefs.putBool("recover", false);
+    prefs.putBool("forceCheck", true);
+}
+
+void setRelayAutoRecover()
+{
+    setRelayAuto();
+    prefs.putBool("recover", true);
 }
 
 void unsetForceCheck()
@@ -475,4 +490,5 @@ void states2doc(domopool_Config &config, JsonDocument &doc)
     doc["states"]["rtc"] = config.states.rtc;
     doc["states"]["netActive"] = config.states.net_active;
     doc["states"]["lightOn"] = config.states.light_on;
+    doc["states"]["recover"] = config.states.recover;
 }

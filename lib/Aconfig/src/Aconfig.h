@@ -14,6 +14,8 @@ bool stopRelay(const int8_t p);
 bool startRelay(const int8_t p, uint32_t duration);
 void setRelayAuto();
 void unsetRelayAuto();
+void unsetRelayAutoRecover();
+void setRelayAutoRecover();
 void pref2config(domopool_Config &config);
 void config2pref(domopool_Config &config);
 void unsetForceCheck();
