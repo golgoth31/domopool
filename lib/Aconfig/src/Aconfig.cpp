@@ -230,17 +230,17 @@ bool stopRelay(const int8_t p)
     switch (p)
     {
     case domopool_Relay_names_filter:
-        prefs.putBool("auto", false);
+        unsetRelayAuto();
         prefs.putBool("forceFilter", false);
         prefs.putBool("forceCH", false);
         prefs.putBool("forcePH", false);
         break;
     case domopool_Relay_names_ch:
-        prefs.putBool("auto", false);
+        unsetRelayAuto();
         prefs.putBool("forceCH", false);
         break;
     case domopool_Relay_names_ph:
-        prefs.putBool("auto", false);
+        unsetRelayAuto();
         prefs.putBool("forcePH", false);
         break;
         // stop light
@@ -262,20 +262,20 @@ bool startRelay(const int8_t p, uint32_t duration)
     {
     // start filter
     case domopool_Relay_names_filter:
-        prefs.putBool("auto", false);
+        unsetRelayAuto();
         prefs.putBool("forceFilter", true);
         prefs.putBool("forceCH", false);
         prefs.putBool("forcePH", false);
         break;
     // start ch
     case domopool_Relay_names_ch:
-        prefs.putBool("auto", false);
+        unsetRelayAuto();
         prefs.putBool("forceFilter", true);
         prefs.putBool("forceCH", true);
         break;
     // start ph
     case domopool_Relay_names_ph:
-        prefs.putBool("auto", false);
+        unsetRelayAuto();
         prefs.putBool("forceFilter", true);
         prefs.putBool("forcePH", true);
         break;
@@ -284,12 +284,12 @@ bool startRelay(const int8_t p, uint32_t duration)
     //     prefs.putBool("forceLight", true);
     //     break;
     // all relay
-    case 4:
-        prefs.putBool("auto", false);
-        prefs.putBool("forceFilter", true);
-        prefs.putBool("forceCH", true);
-        prefs.putBool("forcePH", true);
-        break;
+    // case 4:
+    //     prefs.putBool("auto", false);
+    //     prefs.putBool("forceFilter", true);
+    //     prefs.putBool("forceCH", true);
+    //     prefs.putBool("forcePH", true);
+    //     break;
     default:
         return false;
         break;
@@ -310,7 +310,6 @@ void setRelayAuto()
 {
     prefs.putBool("auto", true);
     prefs.putBool("recover", false);
-    prefs.putBool("forceCheck", true);
     prefs.putBool("forceFilter", false);
     prefs.putBool("forceCH", false);
     prefs.putBool("forcePH", false);
@@ -320,7 +319,6 @@ void setRelayAuto()
 void unsetRelayAutoRecover()
 {
     prefs.putBool("recover", false);
-    prefs.putBool("forceCheck", true);
 }
 
 void setRelayAutoRecover()

@@ -46,7 +46,7 @@ uint8_t tab[30][24] = {
     {0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0}, //27
     {0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0}, //28
     {0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0}, //29
-    // {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, //30
+                                                                              // {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, //30
 };
 
 void pumpInit(domopool_Config &config, int filterPin, int chPin, int phPin)
@@ -112,8 +112,8 @@ void setLightState(domopool_Config &config)
 
 void setFilterState(domopool_Config &config, int hour)
 {
-    bool chOn = config.pump.force_filter;
-    bool fOn = config.pump.force_ch;
+    bool fOn = config.pump.force_filter;
+    bool chOn = config.pump.force_ch;
 
     // keep using water temperature if last shown is below 2 degreC
     // Only use water temp when pump is on
@@ -135,9 +135,14 @@ void setFilterState(domopool_Config &config, int hour)
         }
 
         // ch follows filter state when temp is ok for enought time
-        if (config.metrics.saved_twater >= config.limits.ch_temp_threshold && config.metrics.over_15_duration >= config.limits.wait_before_ch)
+        if (config.metrics.saved_twater >= config.limits.ch_temp_threshold && config.metrics.over_15_duration > config.limits.wait_before_ch)
         {
             chOn = fOn;
+        }
+        else
+        {
+            // enforce ch off
+            chOn = false;
         }
 
         // We check alarms and enforce state if needed
@@ -145,7 +150,6 @@ void setFilterState(domopool_Config &config, int hour)
         if (config.alarms.tw_frost || config.alarms.tamb_frost || config.alarms.tw_high)
         {
             fOn = true;
-            config.pump.force_check = true;
         }
 
         // Pressure alarms
@@ -153,7 +157,6 @@ void setFilterState(domopool_Config &config, int hour)
         {
             fOn = false;
             chOn = false;
-            config.pump.force_check = true;
         }
     }
 
@@ -162,74 +165,66 @@ void setFilterState(domopool_Config &config, int hour)
     {
         fOn = false;
         chOn = false;
-        config.pump.force_check = true;
     }
 
-    // Apply relay states
-    if (config.metrics.hour != hour || !config.pump.automatic || config.pump.force_check)
+    // Apply states to relay
+    if (fOn)
     {
-        // setting force_check to false in case of automatic toggle (from false to true)
-        if (config.pump.force_check)
+        Serial.println(F("[Filter] On"));
+        digitalWrite(pumpFilterRelayPin, LOW);
+        config.states.filter_on = true;
+        delay(500);
+        if (chOn)
         {
-            unsetForceCheck();
-        }
-
-        // Apply states to relay
-        if (fOn)
-        {
-            Serial.println(F("[Filter] On"));
-            digitalWrite(pumpFilterRelayPin, LOW);
-            if (chOn)
-            {
-                digitalWrite(pumpChRelayPin, LOW);
-            }
-            else
-            {
-                digitalWrite(pumpChRelayPin, HIGH);
-            }
+            digitalWrite(pumpChRelayPin, LOW);
+            config.states.ch_on = true;
         }
         else
         {
-            Serial.println(F("[Filter] Off"));
-            digitalWrite(pumpFilterRelayPin, HIGH);
             digitalWrite(pumpChRelayPin, HIGH);
+            config.states.ch_on = false;
         }
-
-        // update chduration only once per hour
-        if (config.metrics.hour != hour)
-        {
-            if (config.metrics.saved_twater >= config.limits.ch_temp_threshold && config.metrics.over_15_duration <= config.limits.wait_before_ch)
-            {
-                config.metrics.over_15_duration++;
-                pumpPrefs.putShort("chDuration", config.metrics.over_15_duration);
-            }
-            if (config.metrics.saved_twater < config.limits.ch_temp_wait_reset && config.metrics.over_15_duration > config.limits.wait_before_ch)
-            {
-                config.metrics.over_15_duration = 0;
-                pumpPrefs.putShort("chDuration", 0);
-            }
-        }
-        if (config.pump.force_filter && config.pump.force_duration != 0)
-        {
-            uint diff_time = now() - config.pump.force_start_time;
-            uint duration_sec = 60 * config.pump.force_duration;
-            Serial.print("[pump] Force pump for ");
-            Serial.print(duration_sec - diff_time);
-            Serial.println("s");
-            if (diff_time >= duration_sec)
-            {
-                Serial.println("[pump] Stoping forced with duration");
-                stopRelay(0);
-            }
-        }
-
-        config.metrics.hour = hour;
+    }
+    else
+    {
+        Serial.println(F("[Filter] Off"));
+        digitalWrite(pumpChRelayPin, HIGH);
+        config.states.ch_on = false;
+        delay(500);
+        digitalWrite(pumpFilterRelayPin, HIGH);
+        config.states.filter_on = false;
     }
 
+    // update chduration only once per hour
+    if (config.metrics.hour != hour)
+    {
+        if (config.metrics.saved_twater >= config.limits.ch_temp_threshold && config.metrics.over_15_duration <= config.limits.wait_before_ch)
+        {
+            config.metrics.over_15_duration++;
+            pumpPrefs.putShort("chDuration", config.metrics.over_15_duration);
+        }
+        if (config.metrics.saved_twater < config.limits.ch_temp_wait_reset && config.metrics.over_15_duration >= config.limits.wait_before_ch)
+        {
+            config.metrics.over_15_duration = 0;
+            pumpPrefs.putShort("chDuration", 0);
+        }
+    }
+    if (config.pump.force_filter && config.pump.force_duration != 0)
+    {
+        uint diff_time = now() - config.pump.force_start_time;
+        uint duration_sec = 60 * config.pump.force_duration;
+        Serial.print("[pump] Force pump for ");
+        Serial.print(duration_sec - diff_time);
+        Serial.println("s");
+        if (diff_time >= duration_sec)
+        {
+            Serial.println("[pump] Stoping forced with duration");
+            stopRelay(domopool_Relay_names_filter);
+        }
+    }
+    config.metrics.hour = hour;
     config.states.automatic = config.pump.automatic;
     config.states.recover = config.pump.recover;
-    config.states.filter_on = fOn;
-    config.states.ch_on = chOn;
 }
 
 void setPhState(domopool_Config &config)
