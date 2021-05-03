@@ -161,6 +161,12 @@ void loop(void)
 
         count_time_10s++;
         lastReadingTime = millis();
+
+        if (config.alarms.reboot)
+        {
+            Serial.println(F("!!!! REBOOTING !!!!"));
+            esp_restart();
+        }
     }
 
     if (count_time_10s == 5)

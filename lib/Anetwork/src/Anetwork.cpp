@@ -287,9 +287,7 @@ void startOTA()
 void startServer(domopool_Config &config)
 {
     // For CORS
-    server.on("/*", HTTP_OPTIONS, [](AsyncWebServerRequest *request) {
-        request->send(200);
-    });
+    server.on("/*", HTTP_OPTIONS, [](AsyncWebServerRequest *request) { request->send(200); });
 
     // Serving pages
     // root
@@ -310,7 +308,7 @@ void startServer(domopool_Config &config)
             strcpy(infos.versions.tft_espi, TFT_ESPI_VERSION);
             strcpy(infos.versions.xtensa, __VERSION__);
             strcpy(infos.versions.dallastemp, DALLASTEMPLIBVERSION);
-            strcpy(infos.versions.ads1115, ADS1X15_LIB_VERSION);
+            strcpy(infos.versions.ads1115, (const char *)ADS1X15_LIB_VERSION);
             strcpy(infos.versions.nanopb, "0.4.4");
             strcpy(infos.versions.mqtt, "3.1.1");
             uint8_t buffer[128];
@@ -578,7 +576,7 @@ void startServer(domopool_Config &config)
         HTTP_POST,
         [&config](AsyncWebServerRequest *request) {
             saveConfiguration(config);
-            // reboot();
+            reboot();
             request->send(200);
         });
 
@@ -610,8 +608,8 @@ void startServer(domopool_Config &config)
         HTTP_POST,
         [&config](AsyncWebServerRequest *request) {
             resetConfig();
+            reboot();
             request->send(200);
-            // reboot();
         });
 
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");

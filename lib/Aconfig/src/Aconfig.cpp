@@ -3,14 +3,11 @@
 const int ConfigDocSize = 1024;
 const char *networkFile = "/network.jsn";
 Preferences prefs;
+String defaultNtpServer = "fr.pool.ntp.org";
+String defaultMQTTServer = "192.168.10.201";
 
 void pref2config(domopool_Config &config)
 {
-    String defaultNtpServer = "fr.pool.ntp.org";
-    String defaultMQTTServer = "192.168.10.201";
-    // double_t defaultAckTone = 4000;
-    // float_t defaultPhThreshold = 7.4;
-
     //default not working
     config.global.ack_tone = prefs.getDouble("ack_tone", 4000);
     strcpy(config.network.ntp.server, prefs.getString("ntp_server", defaultNtpServer).c_str());
@@ -23,11 +20,14 @@ void pref2config(domopool_Config &config)
     config.global.wdt_duration = prefs.getInt("wdtDuration", 60);
     config.global.serial_out = prefs.getBool("serialOut", true);
     config.global.display_startup = prefs.getBool("displayStartup", false);
+    config.global.force_light = prefs.getBool("forceLight", false);
+
     config.network.ntp.day_light = prefs.getShort("dayLight", 3600);
     config.network.ntp.timezone = prefs.getShort("timeZone", 3600);
     config.network.dhcp = prefs.getBool("dhcp", true);
     config.network.allow_post = prefs.getBool("allowPost", true);
     config.network.mqtt.enabled = prefs.getBool("mqtt_enabled", false);
+
     config.sensors.ph.enabled = prefs.getBool("ph_enabled", false);
     config.sensors.ph.threshold = prefs.getFloat("ph_threshold", 0);
     config.sensors.ph.threshold_accuracy = prefs.getShort("ph_t_accuracy", 0);
@@ -36,6 +36,7 @@ void pref2config(domopool_Config &config)
     config.sensors.ph.adc_pin = prefs.getShort("ph_adc_pin", 2);
     config.sensors.ph.precision_factor = prefs.getShort("ph_prec_fact", 100);
     config.sensors.ph.auto_cal = prefs.getBool("ph_auto_cal", true);
+
     config.sensors.ch.enabled = prefs.getBool("ch_enabled", false);
     config.sensors.ch.threshold = prefs.getFloat("ch_threshold", 0);
     config.sensors.ch.threshold_accuracy = prefs.getShort("ch_t_accuracy", 0);
@@ -44,7 +45,8 @@ void pref2config(domopool_Config &config)
     config.sensors.ch.adc_pin = prefs.getShort("ch_adc_pin", 1);
     config.sensors.ch.precision_factor = prefs.getShort("ch_prec_fact", 100);
     config.sensors.ch.auto_cal = prefs.getBool("ch_auto_cal", true);
-    config.sensors.wp.enabled = prefs.getBool("wp_enabled", true);
+
+    config.sensors.wp.enabled = prefs.getBool("wp_enabled", false);
     config.sensors.wp.threshold = prefs.getFloat("wp_threshold", 0.5);
     config.sensors.wp.threshold_accuracy = prefs.getShort("wp_t_accuracy", 8);
     config.sensors.wp.vmin = prefs.getFloat("wp_vmin", 0.5);
@@ -52,6 +54,7 @@ void pref2config(domopool_Config &config)
     config.sensors.wp.adc_pin = prefs.getShort("wp_adc_pin", 3);
     config.sensors.wp.precision_factor = prefs.getShort("wp_prec_fact", 100);
     config.sensors.wp.auto_cal = prefs.getBool("wp_auto_cal", true);
+
     config.sensors.wait_for_conversion = prefs.getBool("waitConvertion", true);
     config.sensors.temp_resolution = prefs.getShort("tempResolution", 12);
     config.sensors.precision_factor = prefs.getShort("precisonFact", 10);
@@ -61,6 +64,10 @@ void pref2config(domopool_Config &config)
     config.sensors.twout.init = prefs.getBool("twout_init", false);
     config.sensors.tamb.enabled = true;
     config.sensors.tamb.init = prefs.getBool("tamb_init", false);
+    config.sensors.adc_mode = prefs.getShort("adcMode", 1);
+    config.sensors.adc_datarate = prefs.getShort("adcDatarate", 1);
+    config.sensors.adc_gain = prefs.getShort("adcGain", 1);
+
     config.pump.force_filter = prefs.getBool("forceFilter", false);
     config.pump.force_ph = prefs.getBool("forcePH", false);
     config.pump.force_ch = prefs.getBool("forceCH", false);
@@ -69,23 +76,23 @@ void pref2config(domopool_Config &config)
     config.pump.force_check = prefs.getBool("forceCheck", false);
     config.pump.force_duration = prefs.getShort("forceDuration", 0);
     config.pump.force_start_time = prefs.getUInt("forceStartTime", 0);
-    config.global.force_light = prefs.getBool("forceLight", false);
+
     config.limits.ch_min = prefs.getFloat("ch_min", 0);
     config.limits.ch_max = prefs.getFloat("ch_max", 0);
     config.limits.ph_min = prefs.getFloat("ph_min", 0);
     config.limits.ph_max = prefs.getFloat("ph_max", 0);
     config.limits.wp_min = prefs.getFloat("wp_min", 0.2);
     config.limits.wp_max = prefs.getFloat("wp_max", 2);
-    config.limits.ch_temp_threshold = prefs.getFloat("ch_t_threshold", 15);
-    config.limits.ch_temp_wait_reset = prefs.getFloat("ch_t_wait", 14);
-    config.limits.wait_before_ch = prefs.getShort("ch_wait", 72);
+    config.limits.ch_temp_threshold_high = prefs.getFloat("ch_t_high", 15);
+    config.limits.ch_temp_threshold_low = prefs.getFloat("ch_t_low", 14);
+    config.limits.ch_wait_before_allow = prefs.getShort("ch_wait_allow", 24);
+    config.limits.ch_wait_before_deny = prefs.getShort("ch_wait_deny", 24);
     config.limits.wp_0_derive = prefs.getFloat("wp_0_derive", 0.01);
-    config.limits.tw_min = prefs.getFloat("tw_min", 1);
+    config.limits.tw_min = prefs.getFloat("tw_min", 2);
     config.limits.tw_max = prefs.getFloat("tw_max", 30);
     config.limits.tamb_min = prefs.getFloat("tamb_min", 0);
-    config.sensors.adc_mode = prefs.getShort("adcMode", 1);
-    config.sensors.adc_datarate = prefs.getShort("adcDatarate", 1);
-    config.sensors.adc_gain = prefs.getShort("adcGain", 1);
+
+    config.alarms.reboot = prefs.getBool("reboot", false);
 }
 
 bool initConfig()
@@ -131,8 +138,8 @@ void loadDefaultConfig(domopool_Config &config)
         prefs.putBool("init", true);
 
         prefs.putDouble("ack_tone", 4000);
-        prefs.putString("ntp_server", "europe.pool.ntp.org");
-        prefs.putString("mqtt_server", "192.168.10.194");
+        prefs.putString("ntp_server", defaultNtpServer);
+        prefs.putString("mqtt_server", defaultMQTTServer);
         prefs.putFloat("ph_threshold", 7.4);
     }
     pref2config(config);
@@ -199,9 +206,10 @@ void config2pref(domopool_Config &config)
     prefs.putFloat("ph_max", config.limits.ph_max);
     prefs.putFloat("wp_min", config.limits.wp_min);
     prefs.putFloat("wp_max", config.limits.wp_max);
-    prefs.putFloat("ch_t_threshold", config.limits.ch_temp_threshold);
-    prefs.putFloat("ch_t_wait", config.limits.ch_temp_wait_reset);
-    prefs.putShort("ch_wait", config.limits.wait_before_ch);
+    prefs.putFloat("ch_t_high", config.limits.ch_temp_threshold_high);
+    prefs.putFloat("ch_t_low", config.limits.ch_temp_threshold_low);
+    prefs.putShort("ch_wait_allow", config.limits.ch_wait_before_allow);
+    prefs.putShort("ch_wait_deny", config.limits.ch_wait_before_deny);
     prefs.putFloat("wp_0_derive", config.limits.wp_0_derive);
     prefs.putFloat("tw_min", config.limits.tw_min);
     prefs.putFloat("tw_max", config.limits.tw_max);
@@ -223,6 +231,8 @@ void initConfigData(domopool_Config &config)
     config.states.startup = true;
     config.states.filter_on = false;
     config.states.ph_on = false;
+    prefs.putBool("reboot", false);
+    config.alarms.reboot = false;
 }
 
 bool stopRelay(const int8_t p)
@@ -351,8 +361,8 @@ void resetConfig()
 
 void reboot()
 {
-    Serial.println(F("[WiFi] Rebooting system"));
-    esp_restart();
+    Serial.println(F("[WiFi] System asked to reboot"));
+    prefs.putBool("reboot", true);
 }
 
 void setADC(domopool_Sensors &sens)
@@ -430,9 +440,10 @@ void setLimits(domopool_Limits &limits)
     prefs.putFloat("ph_max", limits.ph_max);
     prefs.putFloat("wp_min", limits.wp_min);
     prefs.putFloat("wp_max", limits.wp_max);
-    prefs.putFloat("ch_t_threshold", limits.ch_temp_threshold);
-    prefs.putFloat("ch_t_wait", limits.ch_temp_wait_reset);
-    prefs.putShort("ch_wait", limits.wait_before_ch);
+    prefs.putFloat("ch_t_high", limits.ch_temp_threshold_high);
+    prefs.putFloat("ch_t_low", limits.ch_temp_threshold_low);
+    prefs.putShort("ch_wait_allow", limits.ch_wait_before_allow);
+    prefs.putShort("ch_wait_deny", limits.ch_wait_before_deny);
     prefs.putFloat("wp_0_derive", limits.wp_0_derive);
     prefs.putFloat("tw_min", limits.tw_min);
     prefs.putFloat("tw_max", limits.tw_max);
@@ -457,11 +468,13 @@ void alarms2doc(domopool_Config &config, JsonDocument &doc)
     doc["alarms"]["wpBroken"] = config.alarms.wp_broken;
     doc["alarms"]["wpHigh"] = config.alarms.wp_high;
     doc["alarms"]["wpLow"] = config.alarms.wp_low;
+    doc["alarms"]["reboot"] = config.alarms.reboot;
 }
 
 void metrics2doc(domopool_Config &config, JsonDocument &doc)
 {
-    doc["metrics"]["over15Duration"] = config.metrics.over_15_duration;
+    doc["metrics"]["overChTempDuration"] = config.metrics.over_ch_t_high_duration;
+    doc["metrics"]["underChTempDuration"] = config.metrics.under_ch_t_low_duration;
     doc["metrics"]["ch"] = config.metrics.ch;
     doc["metrics"]["ph"] = config.metrics.ph;
     doc["metrics"]["wp"] = config.metrics.wp;

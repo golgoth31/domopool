@@ -461,7 +461,7 @@ void getDS18B20(domopool_Config &config, DallasTemperature &tempSensors)
         config.metrics.tamb = config.tests.tamb;
     }
 
-    if (config.metrics.twater <= config.limits.tw_min)
+    if (config.metrics.twater < config.limits.tw_min)
     {
         config.alarms.tw_frost = true;
     }

@@ -15,9 +15,9 @@ int pumpChRelayPin;
 int lightRelayPin;
 int countForceDuration = 0;
 
-uint8_t tab[30][24] = {
+uint8_t tab[31][24] = {
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, //0
-    {0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, //1
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, //1
     {0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, //2
     {0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, //3
     {0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, //4
@@ -46,7 +46,7 @@ uint8_t tab[30][24] = {
     {0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0}, //27
     {0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0}, //28
     {0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0}, //29
-                                                                              // {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, //30
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, //30
 };
 
 void pumpInit(domopool_Config &config, int filterPin, int chPin, int phPin)
@@ -75,10 +75,10 @@ void pumpInit(domopool_Config &config, int filterPin, int chPin, int phPin)
     pumpChRelayPin = chPin;
 
     pumpPrefs.begin("pump");
-    config.metrics.over_15_duration = pumpPrefs.getShort("chDuration", 0);
-    if (config.metrics.over_15_duration >= 10000) // more then 1 year, seems the data have never been initialized correctly
+    config.metrics.over_ch_t_high_duration = pumpPrefs.getShort("chDuration", 0);
+    if (config.metrics.over_ch_t_high_duration >= 10000) // more then 1 year, seems the data have never been initialized correctly
     {
-        config.metrics.over_15_duration = 0;
+        config.metrics.over_ch_t_high_duration = 0;
         pumpPrefs.putShort("chDuration", 0);
     }
 }
@@ -114,42 +114,22 @@ void setFilterState(domopool_Config &config, int hour)
 {
     bool fOn = config.pump.force_filter;
     bool chOn = config.pump.force_ch;
-
-    // keep using water temperature if last shown is below 2 degreC
-    // Only use water temp when pump is on
-    if (config.states.filter_on || config.metrics.twater <= 2)
-    {
-        config.metrics.saved_twater = config.metrics.twater;
-    }
+    bool save_temp = false;
 
     int8_t tempWaterAbs = (int)config.metrics.saved_twater;
 
     // We set the default state depending on temp and hour and automatic
     if (config.pump.automatic)
     {
-        fOn = tab[tempWaterAbs][hour];
-
-        if (config.pump.recover)
+        // Enforce filter on alarms or recovering mode
+        if (config.alarms.tw_frost || config.alarms.tamb_frost || config.alarms.tw_high || config.pump.recover)
         {
             fOn = true;
-        }
-
-        // ch follows filter state when temp is ok for enought time
-        if (config.metrics.saved_twater >= config.limits.ch_temp_threshold && config.metrics.over_15_duration > config.limits.wait_before_ch)
-        {
-            chOn = fOn;
         }
         else
         {
-            // enforce ch off
-            chOn = false;
-        }
-
-        // We check alarms and enforce state if needed
-        // Temp alarms
-        if (config.alarms.tw_frost || config.alarms.tamb_frost || config.alarms.tw_high)
-        {
-            fOn = true;
+            // filter follow temp table (normal operation)
+            fOn = tab[tempWaterAbs][hour];
         }
 
         // Pressure alarms
@@ -158,9 +138,45 @@ void setFilterState(domopool_Config &config, int hour)
             fOn = false;
             chOn = false;
         }
+
+        if (fOn && !config.states.filter_on)
+        {
+            if (config.metrics.twater < config.metrics.saved_twater)
+            {
+                save_temp = true;
+            }
+            else
+            {
+                if (config.metrics.saved_twater >= config.limits.ch_temp_threshold_high || config.metrics.twater < config.limits.ch_temp_threshold_high)
+                {
+                    save_temp = true;
+                }
+                else
+                {
+
+                    pumpPrefs.putUInt("blank_ch", now());
+                }
+            }
+        }
+        if (fOn && (save_temp || (now() - pumpPrefs.getUInt("blank_ch", 0)) > 1800))
+        {
+
+            config.metrics.saved_twater = config.metrics.twater;
+            save_temp = true;
+        }
+
+        if (config.metrics.saved_twater >= config.limits.ch_temp_threshold_high)
+        {
+            chOn = fOn;
+        }
+        else
+        {
+            // enforce ch off
+            chOn = false;
+        }
     }
 
-    // Pressure alarms
+    // Never start if pressure is high
     if (config.alarms.wp_high)
     {
         fOn = false;
@@ -193,22 +209,23 @@ void setFilterState(domopool_Config &config, int hour)
         delay(500);
         digitalWrite(pumpFilterRelayPin, HIGH);
         config.states.filter_on = false;
+        save_temp = false;
     }
 
     // update chduration only once per hour
-    if (config.metrics.hour != hour)
-    {
-        if (config.metrics.saved_twater >= config.limits.ch_temp_threshold && config.metrics.over_15_duration <= config.limits.wait_before_ch)
-        {
-            config.metrics.over_15_duration++;
-            pumpPrefs.putShort("chDuration", config.metrics.over_15_duration);
-        }
-        if (config.metrics.saved_twater < config.limits.ch_temp_wait_reset && config.metrics.over_15_duration >= config.limits.wait_before_ch)
-        {
-            config.metrics.over_15_duration = 0;
-            pumpPrefs.putShort("chDuration", 0);
-        }
-    }
+    // if (config.metrics.hour != hour)
+    // {
+    //     if (config.metrics.saved_twater >= config.limits.ch_temp_threshold_high && config.metrics.over_ch_t_high_duration <= config.limits.ch_wait_before_allow)
+    //     {
+    //         config.metrics.over_ch_t_high_duration++;
+    //         pumpPrefs.putShort("chDuration", config.metrics.over_ch_t_high_duration);
+    //     }
+    //     if (config.metrics.saved_twater <= config.limits.ch_temp_threshold_low && config.metrics.over_ch_t_high_duration >= config.limits.ch_wait_before_allow)
+    //     {
+    //         config.metrics.over_ch_t_high_duration--;
+    //         pumpPrefs.putShort("chDuration", config.metrics.over_ch_t_high_duration);
+    //     }
+    // }
     if (config.pump.force_filter && config.pump.force_duration != 0)
     {
         uint diff_time = now() - config.pump.force_start_time;
@@ -302,6 +319,6 @@ void setPhState(domopool_Config &config)
 
 bool forceChDuration(domopool_Config &config)
 {
-    pumpPrefs.putShort("chDuration", config.limits.wait_before_ch + 1);
+    pumpPrefs.putShort("chDuration", config.limits.ch_wait_before_allow + 1);
     return true;
 }
