@@ -152,9 +152,6 @@ void config2pref(domopool_Config &config)
     prefs.putBool("dhcp", config.network.dhcp);
     prefs.putBool("allowPost", config.network.allow_post);
     prefs.putBool("twin_enabled", config.sensors.twin.enabled);
-    prefs.putBool("twin_init", config.sensors.twin.init);
-    prefs.putBool("twout_init", config.sensors.twout.init);
-    prefs.putBool("tamb_init", config.sensors.tamb.init);
     prefs.putBool("waitConvertion", config.sensors.wait_for_conversion);
     prefs.putShort("tempResolution", config.sensors.temp_resolution);
     prefs.putShort("precisonFact", config.sensors.precision_factor);

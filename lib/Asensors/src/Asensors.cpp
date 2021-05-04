@@ -91,6 +91,8 @@ void registerDevices(domopool_Config &config, DallasTemperature &tempSensors)
     bool tamb_bool = false;
     bool twin_bool = false;
 
+    String t_addr;
+
     for (int j = 0; j < num; j++)
     {
 
@@ -110,10 +112,16 @@ void registerDevices(domopool_Config &config, DallasTemperature &tempSensors)
 
             if (twout_bool)
             {
-                for (uint8_t i = 0; i < 8; i++)
+                t_addr = "";
+                t_addr = deviceAddress[0];
+                for (uint8_t i = 1; i < 8; i++)
                 {
-                    config.sensors.twout.addr[i] = deviceAddress[i];
+                    t_addr.concat(".");
+                    t_addr.concat(deviceAddress[i]);
+                    // config.sensors.twout.addr[i] = deviceAddress[i];
                 }
+                strcpy(config.sensors.twout.addr, t_addr.c_str());
+                config.sensors.twout.init = true;
                 continue;
             }
             else if (!config.sensors.twout.init && !tamb_bool && !twin_bool)
@@ -140,10 +148,20 @@ void registerDevices(domopool_Config &config, DallasTemperature &tempSensors)
 
             if (tamb_bool)
             {
-                for (uint8_t i = 0; i < 8; i++)
+                // for (uint8_t i = 0; i < 8; i++)
+                // {
+                //     config.sensors.tamb.addr[i] = deviceAddress[i];
+                //     config.sensors.tamb.init = true;
+                // }
+                t_addr = "";
+                t_addr = deviceAddress[0];
+                for (uint8_t i = 1; i < 8; i++)
                 {
-                    config.sensors.tamb.addr[i] = deviceAddress[i];
+                    t_addr.concat(".");
+                    t_addr.concat(deviceAddress[i]);
                 }
+                strcpy(config.sensors.tamb.addr, t_addr.c_str());
+                config.sensors.tamb.init = true;
                 continue;
             }
             else if (!config.sensors.tamb.init && !twout_bool && !twin_bool)
@@ -172,10 +190,21 @@ void registerDevices(domopool_Config &config, DallasTemperature &tempSensors)
 
                 if (twin_bool)
                 {
-                    for (uint8_t i = 0; i < 8; i++)
+                    // for (uint8_t i = 0; i < 8; i++)
+                    // {
+                    //     config.sensors.twin.addr[i] = deviceAddress[i];
+                    //     config.sensors.twin.init = true;
+                    // }
+                    t_addr = "";
+                    t_addr = deviceAddress[0];
+                    for (uint8_t i = 1; i < 8; i++)
                     {
-                        config.sensors.twin.addr[i] = deviceAddress[i];
+                        t_addr.concat(".");
+                        t_addr.concat(deviceAddress[i]);
                     }
+                    strcpy(config.sensors.twin.addr, t_addr.c_str());
+                    config.sensors.twin.init = true;
+                    continue;
                     continue;
                 }
                 else if (!config.sensors.twin.init && !twout_bool && !tamb_bool)
