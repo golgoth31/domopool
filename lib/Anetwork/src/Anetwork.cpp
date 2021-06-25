@@ -240,46 +240,50 @@ void startOTA()
     // ArduinoOTA.setPasswordHash("21232f297a57a5a743894a0e4a801fc3");
     ArduinoOTA.setMdnsEnabled(true);
     ArduinoOTA
-        .onStart([]() {
-            String type;
-            if (ArduinoOTA.getCommand() == U_FLASH)
-                type = "Firmware";
-            else // U_SPIFFS
-                type = "SPIFFS";
+        .onStart([]()
+                 {
+                     String type;
+                     if (ArduinoOTA.getCommand() == U_FLASH)
+                         type = "Firmware";
+                     else // U_SPIFFS
+                         type = "SPIFFS";
 
-            // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-            displayProgressBarText(type + " update", TFT_RED);
-            server.end();
-            Serial.println("Start updating " + type);
-        })
-        .onEnd([]() {
-            Serial.println("\nEnd");
-            OTAdot = 0;
-            // server.begin();
-        })
-        .onProgress([](unsigned int progress, unsigned int total) {
-            int percent = progress / (total / 100);
-            Serial.printf("Progress: %u%%\r", percent);
-            displayProgressBar(percent, TFT_RED);
-            OTAdot++;
-            if (OTAdot > 5)
-            {
-                OTAdot = 0;
-            }
-        })
-        .onError([](ota_error_t error) {
-            Serial.printf("Error[%u]: ", error);
-            if (error == OTA_AUTH_ERROR)
-                Serial.println("Auth Failed");
-            else if (error == OTA_BEGIN_ERROR)
-                Serial.println("Begin Failed");
-            else if (error == OTA_CONNECT_ERROR)
-                Serial.println("Connect Failed");
-            else if (error == OTA_RECEIVE_ERROR)
-                Serial.println("Receive Failed");
-            else if (error == OTA_END_ERROR)
-                Serial.println("End Failed");
-        });
+                     // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
+                     displayProgressBarText(type + " update", TFT_RED);
+                     server.end();
+                     Serial.println("Start updating " + type);
+                 })
+        .onEnd([]()
+               {
+                   Serial.println("\nEnd");
+                   OTAdot = 0;
+                   // server.begin();
+               })
+        .onProgress([](unsigned int progress, unsigned int total)
+                    {
+                        int percent = progress / (total / 100);
+                        Serial.printf("Progress: %u%%\r", percent);
+                        displayProgressBar(percent, TFT_RED);
+                        OTAdot++;
+                        if (OTAdot > 5)
+                        {
+                            OTAdot = 0;
+                        }
+                    })
+        .onError([](ota_error_t error)
+                 {
+                     Serial.printf("Error[%u]: ", error);
+                     if (error == OTA_AUTH_ERROR)
+                         Serial.println("Auth Failed");
+                     else if (error == OTA_BEGIN_ERROR)
+                         Serial.println("Begin Failed");
+                     else if (error == OTA_CONNECT_ERROR)
+                         Serial.println("Connect Failed");
+                     else if (error == OTA_RECEIVE_ERROR)
+                         Serial.println("Receive Failed");
+                     else if (error == OTA_END_ERROR)
+                         Serial.println("End Failed");
+                 });
 
     ArduinoOTA.begin();
 }
@@ -287,14 +291,16 @@ void startOTA()
 void startServer(domopool_Config &config)
 {
     // For CORS
-    server.on("/*", HTTP_OPTIONS, [](AsyncWebServerRequest *request) { request->send(200); });
+    server.on("/*", HTTP_OPTIONS, [](AsyncWebServerRequest *request)
+              { request->send(200); });
 
     // Serving pages
     // root
     server.on(
         "/",
         HTTP_GET,
-        [](AsyncWebServerRequest *request) {
+        [](AsyncWebServerRequest *request)
+        {
             String compile = __DATE__;
             compile += " ";
             compile += __TIME__;
@@ -354,7 +360,8 @@ void startServer(domopool_Config &config)
     server.on(
         "/favicon.*",
         HTTP_GET,
-        [](AsyncWebServerRequest *request) {
+        [](AsyncWebServerRequest *request)
+        {
             request->send(SPIFFS, "/favicon.png", "image/png");
         });
 
@@ -362,14 +369,16 @@ void startServer(domopool_Config &config)
     server.on(
         "/bundle.js",
         HTTP_GET,
-        [](AsyncWebServerRequest *request) {
+        [](AsyncWebServerRequest *request)
+        {
             request->redirect("/ui/bundle.js");
         });
     server.serveStatic("/ui/", SPIFFS, "/").setDefaultFile("index.html");
     server.on(
         "/ui/upload",
         HTTP_POST,
-        [](AsyncWebServerRequest *request) {
+        [](AsyncWebServerRequest *request)
+        {
             AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "OK");
             response->addHeader("Connection", "close");
             request->send(response);
@@ -378,16 +387,18 @@ void startServer(domopool_Config &config)
            const String &filename,
            size_t index,
            uint8_t *data,
-           size_t len, bool final) {
+           size_t len, bool final)
+        {
             handleUploadUi(request, filename, index, data, len, final);
         });
 
     // api
     // relay
     server.on(
-        "/api/v1/filter",
+        "/api/v1/relay",
         HTTP_POST,
-        [](AsyncWebServerRequest *request) {
+        [](AsyncWebServerRequest *request)
+        {
             request->send(200);
         },
         NULL,
@@ -395,62 +406,23 @@ void startServer(domopool_Config &config)
            uint8_t *data,
            size_t len,
            size_t index,
-           size_t total) {
-            handleBodyRelay(request, data, len, index, total);
-        });
-    server.on(
-        "/api/v1/ch",
-        HTTP_POST,
-        [](AsyncWebServerRequest *request) {
-            request->send(200);
-        },
-        NULL,
-        [](AsyncWebServerRequest *request,
-           uint8_t *data,
-           size_t len,
-           size_t index,
-           size_t total) {
-            handleBodyRelay(request, data, len, index, total);
-        });
-    server.on(
-        "/api/v1/ph",
-        HTTP_POST,
-        [](AsyncWebServerRequest *request) {
-            request->send(200);
-        },
-        NULL,
-        [](AsyncWebServerRequest *request,
-           uint8_t *data,
-           size_t len,
-           size_t index,
-           size_t total) {
-            handleBodyRelay(request, data, len, index, total);
-        });
-    server.on(
-        "/api/v1/light",
-        HTTP_POST,
-        [](AsyncWebServerRequest *request) {
-            request->send(200);
-        },
-        NULL,
-        [](AsyncWebServerRequest *request,
-           uint8_t *data,
-           size_t len,
-           size_t index,
-           size_t total) {
+           size_t total)
+        {
             handleBodyRelay(request, data, len, index, total);
         });
     server.on(
         "/api/v1/auto",
         HTTP_POST,
-        [](AsyncWebServerRequest *request) {
+        [](AsyncWebServerRequest *request)
+        {
             setRelayAuto();
             request->send(200);
         });
     server.on(
         "/api/v1/recover",
         HTTP_POST,
-        [&config](AsyncWebServerRequest *request) {
+        [&config](AsyncWebServerRequest *request)
+        {
             setRelayAutoRecover();
             request->send(200);
         });
@@ -459,7 +431,8 @@ void startServer(domopool_Config &config)
     server.on(
         "/api/v1/mqtt/set",
         HTTP_POST,
-        [](AsyncWebServerRequest *request) {
+        [](AsyncWebServerRequest *request)
+        {
             request->send(200);
         },
         NULL,
@@ -467,20 +440,23 @@ void startServer(domopool_Config &config)
            uint8_t *data,
            size_t len,
            size_t index,
-           size_t total) {
+           size_t total)
+        {
             handleBodyMqtt(request, data, len, index, total);
         });
     server.on(
         "/api/v1/mqtt/enable",
         HTTP_POST,
-        [](AsyncWebServerRequest *request) {
+        [](AsyncWebServerRequest *request)
+        {
             startMqtt();
             request->send(200);
         });
     server.on(
         "/api/v1/mqtt/disable",
         HTTP_POST,
-        [](AsyncWebServerRequest *request) {
+        [](AsyncWebServerRequest *request)
+        {
             stopMqtt();
             request->send(200);
         });
@@ -489,7 +465,8 @@ void startServer(domopool_Config &config)
     server.on(
         "/api/v1/sensors/reset",
         HTTP_POST,
-        [&config](AsyncWebServerRequest *request) {
+        [&config](AsyncWebServerRequest *request)
+        {
             resetSensorsTempAddr(config);
             saveConfiguration(config);
             request->send(200);
@@ -499,7 +476,8 @@ void startServer(domopool_Config &config)
     server.on(
         "/api/v1/alarms/reset",
         HTTP_POST,
-        [&config](AsyncWebServerRequest *request) {
+        [&config](AsyncWebServerRequest *request)
+        {
             config.alarms = domopool_Alarms_init_default;
             config.alarms.has_ads1115 = true;
             config.alarms.has_mqtt = true;
@@ -512,7 +490,8 @@ void startServer(domopool_Config &config)
     server.on(
         "/api/v1/wp/set",
         HTTP_POST,
-        [](AsyncWebServerRequest *request) {
+        [](AsyncWebServerRequest *request)
+        {
             request->send(200);
         },
         NULL,
@@ -520,20 +499,23 @@ void startServer(domopool_Config &config)
            uint8_t *data,
            size_t len,
            size_t index,
-           size_t total) {
+           size_t total)
+        {
             handleBodyAnalogSensor(request, data, len, index, total);
         });
     server.on(
         "/api/v1/wp/enable",
         HTTP_POST,
-        [](AsyncWebServerRequest *request) {
+        [](AsyncWebServerRequest *request)
+        {
             enableWP();
             request->send(200);
         });
     server.on(
         "/api/v1/wp/disable",
         HTTP_POST,
-        [](AsyncWebServerRequest *request) {
+        [](AsyncWebServerRequest *request)
+        {
             disableWP();
             request->send(200);
         });
@@ -542,7 +524,8 @@ void startServer(domopool_Config &config)
     server.on(
         "/api/v1/adc/set",
         HTTP_POST,
-        [](AsyncWebServerRequest *request) {
+        [](AsyncWebServerRequest *request)
+        {
             request->send(200);
         },
         NULL,
@@ -550,7 +533,8 @@ void startServer(domopool_Config &config)
            uint8_t *data,
            size_t len,
            size_t index,
-           size_t total) {
+           size_t total)
+        {
             handleBodyADC(request, data, len, index, total);
         });
 
@@ -558,7 +542,8 @@ void startServer(domopool_Config &config)
     server.on(
         "/api/v1/limits/set",
         HTTP_POST,
-        [](AsyncWebServerRequest *request) {
+        [](AsyncWebServerRequest *request)
+        {
             request->send(200);
         },
         NULL,
@@ -566,7 +551,8 @@ void startServer(domopool_Config &config)
            uint8_t *data,
            size_t len,
            size_t index,
-           size_t total) {
+           size_t total)
+        {
             handleBodyLimits(request, data, len, index, total);
         });
 
@@ -574,7 +560,8 @@ void startServer(domopool_Config &config)
     server.on(
         "/api/v1/reboot",
         HTTP_POST,
-        [&config](AsyncWebServerRequest *request) {
+        [&config](AsyncWebServerRequest *request)
+        {
             saveConfiguration(config);
             reboot();
             request->send(200);
@@ -584,7 +571,8 @@ void startServer(domopool_Config &config)
     server.on(
         "/api/v1/config",
         HTTP_GET,
-        [&config](AsyncWebServerRequest *request) {
+        [&config](AsyncWebServerRequest *request)
+        {
             uint8_t buffer[2048];
             size_t message_length;
             bool status;
@@ -606,7 +594,8 @@ void startServer(domopool_Config &config)
     server.on(
         "/api/v1/config/reset",
         HTTP_POST,
-        [&config](AsyncWebServerRequest *request) {
+        [&config](AsyncWebServerRequest *request)
+        {
             resetConfig();
             reboot();
             request->send(200);
@@ -616,7 +605,8 @@ void startServer(domopool_Config &config)
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "GET,OPTIONS,POST");
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "access-control-allow-origin,content-type");
     server.onNotFound(
-        [](AsyncWebServerRequest *request) {
+        [](AsyncWebServerRequest *request)
+        {
             request->send(404);
         });
     // WebSerial.begin(&server);
