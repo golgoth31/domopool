@@ -19,6 +19,7 @@ void setRelayAutoRecover();
 void pref2config(domopool_Config &config);
 void config2pref(domopool_Config &config);
 void unsetForceCheck();
+void setForceCheck();
 void startMqtt();
 void stopMqtt();
 void setMqtt(String server);

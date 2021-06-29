@@ -322,6 +322,7 @@ void setRelayAuto()
     prefs.putBool("forceCH", false);
     prefs.putBool("forcePH", false);
     prefs.putShort("forceDuration", 0);
+    setForceCheck();
 }
 
 void unsetRelayAutoRecover()
@@ -338,6 +339,10 @@ void setRelayAutoRecover()
 void unsetForceCheck()
 {
     prefs.putBool("forceCheck", false);
+}
+void setForceCheck()
+{
+    prefs.putBool("forceCheck", true);
 }
 void startMqtt()
 {

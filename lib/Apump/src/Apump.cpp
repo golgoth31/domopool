@@ -128,8 +128,20 @@ void setFilterState(domopool_Config &config, int hour)
         }
         else
         {
-            // filter follow temp table (normal operation)
-            fOn = tab[tempWaterAbs][hour];
+            // only change once per hour if needed
+            if (config.metrics.hour != hour || config.pump.force_check)
+            {
+                // filter follow temp table (normal operation)
+                fOn = tab[tempWaterAbs][hour];
+                if (config.pump.force_check)
+                {
+                    unsetForceCheck();
+                }
+            }
+            else
+            {
+                fOn = config.states.filter_on;
+            }
         }
 
         // Pressure alarms
@@ -153,16 +165,9 @@ void setFilterState(domopool_Config &config, int hour)
                 }
                 else
                 {
-
                     pumpPrefs.putUInt("blank_ch", now());
                 }
             }
-        }
-        if (fOn && (save_temp || (now() - pumpPrefs.getUInt("blank_ch", 0)) > 1800))
-        {
-
-            config.metrics.saved_twater = config.metrics.twater;
-            save_temp = true;
         }
 
         if (config.metrics.saved_twater >= config.limits.ch_temp_threshold_high)
@@ -200,6 +205,12 @@ void setFilterState(domopool_Config &config, int hour)
             digitalWrite(pumpChRelayPin, HIGH);
             config.states.ch_on = false;
         }
+
+        if (save_temp || (now() - pumpPrefs.getUInt("blank_ch", 0)) > 1800)
+        {
+            config.metrics.saved_twater = config.metrics.twater;
+            save_temp = true;
+        }
     }
     else
     {
@@ -235,7 +246,7 @@ void setFilterState(domopool_Config &config, int hour)
         Serial.println("s");
         if (diff_time >= duration_sec)
         {
-            Serial.println("[pump] Stoping forced with duration");
+            Serial.println("[pump] Stopping forced with duration");
             stopRelay(domopool_Relay_names_filter);
         }
     }
