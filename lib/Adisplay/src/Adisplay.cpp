@@ -494,14 +494,7 @@ void displayPressed(domopool_Config &config)
             if ((y > AUTO_Y) && (y <= AUTO_Y + AUTO_H))
             {
                 Serial.println("auto");
-                if (config.states.automatic)
-                {
-                    unsetRelayAuto();
-                }
-                else
-                {
-                    setRelayAuto();
-                }
+                setRelayAuto(config);
             }
         }
 
@@ -511,14 +504,7 @@ void displayPressed(domopool_Config &config)
             if ((y > RECO_Y) && (y <= RECO_Y + RECO_H))
             {
                 Serial.println("recover");
-                if (config.states.recover)
-                {
-                    unsetRelayAutoRecover();
-                }
-                else
-                {
-                    setRelayAutoRecover();
-                }
+                setRelayAutoRecover(config);
             }
         }
 

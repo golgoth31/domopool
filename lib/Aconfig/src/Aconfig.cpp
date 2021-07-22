@@ -232,6 +232,13 @@ void initConfigData(domopool_Config &config)
     config.alarms.reboot = false;
 }
 
+void unsetRelayAuto()
+{
+    prefs.putBool("auto", false);
+    prefs.putBool("recover", false);
+    prefs.putShort("forceDuration", 0);
+}
+
 bool stopRelay(const int8_t p)
 {
     switch (p)
@@ -307,22 +314,22 @@ bool startRelay(const int8_t p, uint32_t duration)
     return true;
 }
 
-void unsetRelayAuto()
+void setRelayAuto(domopool_Config &config)
 {
-    prefs.putBool("auto", false);
-    prefs.putBool("recover", false);
-    prefs.putShort("forceDuration", 0);
-}
-
-void setRelayAuto()
-{
-    prefs.putBool("auto", true);
-    prefs.putBool("recover", false);
-    prefs.putBool("forceFilter", false);
-    prefs.putBool("forceCH", false);
-    prefs.putBool("forcePH", false);
-    prefs.putShort("forceDuration", 0);
-    setForceCheck();
+    if (config.states.automatic)
+    {
+        unsetRelayAuto();
+    }
+    else
+    {
+        prefs.putBool("auto", true);
+        prefs.putBool("recover", false);
+        prefs.putBool("forceFilter", false);
+        prefs.putBool("forceCH", false);
+        prefs.putBool("forcePH", false);
+        prefs.putShort("forceDuration", 0);
+        setForceCheck();
+    }
 }
 
 void unsetRelayAutoRecover()
@@ -330,10 +337,17 @@ void unsetRelayAutoRecover()
     prefs.putBool("recover", false);
 }
 
-void setRelayAutoRecover()
+void setRelayAutoRecover(domopool_Config &config)
 {
-    setRelayAuto();
-    prefs.putBool("recover", true);
+    if (config.states.recover)
+    {
+        unsetRelayAutoRecover();
+    }
+    else
+    {
+        setRelayAuto(config);
+        prefs.putBool("recover", true);
+    }
 }
 
 void unsetForceCheck()

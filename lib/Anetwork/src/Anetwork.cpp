@@ -291,8 +291,8 @@ void startOTA()
 void startServer(domopool_Config &config)
 {
     // For CORS
-    server.on("/*", HTTP_OPTIONS, [](AsyncWebServerRequest *request)
-              { request->send(200); });
+    // server.on("/*", HTTP_OPTIONS, [](AsyncWebServerRequest *request)
+    //           { request->send(200); });
 
     // Serving pages
     // root
@@ -413,9 +413,9 @@ void startServer(domopool_Config &config)
     server.on(
         "/api/v1/auto",
         HTTP_POST,
-        [](AsyncWebServerRequest *request)
+        [&config](AsyncWebServerRequest *request)
         {
-            setRelayAuto();
+            setRelayAuto(config);
             request->send(200);
         });
     server.on(
@@ -423,7 +423,7 @@ void startServer(domopool_Config &config)
         HTTP_POST,
         [&config](AsyncWebServerRequest *request)
         {
-            setRelayAutoRecover();
+            setRelayAutoRecover(config);
             request->send(200);
         });
 
@@ -602,14 +602,20 @@ void startServer(domopool_Config &config)
         });
 
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
-    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "GET,OPTIONS,POST");
+    // DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "GET,OPTIONS,POST");
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "access-control-allow-origin,content-type");
     server.onNotFound(
         [](AsyncWebServerRequest *request)
         {
-            request->send(404);
+            if (request->method() == HTTP_OPTIONS)
+            {
+                request->send(200);
+            }
+            else
+            {
+                request->send(404);
+            }
         });
-    // WebSerial.begin(&server);
     server.begin();
 }
 
