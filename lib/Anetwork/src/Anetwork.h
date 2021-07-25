@@ -6,13 +6,14 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include <ESPAsyncWebServer.h>
-#include <WebSerial.hpp>
+// #include <WebSerial.hpp>
 #include <PubSubClient.h>
 #include <FS.h>
 #include <SPIFFS.h>
 #include <pb_common.h>
 #include <pb_encode.h>
 #include <pb_decode.h>
+#include <ArduinoJson/version.hpp>
 
 #include <Aconfig.h>
 #include <Asensors.h>
@@ -20,6 +21,11 @@
 
 #ifndef __ANETWORK_H_UNDEFINED__
 #define __ANETWORK_H_UNDEFINED__
+#ifndef DOMOPOOL_VERSION
+#define DOMOPOOL_VERSION dev
+#endif
+#define STR_EXPAND(tok) #tok
+#define STR(tok) STR_EXPAND(tok)
 bool checkIP(const char *ip);
 bool startNetwork(const char *ssid, const char *password, domopool_Config &config);
 void restartNetwork(const char *ssid, const char *password, domopool_Config &config);

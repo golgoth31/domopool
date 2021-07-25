@@ -290,10 +290,6 @@ void startOTA()
 
 void startServer(domopool_Config &config)
 {
-    // For CORS
-    // server.on("/*", HTTP_OPTIONS, [](AsyncWebServerRequest *request)
-    //           { request->send(200); });
-
     // Serving pages
     // root
     server.on(
@@ -308,16 +304,17 @@ void startServer(domopool_Config &config)
             strcpy(infos.board_name, ARDUINO_BOARD);
             strcpy(infos.compile, compile.c_str());
             infos.has_versions = true;
-            strcpy(infos.versions.domopool, "test");
+            strcpy(infos.versions.domopool, STR(DOMOPOOL_VERSION));
             strcpy(infos.versions.esp_idf, esp_get_idf_version());
             infos.versions.platformio = PLATFORMIO;
             strcpy(infos.versions.tft_espi, TFT_ESPI_VERSION);
             strcpy(infos.versions.xtensa, __VERSION__);
             strcpy(infos.versions.dallastemp, DALLASTEMPLIBVERSION);
             strcpy(infos.versions.ads1115, (const char *)ADS1X15_LIB_VERSION);
-            strcpy(infos.versions.nanopb, "0.4.4");
+            strcpy(infos.versions.nanopb, NANOPB_VERSION);
             strcpy(infos.versions.mqtt, "3.1.1");
-            uint8_t buffer[128];
+            strcpy(infos.versions.arduinojson, ARDUINOJSON_VERSION);
+            uint8_t buffer[256];
             size_t message_length;
             bool status;
             pb_ostream_t pb_stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
@@ -335,26 +332,6 @@ void startServer(domopool_Config &config)
                 request->send(500);
             }
         });
-
-    // // healthz
-    // server.on(
-    //     "/healthz",
-    //     HTTP_GET,
-    //     [](AsyncWebServerRequest *request) {
-    //         request->send(200);
-    //     });
-
-    // // metrics
-    // server.on(
-    //     "/readyz",
-    //     HTTP_GET,
-    //     [&config](AsyncWebServerRequest *request) {
-    //         if (config.states.startup)
-    //         {
-    //             request->send(404);
-    //         }
-    //         request->send(200);
-    //     });
 
     // favicon
     server.on(
@@ -415,7 +392,7 @@ void startServer(domopool_Config &config)
         HTTP_POST,
         [&config](AsyncWebServerRequest *request)
         {
-            setRelayAuto(config);
+            toggleRelayAuto(config);
             request->send(200);
         });
     server.on(
@@ -423,7 +400,7 @@ void startServer(domopool_Config &config)
         HTTP_POST,
         [&config](AsyncWebServerRequest *request)
         {
-            setRelayAutoRecover(config);
+            toggleRelayAutoRecover(config);
             request->send(200);
         });
 
