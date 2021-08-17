@@ -12,7 +12,6 @@ void pref2config(domopool_Config &config)
     config.global.ack_tone = prefs.getDouble("ack_tone", 4000);
     strcpy(config.network.ntp.server, prefs.getString("ntp_server", defaultNtpServer).c_str());
     strcpy(config.network.mqtt.server, prefs.getString("mqtt_server", defaultMQTTServer).c_str());
-    config.sensors.ph.threshold = prefs.getFloat("ph_threshold", 7.4);
 
     //no bug
     config.global.lcd_backlight_duration = prefs.getShort("BacklightTime", 30000);
@@ -29,7 +28,7 @@ void pref2config(domopool_Config &config)
     config.network.mqtt.enabled = prefs.getBool("mqtt_enabled", false);
 
     config.sensors.ph.enabled = prefs.getBool("ph_enabled", false);
-    config.sensors.ph.threshold = prefs.getFloat("ph_threshold", 0);
+    config.sensors.ph.threshold = prefs.getFloat("ph_threshold", 7.4);
     config.sensors.ph.threshold_accuracy = prefs.getShort("ph_t_accuracy", 0);
     config.sensors.ph.vmin = prefs.getFloat("ph_vmin", 0);
     config.sensors.ph.vmax = prefs.getFloat("ph_vmax", 0);
