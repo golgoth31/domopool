@@ -482,39 +482,39 @@ void alarms2doc(domopool_Config &config, JsonDocument &doc)
     // doc["alarms"]["adsNotConnect"] = config.alarms.ads1115.not_connected;
     // doc["alarms"]["adsNotReady"] = config.alarms.ads1115.not_ready;
     // doc["alarms"]["adsNotStarted"] = config.alarms.ads1115.not_started;
-    doc["alarms"]["ch"] = config.alarms.ch;
-    doc["alarms"]["filter"] = config.alarms.filter;
+    doc["ch"] = config.alarms.ch;
+    doc["filter"] = config.alarms.filter;
     // doc["alarms"]["mqttMetrics"] = config.alarms.mqtt.metrics;
     // doc["alarms"]["mqttStates"] = config.alarms.mqtt.states;
     // doc["alarms"]["mqttAlarms"] = config.alarms.mqtt.alarms;
-    doc["alarms"]["ph"] = config.alarms.ph;
-    doc["alarms"]["rtc"] = config.alarms.rtc;
-    doc["alarms"]["tambFrost"] = config.alarms.tamb_frost;
-    doc["alarms"]["twFrost"] = config.alarms.tw_frost;
+    doc["ph"] = config.alarms.ph;
+    doc["rtc"] = config.alarms.rtc;
+    doc["tambFrost"] = config.alarms.tamb_frost;
+    doc["twFrost"] = config.alarms.tw_frost;
     // doc["alarms"]["twHigh"] = config.alarms.tw_high;
-    doc["alarms"]["wpBroken"] = config.alarms.wp_broken;
-    doc["alarms"]["wpHigh"] = config.alarms.wp_high;
-    doc["alarms"]["wpLow"] = config.alarms.wp_low;
-    doc["alarms"]["reboot"] = config.alarms.reboot;
+    doc["wpBroken"] = config.alarms.wp_broken;
+    doc["wpHigh"] = config.alarms.wp_high;
+    doc["wpLow"] = config.alarms.wp_low;
+    doc["reboot"] = config.alarms.reboot;
 }
 
 void metrics2doc(domopool_Config &config, JsonDocument &doc)
 {
-    doc["metrics"]["overChTempDuration"] = config.metrics.over_ch_t_high_duration;
-    doc["metrics"]["underChTempDuration"] = config.metrics.under_ch_t_low_duration;
-    doc["metrics"]["ch"] = config.metrics.ch;
-    doc["metrics"]["ph"] = config.metrics.ph;
-    doc["metrics"]["wp"] = config.metrics.wp;
-    doc["metrics"]["wpVolt"] = config.metrics.wp_volt;
-    doc["metrics"]["time"] = config.metrics.time;
+    doc["overChTempDuration"] = config.metrics.over_ch_t_high_duration;
+    doc["underChTempDuration"] = config.metrics.under_ch_t_low_duration;
+    doc["ch"] = config.metrics.ch;
+    doc["ph"] = config.metrics.ph;
+    doc["wp"] = config.metrics.wp;
+    doc["wpVolt"] = config.metrics.wp_volt;
+    doc["time"] = config.metrics.time;
 }
 
 void temps2doc(domopool_Config &config, JsonDocument &doc)
 {
-    doc["metrics"]["tamb"] = config.metrics.tamb;
-    doc["metrics"]["twater"] = config.metrics.twater;
-    doc["metrics"]["hour"] = config.metrics.hour;
-    doc["metrics"]["savedTwater"] = config.metrics.saved_twater;
+    doc["tamb"] = config.metrics.tamb;
+    doc["twater"] = config.metrics.twater;
+    doc["hour"] = config.metrics.hour;
+    doc["savedTwater"] = config.metrics.saved_twater;
 }
 
 void states2doc(domopool_Config &config, JsonDocument &doc)
