@@ -579,7 +579,7 @@ void startServer(domopool_Config &config)
         });
 
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
-    // DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "GET,OPTIONS,POST");
+    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "GET,OPTIONS,POST");
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "access-control-allow-origin,content-type");
     server.onNotFound(
         [](AsyncWebServerRequest *request)
