@@ -519,14 +519,14 @@ void temps2doc(domopool_Config &config, JsonDocument &doc)
 
 void states2doc(domopool_Config &config, JsonDocument &doc)
 {
-    doc["states"]["filterOn"] = config.states.filter_on;
-    doc["states"]["phOn"] = config.states.ph_on;
-    doc["states"]["chOn"] = config.states.ch_on;
-    doc["states"]["automatic"] = config.states.automatic;
-    doc["states"]["startup"] = config.states.startup;
-    doc["states"]["ntp"] = config.states.ntp;
-    doc["states"]["rtc"] = config.states.rtc;
-    doc["states"]["netActive"] = config.states.net_active;
-    doc["states"]["lightOn"] = config.states.light_on;
-    doc["states"]["recover"] = config.states.recover;
+    doc["filterOn"] = config.states.filter_on;
+    doc["phOn"] = config.states.ph_on;
+    doc["chOn"] = config.states.ch_on;
+    doc["automatic"] = config.states.automatic;
+    doc["startup"] = config.states.startup;
+    doc["ntp"] = config.states.ntp;
+    doc["rtc"] = config.states.rtc;
+    doc["netActive"] = config.states.net_active;
+    doc["lightOn"] = config.states.light_on;
+    doc["recover"] = config.states.recover;
 }
