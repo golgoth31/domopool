@@ -103,12 +103,12 @@ void setup(void)
     config.tests.pressure = 0.8;
 
     // Get the first temp, then each 10 minutes
-    config.metrics.saved_twater = 15;
+    config.metrics.saved_twater = 14;
     getDS18B20(config, tempSensors);
     sendTempsMqtt(config);
 
     // Setting watchDog
-    esp_task_wdt_init(config.global.wdt_duration, true); //enable panic so ESP32 restarts
+    esp_task_wdt_init(config.global.wdt_duration, true); // enable panic so ESP32 restarts
     esp_task_wdt_add(NULL);
 }
 
