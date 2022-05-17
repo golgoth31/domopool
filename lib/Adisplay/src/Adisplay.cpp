@@ -332,21 +332,21 @@ void displayRelay(domopool_Config &config)
     // filter dynamic
     if (config.states.dynamic && config.states.automatic)
     {
-        displayButton("Auto", TFT_GREEN, AUTO_X, AUTO_Y, AUTO_W, AUTO_H, AUTO_TEXT_X, AUTO_TEXT_Y);
+        displayButton("Dyn", TFT_GREEN, AUTO_X, AUTO_Y, AUTO_W, AUTO_H, AUTO_TEXT_X, AUTO_TEXT_Y);
     }
     else
     {
-        displayButton("Auto", stopColor, AUTO_X, AUTO_Y, AUTO_W, AUTO_H, AUTO_TEXT_X, AUTO_TEXT_Y);
+        displayButton("Dyn", stopColor, AUTO_X, AUTO_Y, AUTO_W, AUTO_H, AUTO_TEXT_X, AUTO_TEXT_Y);
     }
 
     // filter half day
     if (config.states.half_day && config.states.automatic)
     {
-        displayButton("half", TFT_GREEN, HALF_X, HALF_Y, HALF_W, HALF_H, HALF_TEXT_X, HALF_TEXT_Y);
+        displayButton("Half", TFT_GREEN, HALF_X, HALF_Y, HALF_W, HALF_H, HALF_TEXT_X, HALF_TEXT_Y);
     }
     else
     {
-        displayButton("half", stopColor, HALF_X, HALF_Y, HALF_W, HALF_H, HALF_TEXT_X, HALF_TEXT_Y);
+        displayButton("Half", stopColor, HALF_X, HALF_Y, HALF_W, HALF_H, HALF_TEXT_X, HALF_TEXT_Y);
     }
 
     // filter full day
