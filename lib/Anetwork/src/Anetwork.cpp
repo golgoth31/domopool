@@ -89,6 +89,39 @@ void handleBodyRelay(AsyncWebServerRequest *request, uint8_t *data, size_t len, 
     }
 }
 
+void handlePumpTime(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+{
+    uint8_t buffer[total];
+    if (!index)
+    {
+        Serial.printf("BodyStart: %u B\n", total);
+    }
+    for (size_t i = 0; i < len; i++)
+    {
+        buffer[i] = data[i];
+    }
+    if (index + len == total)
+    {
+        Serial.printf("BodyEnd: %u B\n", total);
+    }
+    /* Allocate space for the decoded message. */
+    domopool_Pump pump = domopool_Pump_init_default;
+
+    /* Create a stream that reads from the buffer. */
+    pb_istream_t stream = pb_istream_from_buffer(buffer, total);
+    /* Now we are ready to decode the message. */
+    bool status = pb_decode(&stream, domopool_Pump_fields, &pump);
+
+    /* Check for errors... */
+    if (!status)
+    {
+        printf("Decoding failed: %s\n", PB_GET_ERROR(&stream));
+        request->send(500);
+    }
+
+    setPumpTime(pump.timing);
+}
+
 void handleBodyMqtt(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
 {
     uint8_t buffer[total];
@@ -245,20 +278,16 @@ void startOTA()
                      String type;
                      if (ArduinoOTA.getCommand() == U_FLASH)
                          type = "Firmware";
-                     else // U_SPIFFS
+                     else
                          type = "SPIFFS";
 
-                     // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
                      displayProgressBarText(type + " update", TFT_RED);
                      server.end();
-                     Serial.println("Start updating " + type);
-                 })
+                     Serial.println("Start updating " + type); })
         .onEnd([]()
                {
                    Serial.println("\nEnd");
-                   OTAdot = 0;
-                   // server.begin();
-               })
+                   OTAdot = 0; })
         .onProgress([](unsigned int progress, unsigned int total)
                     {
                         int percent = progress / (total / 100);
@@ -268,8 +297,7 @@ void startOTA()
                         if (OTAdot > 5)
                         {
                             OTAdot = 0;
-                        }
-                    })
+                        } })
         .onError([](ota_error_t error)
                  {
                      Serial.printf("Error[%u]: ", error);
@@ -282,8 +310,7 @@ void startOTA()
                      else if (error == OTA_RECEIVE_ERROR)
                          Serial.println("Receive Failed");
                      else if (error == OTA_END_ERROR)
-                         Serial.println("End Failed");
-                 });
+                         Serial.println("End Failed"); });
 
     ArduinoOTA.begin();
 }
@@ -388,20 +415,30 @@ void startServer(domopool_Config &config)
             handleBodyRelay(request, data, len, index, total);
         });
     server.on(
-        "/api/v1/auto",
+        "/api/v1/auto/disable",
         HTTP_POST,
-        [&config](AsyncWebServerRequest *request)
+        [](AsyncWebServerRequest *request)
         {
-            toggleRelayAuto(config);
+            unsetRelayAuto();
             request->send(200);
         });
+
+    // pump time
     server.on(
-        "/api/v1/recover",
+        "/api/v1/pump/time",
         HTTP_POST,
-        [&config](AsyncWebServerRequest *request)
+        [](AsyncWebServerRequest *request)
         {
-            toggleRelayAutoRecover(config);
             request->send(200);
+        },
+        NULL,
+        [](AsyncWebServerRequest *request,
+           uint8_t *data,
+           size_t len,
+           size_t index,
+           size_t total)
+        {
+            handlePumpTime(request, data, len, index, total);
         });
 
     // mqtt

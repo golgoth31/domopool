@@ -23,12 +23,19 @@ int AUTO_H;
 int AUTO_TEXT_X;
 int AUTO_TEXT_Y;
 
-int RECO_X;
-int RECO_Y;
-int RECO_W;
-int RECO_H;
-int RECO_TEXT_X;
-int RECO_TEXT_Y;
+int HALF_X;
+int HALF_Y;
+int HALF_W;
+int HALF_H;
+int HALF_TEXT_X;
+int HALF_TEXT_Y;
+
+int FULL_X;
+int FULL_Y;
+int FULL_W;
+int FULL_H;
+int FULL_TEXT_X;
+int FULL_TEXT_Y;
 
 int FILTER_X;
 int FILTER_Y;
@@ -98,17 +105,24 @@ void initDisplay()
     // First button line
     AUTO_X = BUTTON_BOX_X + 1;
     AUTO_Y = BUTTON_BOX_Y + 2;
-    AUTO_W = (BUTTON_BOX_W / 2) - 2;
+    AUTO_W = (BUTTON_BOX_W / 3) - 2;
     AUTO_H = (BUTTON_BOX_H / 2) - 2;
     AUTO_TEXT_X = AUTO_X + (AUTO_W / 2);
     AUTO_TEXT_Y = AUTO_Y + (AUTO_H / 2);
 
-    RECO_X = BUTTON_BOX_X + (BUTTON_BOX_W / 2) + 1;
-    RECO_Y = AUTO_Y;
-    RECO_W = AUTO_W;
-    RECO_H = AUTO_H;
-    RECO_TEXT_X = RECO_X + (RECO_W / 2);
-    RECO_TEXT_Y = RECO_Y + (RECO_H / 2);
+    HALF_X = BUTTON_BOX_X + (BUTTON_BOX_W / 3) + 1;
+    HALF_Y = AUTO_Y;
+    HALF_W = AUTO_W;
+    HALF_H = AUTO_H;
+    HALF_TEXT_X = HALF_X + (HALF_W / 2);
+    HALF_TEXT_Y = HALF_Y + (HALF_H / 2);
+
+    FULL_X = BUTTON_BOX_X + (2 * (BUTTON_BOX_W / 3)) + 1;
+    FULL_Y = AUTO_Y;
+    FULL_W = AUTO_W;
+    FULL_H = AUTO_H;
+    FULL_TEXT_X = FULL_X + (FULL_W / 2);
+    FULL_TEXT_Y = FULL_Y + (FULL_H / 2);
 
     // Second button line
     FILTER_X = AUTO_X;
@@ -153,24 +167,6 @@ void initDisplay()
     WP_H = SENSORS_BOX_H;
 }
 
-// void pageOTA(String type)
-// {
-//     type += " update";
-//     tft.fillScreen(TFT_BLACK);
-//     tft.setTextColor(TFT_RED, TFT_BLACK);
-//     tft.setTextSize(2);
-//     tft.drawCentreString(type, 120, 150, 1);
-//     tft.drawRect(10, 170, pBarw, 15, TFT_RED);
-// }
-// void pageOTAProgressBar(int percent)
-// {
-//     int width = 0;
-//     if (percent > 0)
-//     {
-//         width = (pBarw * percent) / 100;
-//     }
-//     tft.fillRect(10, 170, width, 15, TFT_RED);
-// }
 void displayProgressBarText(String text, uint32_t color)
 {
     tft.fillScreen(TFT_BLACK);
@@ -231,16 +227,16 @@ void displaySensors(domopool_Config &config)
     }
 
     String text = "";
-    if (config.metrics.twater >= 0 && config.metrics.twater < 10)
+    if (config.metrics.saved_twater >= 0 && config.metrics.saved_twater < 10)
     {
         text = " ";
     }
-    text += config.metrics.twater;
+    text += config.metrics.saved_twater;
     text += (char)247;
     text += "C";
     tft.drawString(text, 60, 37, 1);
 
-    if (config.metrics.twater >= 0 && config.metrics.twater < 10)
+    if (config.metrics.tamb >= 0 && config.metrics.tamb < 10)
     {
         text = " ";
     }
@@ -322,24 +318,45 @@ void displayButton(String text, int color, int box_x, int box_y, int box_w, int 
 
 void displayRelay(domopool_Config &config)
 {
-    // filter auto
+    int stopColor;
+
     if (config.states.automatic)
+    {
+        stopColor = defaultColor;
+    }
+    else
+    {
+        stopColor = TFT_RED;
+    }
+
+    // filter dynamic
+    if (config.states.dynamic && config.states.automatic)
     {
         displayButton("Auto", TFT_GREEN, AUTO_X, AUTO_Y, AUTO_W, AUTO_H, AUTO_TEXT_X, AUTO_TEXT_Y);
     }
     else
     {
-        displayButton("Auto", TFT_RED, AUTO_X, AUTO_Y, AUTO_W, AUTO_H, AUTO_TEXT_X, AUTO_TEXT_Y);
+        displayButton("Auto", stopColor, AUTO_X, AUTO_Y, AUTO_W, AUTO_H, AUTO_TEXT_X, AUTO_TEXT_Y);
     }
 
-    // filter auto recover
-    if (config.states.recover)
+    // filter half day
+    if (config.states.half_day && config.states.automatic)
     {
-        displayButton("Reco", TFT_GREEN, RECO_X, RECO_Y, RECO_W, RECO_H, RECO_TEXT_X, RECO_TEXT_Y);
+        displayButton("half", TFT_GREEN, HALF_X, HALF_Y, HALF_W, HALF_H, HALF_TEXT_X, HALF_TEXT_Y);
     }
     else
     {
-        displayButton("Reco", defaultColor, RECO_X, RECO_Y, RECO_W, RECO_H, RECO_TEXT_X, RECO_TEXT_Y);
+        displayButton("half", stopColor, HALF_X, HALF_Y, HALF_W, HALF_H, HALF_TEXT_X, HALF_TEXT_Y);
+    }
+
+    // filter full day
+    if (config.states.full_day && config.states.automatic)
+    {
+        displayButton("Full", TFT_GREEN, FULL_X, FULL_Y, FULL_W, FULL_H, FULL_TEXT_X, FULL_TEXT_Y);
+    }
+    else
+    {
+        displayButton("Full", stopColor, FULL_X, FULL_Y, FULL_W, FULL_H, FULL_TEXT_X, FULL_TEXT_Y);
     }
 
     // filter button
@@ -494,17 +511,27 @@ void displayPressed(domopool_Config &config)
             if ((y > AUTO_Y) && (y <= AUTO_Y + AUTO_H))
             {
                 Serial.println("auto");
-                toggleRelayAuto(config);
+                setPumpTime(domopool_Pump_timing_dynamic);
             }
         }
 
-        // recover button
-        if ((x > RECO_X) && (x < RECO_X + RECO_W))
+        // half button
+        if ((x > HALF_X) && (x < HALF_X + HALF_W))
         {
-            if ((y > RECO_Y) && (y <= RECO_Y + RECO_H))
+            if ((y > HALF_Y) && (y <= HALF_Y + HALF_H))
             {
-                Serial.println("recover");
-                toggleRelayAutoRecover(config);
+                Serial.println("half");
+                setPumpTime(domopool_Pump_timing_half_day);
+            }
+        }
+
+        // full button
+        if ((x > FULL_X) && (x < FULL_X + FULL_W))
+        {
+            if ((y > FULL_Y) && (y <= FULL_Y + FULL_H))
+            {
+                Serial.println("full");
+                setPumpTime(domopool_Pump_timing_full_day);
             }
         }
 

@@ -6,14 +6,41 @@ Preferences prefs;
 String defaultNtpServer = "fr.pool.ntp.org";
 String defaultMQTTServer = "192.168.10.201";
 
+void setConfigPumpTime(domopool_Config &config)
+{
+    config.states.half_day = false;
+    config.states.full_day = false;
+    config.states.dynamic = false;
+
+    int16_t timing = prefs.getShort("pumpTiming", 0);
+    switch (timing)
+    {
+    case 1:
+        config.pump.timing = domopool_Pump_timing_half_day;
+        config.states.half_day = true;
+        break;
+    case 2:
+        config.pump.timing = domopool_Pump_timing_full_day;
+        config.states.full_day = true;
+        break;
+
+    default:
+        config.pump.timing = domopool_Pump_timing_dynamic;
+        config.states.dynamic = true;
+        break;
+    }
+}
+
 void pref2config(domopool_Config &config)
 {
-    //default not working
+    setConfigPumpTime(config);
+
+    // default not working
     config.global.ack_tone = prefs.getDouble("ack_tone", 4000);
     strcpy(config.network.ntp.server, prefs.getString("ntp_server", defaultNtpServer).c_str());
     strcpy(config.network.mqtt.server, prefs.getString("mqtt_server", defaultMQTTServer).c_str());
 
-    //no bug
+    // no bug
     config.global.lcd_backlight_duration = prefs.getShort("BacklightTime", 30000);
     config.global.ack_duration = prefs.getInt("ackDuration", 100);
     config.global.wdt_duration = prefs.getInt("wdtDuration", 60);
@@ -71,6 +98,7 @@ void pref2config(domopool_Config &config)
     config.pump.force_ph = prefs.getBool("forcePH", false);
     config.pump.force_ch = prefs.getBool("forceCH", false);
     config.pump.automatic = prefs.getBool("auto", true);
+    config.states.automatic = config.pump.automatic;
     config.pump.recover = prefs.getBool("recover", false);
     config.pump.force_check = prefs.getBool("forceCheck", false);
     config.pump.force_duration = prefs.getShort("forceDuration", 0);
@@ -231,13 +259,6 @@ void initConfigData(domopool_Config &config)
     config.alarms.reboot = false;
 }
 
-void unsetRelayAuto()
-{
-    prefs.putBool("auto", false);
-    prefs.putBool("recover", false);
-    prefs.putShort("forceDuration", 0);
-}
-
 bool stopRelay(const int8_t p)
 {
     switch (p)
@@ -313,10 +334,10 @@ bool startRelay(const int8_t p, uint32_t duration)
     return true;
 }
 
+// Auto state
 void setRelayAuto()
 {
     prefs.putBool("auto", true);
-    prefs.putBool("recover", false);
     prefs.putBool("forceFilter", false);
     prefs.putBool("forceCH", false);
     prefs.putBool("forcePH", false);
@@ -324,9 +345,15 @@ void setRelayAuto()
     setForceCheck();
 }
 
-void toggleRelayAuto(domopool_Config &config)
+void unsetRelayAuto()
 {
-    if (config.states.automatic)
+    prefs.putBool("auto", false);
+    prefs.putShort("forceDuration", 0);
+}
+
+void toggleRelayAuto()
+{
+    if (prefs.getBool("auto", true))
     {
         unsetRelayAuto();
     }
@@ -336,27 +363,33 @@ void toggleRelayAuto(domopool_Config &config)
     }
 }
 
-void unsetRelayAutoRecover()
+void setPumpTime(const int8_t p)
 {
-    prefs.putBool("recover", false);
-    setForceCheck();
-}
+    int16_t oldTiming = prefs.getShort("pumpTiming", 0);
+    int16_t curTiming;
 
-void setRelayAutoRecover()
-{
-    setRelayAuto();
-    prefs.putBool("recover", true);
-}
-
-void toggleRelayAutoRecover(domopool_Config &config)
-{
-    if (config.states.recover)
+    switch (p)
     {
-        unsetRelayAutoRecover();
+    case domopool_Pump_timing_half_day:
+        curTiming = 1;
+        break;
+    case domopool_Pump_timing_full_day:
+        curTiming = 2;
+        break;
+
+    default:
+        curTiming = 0;
+        break;
+    }
+
+    prefs.putShort("pumpTiming", curTiming);
+    if (oldTiming == curTiming)
+    {
+        toggleRelayAuto();
     }
     else
     {
-        setRelayAutoRecover();
+        setRelayAuto();
     }
 }
 
@@ -528,5 +561,7 @@ void states2doc(domopool_Config &config, JsonDocument &doc)
     doc["rtc"] = config.states.rtc;
     doc["netActive"] = config.states.net_active;
     doc["lightOn"] = config.states.light_on;
-    doc["recover"] = config.states.recover;
+    doc["dynamic"] = config.states.dynamic;
+    doc["halfDay"] = config.states.half_day;
+    doc["fullDay"] = config.states.full_day;
 }
