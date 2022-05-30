@@ -103,7 +103,6 @@ void setup(void)
     config.tests.pressure = 0.8;
 
     // Get the first temp, then each 10 minutes
-    config.metrics.saved_twater = 14;
     getDS18B20(config, tempSensors);
     sendTempsMqtt(config);
 
@@ -175,7 +174,6 @@ void loop(void)
         {
             Serial.println(F("End of startup blanking time"));
             config.states.startup = false;
-            // config.metrics.saved_twater = config.metrics.twater;
             displayPageMain(config);
         }
 

@@ -89,6 +89,8 @@ void pumpInit(domopool_Config &config, int filterPin, int chPin, int phPin)
         config.metrics.over_ch_t_high_duration = 0;
         pumpPrefs.putShort("chDuration", 0);
     }
+
+    config.metrics.saved_twater = pumpPrefs.getFloat("saved_twater", 14);
 }
 
 void lightInit(int lightPin)
@@ -238,6 +240,10 @@ void setFilterState(domopool_Config &config, int hour)
         config.states.ch_on = false;
         delay(500);
         digitalWrite(pumpFilterRelayPin, HIGH);
+        if (config.states.filter_on)
+        {
+            pumpPrefs.putFloat("saved_twater", config.metrics.saved_twater);
+        }
         config.states.filter_on = false;
         save_temp = false;
     }
