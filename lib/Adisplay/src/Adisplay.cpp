@@ -302,7 +302,8 @@ void displaySensors(domopool_Config &config)
     {
         text = "";
     }
-    text += config.metrics.wp;
+    String wp = String(config.metrics.wp / config.sensors.wp.v_accuracy, 2);
+    text += wp.c_str();
     text += " Bar";
     tft.drawString(text, 180, 87, 1);
 }

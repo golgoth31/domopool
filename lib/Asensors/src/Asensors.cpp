@@ -325,11 +325,11 @@ void initializeADS115(domopool_Config &config, ADS1115 &ads, int sda, int scl)
 
 // When wp is to far from 0 (when filter pump is stopped), recalibrate threshold
 // do not calibrate if threshold is above limits around wp vmin
-void autoWPThreshold(domopool_Config &config)
+uint32_t autoWPThreshold(domopool_Config &config)
 {
-    float pct = (config.sensors.wp.vmin * config.sensors.wp.threshold_accuracy) / 100;
-    float l_min = config.sensors.wp.vmin - pct;
-    float l_max = config.sensors.wp.vmin + pct;
+    uint32_t pct = (config.sensors.wp.vmin * config.sensors.wp.threshold_accuracy) / 100;
+    uint32_t l_min = config.sensors.wp.vmin - pct;
+    uint32_t l_max = config.sensors.wp.vmin + pct;
 
     // Check if we are really far from 0.5V
     if (config.metrics.wp_volt > l_min || config.metrics.wp_volt < l_max)
@@ -342,6 +342,8 @@ void autoWPThreshold(domopool_Config &config)
         config.alarms.wp_broken = true;
         disableWP();
     }
+
+    return 0;
 }
 
 void getWPAnalog(domopool_Config &config, ADS1115 &ads)
@@ -358,7 +360,7 @@ void getWPAnalog(domopool_Config &config, ADS1115 &ads)
         ads.requestADC(config.sensors.wp.adc_pin);
         val = ads.toVoltage(raw);
         config.alarms.ads1115.not_ready = false;
-        config.metrics.wp_volt = val;
+        config.metrics.wp_volt = val * config.sensors.wp.v_accuracy;
     }
     else
     {
@@ -370,18 +372,19 @@ void getWP(domopool_Config &config, ADS1115 &ads)
 {
     getWPAnalog(config, ads);
 
-    float cur_wp = (config.metrics.wp_volt - config.sensors.wp.threshold) * 4;
+    config.metrics.wp = (config.metrics.wp_volt - config.sensors.wp.threshold) * 4;
 
     // autocalibrate if we have derived from 0 Bar
-    if (!config.states.filter_on && config.sensors.wp.auto_cal && abs(cur_wp) >= config.limits.wp_0_derive)
+    if (!config.states.filter_on && config.sensors.wp.auto_cal && config.metrics.wp >= config.limits.wp_0_derive)
     {
-        autoWPThreshold(config);
+        config.metrics.wp = autoWPThreshold(config);
     }
 
-    config.metrics.wp = roundVal((config.metrics.wp_volt - config.sensors.wp.threshold) * 4, config.sensors.wp.precision_factor);
+    // Check if we have a high water pressure value
     if (config.metrics.wp >= config.limits.wp_max)
     {
         config.alarms.wp_high = true;
+        config.alarms.wp_value = config.metrics.wp;
     }
     // else
     // {
@@ -395,6 +398,7 @@ void getWP(domopool_Config &config, ADS1115 &ads)
             if (blankFilterStart == blankMaxNumber)
             {
                 config.alarms.wp_low = true;
+                config.alarms.wp_value = config.metrics.wp;
             }
             else
             {
@@ -407,10 +411,10 @@ void getWP(domopool_Config &config, ADS1115 &ads)
         blankFilterStart = 0;
     }
 
-    if (config.tests.enabled)
-    {
-        config.metrics.wp = config.tests.pressure;
-    }
+    // if (config.tests.enabled)
+    // {
+    //     config.metrics.wp = config.tests.pressure;
+    // }
 }
 
 void getDS18B20(domopool_Config &config, DallasTemperature &tempSensors)

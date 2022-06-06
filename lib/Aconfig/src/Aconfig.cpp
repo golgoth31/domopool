@@ -73,10 +73,11 @@ void pref2config(domopool_Config &config)
     config.sensors.ch.auto_cal = prefs.getBool("ch_auto_cal", true);
 
     config.sensors.wp.enabled = prefs.getBool("wp_enabled", false);
-    config.sensors.wp.threshold = prefs.getFloat("wp_threshold", 0.5);
+    config.sensors.wp.threshold = prefs.getUInt("wp_threshold", 500000);
     config.sensors.wp.threshold_accuracy = prefs.getShort("wp_t_accuracy", 8);
-    config.sensors.wp.vmin = prefs.getFloat("wp_vmin", 0.5);
-    config.sensors.wp.vmax = prefs.getFloat("wp_vmax", 4.5);
+    config.sensors.wp.vmin = prefs.getUInt("wp_vmin", 500000);
+    config.sensors.wp.vmax = prefs.getUInt("wp_vmax", 4500000);
+    config.sensors.wp.v_accuracy = prefs.getUInt("v_accuracy", 1000000);
     config.sensors.wp.adc_pin = prefs.getShort("wp_adc_pin", 3);
     config.sensors.wp.precision_factor = prefs.getShort("wp_prec_fact", 100);
     config.sensors.wp.auto_cal = prefs.getBool("wp_auto_cal", true);
@@ -108,13 +109,13 @@ void pref2config(domopool_Config &config)
     config.limits.ch_max = prefs.getFloat("ch_max", 0);
     config.limits.ph_min = prefs.getFloat("ph_min", 0);
     config.limits.ph_max = prefs.getFloat("ph_max", 0);
-    config.limits.wp_min = prefs.getFloat("wp_min", 0.2);
-    config.limits.wp_max = prefs.getFloat("wp_max", 2);
+    config.limits.wp_min = prefs.getUInt("wp_min", 200000);
+    config.limits.wp_max = prefs.getUInt("wp_max", 2000000);
     config.limits.ch_temp_threshold_high = prefs.getFloat("ch_t_high", 15);
     config.limits.ch_temp_threshold_low = prefs.getFloat("ch_t_low", 14);
     config.limits.ch_wait_before_allow = prefs.getShort("ch_wait_allow", 24);
     config.limits.ch_wait_before_deny = prefs.getShort("ch_wait_deny", 24);
-    config.limits.wp_0_derive = prefs.getFloat("wp_0_derive", 0.01);
+    config.limits.wp_0_derive = prefs.getUInt("wp_0_derive", 10000);
     config.limits.tw_min = prefs.getFloat("tw_min", 2);
     config.limits.tw_max = prefs.getFloat("tw_max", 30);
     config.limits.tamb_min = prefs.getFloat("tamb_min", 0);
@@ -199,10 +200,10 @@ void config2pref(domopool_Config &config)
     prefs.putShort("ch_prec_fact", config.sensors.ch.precision_factor);
     prefs.putBool("ch_auto_cal", config.sensors.ch.auto_cal);
     prefs.putBool("wp_enabled", config.sensors.wp.enabled);
-    prefs.putFloat("wp_threshold", config.sensors.wp.threshold);
+    prefs.putUInt("wp_threshold", config.sensors.wp.threshold);
     prefs.putShort("wp_t_accuracy", config.sensors.wp.threshold_accuracy);
-    prefs.putFloat("wp_vmin", config.sensors.wp.vmin);
-    prefs.putFloat("wp_vmax", config.sensors.wp.vmax);
+    prefs.putUInt("wp_vmin", config.sensors.wp.vmin);
+    prefs.putUInt("wp_vmax", config.sensors.wp.vmax);
     prefs.putShort("wp_adc_pin", config.sensors.wp.adc_pin);
     prefs.putShort("wp_prec_fact", config.sensors.wp.precision_factor);
     prefs.putBool("wp_auto_cal", config.sensors.wp.auto_cal);
@@ -228,13 +229,13 @@ void config2pref(domopool_Config &config)
     prefs.putFloat("ch_max", config.limits.ch_max);
     prefs.putFloat("ph_min", config.limits.ph_min);
     prefs.putFloat("ph_max", config.limits.ph_max);
-    prefs.putFloat("wp_min", config.limits.wp_min);
-    prefs.putFloat("wp_max", config.limits.wp_max);
+    prefs.putUInt("wp_min", config.limits.wp_min);
+    prefs.putUInt("wp_max", config.limits.wp_max);
     prefs.putFloat("ch_t_high", config.limits.ch_temp_threshold_high);
     prefs.putFloat("ch_t_low", config.limits.ch_temp_threshold_low);
     prefs.putShort("ch_wait_allow", config.limits.ch_wait_before_allow);
     prefs.putShort("ch_wait_deny", config.limits.ch_wait_before_deny);
-    prefs.putFloat("wp_0_derive", config.limits.wp_0_derive);
+    prefs.putUInt("wp_0_derive", config.limits.wp_0_derive);
     prefs.putFloat("tw_min", config.limits.tw_min);
     prefs.putFloat("tw_max", config.limits.tw_max);
     prefs.putFloat("tamb_min", config.limits.tamb_min);
@@ -527,7 +528,9 @@ void alarms2doc(domopool_Config &config, JsonDocument &doc)
     // doc["alarms"]["twHigh"] = config.alarms.tw_high;
     doc["wpBroken"] = config.alarms.wp_broken;
     doc["wpHigh"] = config.alarms.wp_high;
+    // doc["wpHighValue"] = config.alarms.wp_high_value;
     doc["wpLow"] = config.alarms.wp_low;
+    doc["wpValue"] = config.alarms.wp_value;
     doc["reboot"] = config.alarms.reboot;
 }
 
