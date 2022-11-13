@@ -34,9 +34,13 @@ String printTime(bool seconds)
 String printDate()
 {
     String date = "";
+    if (day() < 10)
+    {
+        date += "0";
+    }
     date += day();
     date += " ";
-    date += monthStr(month());
+    date += monthShortStr(month());
     date += " ";
     date += year();
     return date;
@@ -163,6 +167,8 @@ void initSystemTime(domopool_Config &config, int sda, int scl)
         config.network.ntp.timezone,
         config.network.ntp.day_light,
         config.network.ntp.server);
+    // sleep 2s to let ntp set the current time
+    sleep(2);
     // Wire.begin(35, 34, 400000);
     RTC.Begin(sda, scl);
     if (!RTC.GetIsRunning() || RTC.LastError() == 0)

@@ -374,6 +374,11 @@ void getWP(domopool_Config &config, ADS1115 &ads)
 
     config.metrics.wp = (config.metrics.wp_volt - config.sensors.wp.threshold) * 4;
 
+    if (config.metrics.wp < 0)
+    {
+        config.metrics.wp = config.metrics.wp * -1;
+    }
+
     // autocalibrate if we have derived from 0 Bar
     if (!config.states.filter_on && config.sensors.wp.auto_cal && config.metrics.wp >= config.limits.wp_0_derive)
     {
